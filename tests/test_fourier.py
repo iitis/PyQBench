@@ -1,6 +1,6 @@
 import numpy as np
 
-from qbench.fourier._initial_state import state_preparation_circuit
+from qbench.fourier import state_preparation_circuit
 
 
 def test_initial_state_prepared_from_ket_zeros_is_maximally_entangled():
