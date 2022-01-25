@@ -9,3 +9,7 @@ def state_preparation_circuit(target: int = 0, ancilla: int = 1) -> circuits.Cir
     :return: A circuit mapping |00> to (|00> + |11>) / sqrt(2).
     """
     return circuits.Circuit().h(target).cnot(target, ancilla)
+
+
+def measurement_circuit(phi: float, target: int = 0) -> circuits.Circuit:
+    return circuits.Circuit().h(target).phaseshift(target, phi).h(target)
