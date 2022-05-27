@@ -19,3 +19,15 @@ def measurement_circuit(phi: float, target: int = 0) -> circuits.Circuit:
     :return: A circuit H-PHASE(phi)-H
     """
     return circuits.Circuit().h(target).phaseshift(target, phi).h(target)
+
+
+def global_phase_circuit(phi: float, target: int):
+    """Create a circuit applying global phase factor to target qubit.
+
+    The corresponding unitary is of the form diag(exp(i * phi), exp(i * phi)).
+
+    :param phi: Rotation angle defining phase.
+    :param target: Index of qubit global phase should be applied to.
+    :return: A circuit comprising gates shifting global phase of the target qubit.
+    """
+    return circuits.Circuit().phaseshift(target, 2 * phi).rz(target, -2 * phi)
