@@ -1,3 +1,4 @@
+import numpy as np
 from braket import circuits
 
 
@@ -31,3 +32,35 @@ def global_phase_circuit(phi: float, target: int):
     :return: A circuit comprising gates shifting global phase of the target qubit.
     """
     return circuits.Circuit().phaseshift(target, 2 * phi).rz(target, -2 * phi)
+
+
+def v0_circuit(phi: float, target: int, preserve_global_phase=True):
+    """Circuit implementing V0 operation on given qubit.
+
+    :param phi: rotation angle.
+    :param target: qubit V0 should be applied to
+    :param preserve_global_phase: whether the decomposition should preserve global phase.
+     This should matter only if V0 is used to construct a controlled gate, and is irrelevant
+     otherwise. To be on the safe side, the default is `True`. Note that including global phase
+     adds two more gates to the circuit.
+    """
+    circuit = (
+        global_phase_circuit(np.pi / 4, target) if preserve_global_phase else circuits.Circuit()
+    )
+    return circuit.ry(target, (phi + np.pi) / 2).rz(target, -np.pi / 2)
+
+
+def v1_circuit(phi: float, target: int, preserve_global_phase=True):
+    """Circuit implementing V0 operation on given qubit.
+
+    :param phi: rotation angle.
+    :param target: qubit V1 should be applied to
+    :param preserve_global_phase: whether the decomposition should preserve global phase.
+     This should matter only if V1 is used to construct a controlled gate, and is irrelevant
+     otherwise. To be on the safe side, the default is `True`. Note that including global phase
+     adds two more gates to the circuit.
+    """
+    circuit = (
+        global_phase_circuit(3 * np.pi / 4, target) if preserve_global_phase else circuits.Circuit()
+    )
+    return circuit.rx(target, np.pi).ry(target, (phi + np.pi) / 2).rz(target, -np.pi / 2)
