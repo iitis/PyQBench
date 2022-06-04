@@ -61,17 +61,19 @@ def test_measurement_circuit_has_correct_unitary(phi):
     np.testing.assert_allclose(circuit.as_unitary(), expected_unitary, atol=1e-6)
 
 
+@pytest.mark.parametrize("native_only", [True, False])
 @pytest.mark.parametrize("phi", np.linspace(0, 2 * np.pi, 100))
-def test_decomposed_v0_is_equal_to_the_original_one(phi):
-    actual = v0_circuit(phi, 0).as_unitary()
+def test_decomposed_v0_is_equal_to_the_original_one(phi, native_only):
+    actual = v0_circuit(phi, 0, native_only=native_only).as_unitary()
     expected = _v0_ref(phi)
 
     _assert_is_equal_up_to_phase(actual, expected)
 
 
+@pytest.mark.parametrize("native_only", [True, False])
 @pytest.mark.parametrize("phi", np.linspace(0, 2 * np.pi, 100))
-def test_decomposed_v1_is_equal_to_the_original_one(phi):
-    actual = v1_circuit(phi, 0).as_unitary()
+def test_decomposed_v1_is_equal_to_the_original_one(phi, native_only):
+    actual = v1_circuit(phi, 0, native_only=native_only).as_unitary()
     expected = _v1_ref(phi)
 
     _assert_is_equal_up_to_phase(actual, expected)
