@@ -55,14 +55,6 @@ def test_measurement_circuit_has_correct_unitary(phi):
 
 
 @pytest.mark.parametrize("phi", np.linspace(0, 2 * np.pi, 100))
-def test_decomposition_of_global_phase_expected_correct_unitary(phi):
-    expected = np.diag([np.exp(1j * phi), np.exp(1j * phi)])
-    actual = global_phase_circuit(phi, 0).as_unitary()
-
-    np.testing.assert_allclose(expected, actual)
-
-
-@pytest.mark.parametrize("phi", np.linspace(0, 2 * np.pi, 100))
 def test_decomposed_v0_is_equal_to_the_original_one_if_global_phase_is_preserved(phi):
     actual = v0_circuit(phi, 0, preserve_global_phase=True).as_unitary()
     expected = _v0_ref(phi)
