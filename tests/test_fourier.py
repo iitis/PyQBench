@@ -3,12 +3,19 @@ import pytest
 from scipy import linalg
 
 from qbench.fourier import (
-    global_phase_circuit,
     measurement_circuit,
     state_preparation_circuit,
     v0_circuit,
     v1_circuit,
 )
+
+
+def _assert_is_equal_up_to_phase(actual, expected):
+    quotient = actual / expected
+    multipliers = quotient[~np.isnan(quotient)]
+    assert multipliers.shape != (0,)
+    assert np.allclose(actual, expected * multipliers[0])
+    assert np.allclose(abs(multipliers[0]), 1)
 
 
 def _v0_ref(phi):
@@ -54,44 +61,19 @@ def test_measurement_circuit_has_correct_unitary(phi):
     np.testing.assert_allclose(circuit.as_unitary(), expected_unitary, atol=1e-6)
 
 
+@pytest.mark.parametrize("native_only", [True, False])
 @pytest.mark.parametrize("phi", np.linspace(0, 2 * np.pi, 100))
-def test_decomposition_of_global_phase_expected_correct_unitary(phi):
-    expected = np.diag([np.exp(1j * phi), np.exp(1j * phi)])
-    actual = global_phase_circuit(phi, 0).as_unitary()
-
-    np.testing.assert_allclose(expected, actual)
-
-
-@pytest.mark.parametrize("phi", np.linspace(0, 2 * np.pi, 100))
-def test_decomposed_v0_is_equal_to_the_original_one_if_global_phase_is_preserved(phi):
-    actual = v0_circuit(phi, 0, preserve_global_phase=True).as_unitary()
+def test_decomposed_v0_is_equal_to_the_original_one(phi, native_only):
+    actual = v0_circuit(phi, 0, native_only=native_only).as_unitary()
     expected = _v0_ref(phi)
 
-    np.testing.assert_allclose(expected, actual, atol=1e-10)
+    _assert_is_equal_up_to_phase(actual, expected)
 
 
+@pytest.mark.parametrize("native_only", [True, False])
 @pytest.mark.parametrize("phi", np.linspace(0, 2 * np.pi, 100))
-def test_decomposed_v1_is_equal_to_the_original_one_if_global_phase_is_preserved(phi):
-    actual = v1_circuit(phi, 0, preserve_global_phase=True).as_unitary()
+def test_decomposed_v1_is_equal_to_the_original_one(phi, native_only):
+    actual = v1_circuit(phi, 0, native_only=native_only).as_unitary()
     expected = _v1_ref(phi)
 
-    np.testing.assert_allclose(expected, actual, atol=1e-10)
-
-
-@pytest.mark.parametrize("phi", np.linspace(0, 2 * np.pi, 100))
-def test_decomposed_v0_differs_from_the_original_one_only_by_phase(phi):
-    # Since v0 is unitary, multiplication of the form (const * v0) @ v0^dagger should be
-    # a scalar matrix, which is what this test checks.
-    expected_diag = (
-        v0_circuit(phi, 0, preserve_global_phase=False).as_unitary() @ _v0_ref(phi).conj().T
-    )
-    np.testing.assert_allclose(expected_diag, np.eye(2) * expected_diag[0, 0], atol=1e-10)
-
-
-@pytest.mark.parametrize("phi", np.linspace(0, 2 * np.pi, 100))
-def test_decomposed_v1_differs_from_the_original_one_only_by_phase(phi):
-    # See previous test for v0 for explanation of this test.
-    expected_diag = (
-        v1_circuit(phi, 0, preserve_global_phase=False).as_unitary() @ _v1_ref(phi).conj().T
-    )
-    np.testing.assert_allclose(expected_diag, np.eye(2) * expected_diag[0, 0], atol=1e-10)
+    _assert_is_equal_up_to_phase(actual, expected)

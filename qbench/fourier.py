@@ -22,45 +22,44 @@ def measurement_circuit(phi: float, target: int = 0) -> circuits.Circuit:
     return circuits.Circuit().h(target).phaseshift(target, phi).h(target)
 
 
-def global_phase_circuit(phi: float, target: int):
-    """Create a circuit applying global phase factor to target qubit.
-
-    The corresponding unitary is of the form diag(exp(i * phi), exp(i * phi)).
-
-    :param phi: Rotation angle defining phase.
-    :param target: Index of qubit global phase should be applied to.
-    :return: A circuit comprising gates shifting global phase of the target qubit.
-    """
-    return circuits.Circuit().phaseshift(target, 2 * phi).rz(target, -2 * phi)
-
-
-def v0_circuit(phi: float, target: int, preserve_global_phase=True):
+def v0_circuit(phi: float, target: int, native_only: bool = False):
     """Circuit implementing V0 operation on given qubit.
 
     :param phi: rotation angle.
     :param target: qubit V0 should be applied to
-    :param preserve_global_phase: whether the decomposition should preserve global phase.
-     This should matter only if V0 is used to construct a controlled gate, and is irrelevant
-     otherwise. To be on the safe side, the default is `True`. Note that including global phase
-     adds two more gates to the circuit.
+    :param native_only: use only gates native to current Rigetti QPUs. Use this if you
+     don't trust the compiler.
+    :return: Circuit performing V0 operation.
     """
-    circuit = (
-        global_phase_circuit(np.pi / 4, target) if preserve_global_phase else circuits.Circuit()
+    return (
+        circuits.Circuit()
+        .rx(target, np.pi / 2)
+        .rz(target, (phi + np.pi) / 2)
+        .rx(target, -np.pi / 2)
+        .rz(target, -np.pi / 2)
+        if native_only
+        else circuits.Circuit().ry(target, (phi + np.pi) / 2).rz(target, -np.pi / 2)
     )
-    return circuit.ry(target, (phi + np.pi) / 2).rz(target, -np.pi / 2)
 
 
-def v1_circuit(phi: float, target: int, preserve_global_phase=True):
+def v1_circuit(phi: float, target: int, native_only: bool = False):
     """Circuit implementing V0 operation on given qubit.
 
     :param phi: rotation angle.
-    :param target: qubit V1 should be applied to
-    :param preserve_global_phase: whether the decomposition should preserve global phase.
-     This should matter only if V1 is used to construct a controlled gate, and is irrelevant
-     otherwise. To be on the safe side, the default is `True`. Note that including global phase
-     adds two more gates to the circuit.
+    :param target: qubit V1 should be applied to.
+    :param native_only: use only gates native to current Rigetti QPUs. Use this if you
+     don't trust the compiler.
+    :return: Circuit performing V1 operation.
     """
-    circuit = (
-        global_phase_circuit(3 * np.pi / 4, target) if preserve_global_phase else circuits.Circuit()
+    return (
+        circuits.Circuit()
+        .rx(target, np.pi / 2)
+        .rz(target, (np.pi - phi) / 2)
+        .rx(target, -np.pi / 2)
+        .rz(target, np.pi / 2)
+        if native_only
+        else circuits.Circuit()
+        .rx(target, np.pi)
+        .ry(target, (phi + np.pi) / 2)
+        .rz(target, -np.pi / 2)
     )
-    return circuit.rx(target, np.pi).ry(target, (phi + np.pi) / 2).rz(target, -np.pi / 2)
