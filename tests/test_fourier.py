@@ -6,6 +6,7 @@ from qbench.fourier import (
     measurement_circuit,
     state_preparation_circuit,
     v0_circuit,
+    v0_v1_block_diagonal_circuit,
     v1_circuit,
 )
 
@@ -14,8 +15,8 @@ def _assert_is_equal_up_to_phase(actual, expected):
     quotient = actual / expected
     multipliers = quotient[~np.isnan(quotient)]
     assert multipliers.shape != (0,)
-    assert np.allclose(actual, expected * multipliers[0])
-    assert np.allclose(abs(multipliers[0]), 1)
+    np.testing.assert_allclose(actual, expected * multipliers[0])
+    np.testing.assert_allclose(abs(multipliers[0]), 1)
 
 
 def _v0_ref(phi):
@@ -44,6 +45,15 @@ def _v1_ref(phi):
             [np.sin(phi_adjusted), np.cos(phi_adjusted)],
         ]
     )
+
+
+def _swap_gate():
+    return np.array([[1, 0, 0, 0], [0, 0, 1, 0], [0, 1, 0, 0], [0, 0, 0, 1]])
+
+
+def _v0_v1_block_diag_ref(phi):
+    swap = _swap_gate()
+    return swap @ linalg.block_diag(_v0_ref(phi), _v1_ref(phi)) @ swap
 
 
 def test_initial_state_prepared_from_ket_zeros_is_maximally_entangled():
@@ -75,5 +85,14 @@ def test_decomposed_v0_is_equal_to_the_original_one(phi, native_only):
 def test_decomposed_v1_is_equal_to_the_original_one(phi, native_only):
     actual = v1_circuit(phi, 0, native_only=native_only).as_unitary()
     expected = _v1_ref(phi)
+
+    _assert_is_equal_up_to_phase(actual, expected)
+
+
+@pytest.mark.parametrize("native_only", [True, False])
+@pytest.mark.parametrize("phi", np.linspace(0, 2 * np.pi, 100))
+def test_decomposed_v0_v1_circuit_is_equal_to_the_original_one_up_to_phase(phi, native_only):
+    actual = v0_v1_block_diagonal_circuit(phi, 0, 1, native_only=native_only).as_unitary()
+    expected = _v0_v1_block_diag_ref(phi)
 
     _assert_is_equal_up_to_phase(actual, expected)

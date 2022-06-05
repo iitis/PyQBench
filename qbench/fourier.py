@@ -63,3 +63,26 @@ def v1_circuit(phi: float, target: int, native_only: bool = False):
         .ry(target, (phi + np.pi) / 2)
         .rz(target, -np.pi / 2)
     )
+
+
+def v0_v1_block_diagonal_circuit(phi, control, target, native_only: bool = True):
+    """Construct a block diagonal circuit V0 \oplus V1.
+
+    .. note::
+       Braket enumerates basis vectors in "reverse". Hence, unitary of this circuit
+       returned by `circuit.as_unitary() is not block-diagonal`, unless the qubits
+       are swapped. See accompanying tests to see how it's done.
+
+       The following article contains more details on basis vectors ordering used
+       (among others) by Braket:
+       https://arxiv.org/abs/1711.02086
+
+    :param phi: rotation angle for both V0 and V1 blocks.
+    :param control: index of the control qubit.
+    :param target: index of the target qubit.
+    :param native_only: use only gates native to Rigetti architecture.
+    :return: Circuit implementing V0 \oplus V1.
+    """
+    return circuits.Circuit().cnot(control, target) + v0_circuit(
+        phi, target, native_only=native_only
+    )
