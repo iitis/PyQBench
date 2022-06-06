@@ -66,7 +66,7 @@ def v1_circuit(phi: float, target: int, native_only: bool = False):
 
 
 def v0_v1_block_diagonal_circuit(phi, control, target, native_only: bool = True):
-    """Construct a block diagonal circuit V0 \oplus V1.
+    """Construct a block diagonal circuit V0 \\oplus V1.
 
     .. note::
        Braket enumerates basis vectors in "reverse". Hence, unitary of this circuit
@@ -81,7 +81,7 @@ def v0_v1_block_diagonal_circuit(phi, control, target, native_only: bool = True)
     :param control: index of the control qubit.
     :param target: index of the target qubit.
     :param native_only: use only gates native to Rigetti architecture.
-    :return: Circuit implementing V0 \oplus V1.
+    :return: Circuit implementing V0 \\oplus V1.
     """
     return circuits.Circuit().cnot(control, target) + v0_circuit(
         phi, target, native_only=native_only
