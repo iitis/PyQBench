@@ -9,8 +9,10 @@ def benchmark_using_postselection(
     target: int,
     ancilla: int,
     state_preparation: Callable[[int, int], circuits.Circuit],
+    basis_change: Callable[[int], circuits.Circuit],
     v0: Callable[[int, int], circuits.Circuit],
     v1: Callable[[int, int], circuits.Circuit],
+    num_shots_per_measurement: int,
 ) -> float:
 
     pass
