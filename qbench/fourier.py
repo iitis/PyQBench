@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable, Union
 
 import numpy as np
 from braket import circuits
@@ -96,3 +96,7 @@ def controlled_v0_v1(phi, native_only: bool = True):
         )
 
     return _circuit_factory
+
+
+def exact_probability(phi: Union[float, np.ndarray]) -> float:
+    return 0.5 + 0.25 * abs(1 + np.exp(1j * phi))

@@ -7,7 +7,7 @@ from qbench.fourier import (
     controlled_v0_v1,
     state_preparation_circuit,
     v0_circuit,
-    v1_circuit,
+    v1_circuit, exact_probability,
 )
 
 
@@ -96,3 +96,11 @@ def test_decomposed_v0_v1_circuit_is_equal_to_the_original_one_up_to_phase(phi, 
     expected = _v0_v1_block_diag_ref(phi)
 
     _assert_is_equal_up_to_phase(actual, expected)
+
+
+def test_computed_exact_probabilities_are_feasible():
+    phis = np.linspace(0, 2 * np.pi, 10000)
+
+    probs = exact_probability(phis)
+
+    assert np.all(probs >= 0) and np.all(probs <= 1)
