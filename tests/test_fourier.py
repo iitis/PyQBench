@@ -3,10 +3,10 @@ import pytest
 from scipy import linalg
 
 from qbench.fourier import (
-    measurement_circuit,
+    basis_change,
+    controlled_v0_v1,
     state_preparation_circuit,
     v0_circuit,
-    v0_v1_block_diagonal_circuit,
     v1_circuit,
 )
 
@@ -65,7 +65,7 @@ def test_initial_state_prepared_from_ket_zeros_is_maximally_entangled():
 
 @pytest.mark.parametrize("phi", [np.pi, np.pi / 4, np.pi / 5, np.sqrt(2), 0])
 def test_measurement_circuit_has_correct_unitary(phi):
-    circuit = measurement_circuit(phi)
+    circuit = basis_change(phi)(0)
     expected_unitary = linalg.dft(2) @ np.diag([1, np.exp(1j * phi)]) @ linalg.dft(2) / 2
 
     np.testing.assert_allclose(circuit.as_unitary(), expected_unitary, atol=1e-6)
@@ -92,7 +92,7 @@ def test_decomposed_v1_is_equal_to_the_original_one(phi, native_only):
 @pytest.mark.parametrize("native_only", [True, False])
 @pytest.mark.parametrize("phi", np.linspace(0, 2 * np.pi, 100))
 def test_decomposed_v0_v1_circuit_is_equal_to_the_original_one_up_to_phase(phi, native_only):
-    actual = v0_v1_block_diagonal_circuit(phi, 0, 1, native_only=native_only).as_unitary()
+    actual = controlled_v0_v1(phi, native_only=native_only)(0, 1).as_unitary()
     expected = _v0_v1_block_diag_ref(phi)
 
     _assert_is_equal_up_to_phase(actual, expected)
