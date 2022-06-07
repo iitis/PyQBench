@@ -12,8 +12,8 @@ def state_preparation_circuit(target: int = 0, ancilla: int = 1) -> circuits.Cir
     return circuits.Circuit().h(target).cnot(target, ancilla)
 
 
-def measurement_circuit(phi: float, target: int = 0) -> circuits.Circuit:
-    """Create von Neumann measurement circuit.
+def basis_change(phi: float, target: int = 0) -> circuits.Circuit:
+    """Create circuit changing basis in which qubit will be measured.
 
     :param phi: Rotation angle used in PHASE gate.
     :param target: Index of qubit on which von Neumann measurement will be performed.
