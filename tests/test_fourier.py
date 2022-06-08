@@ -12,12 +12,11 @@ from qbench.fourier import (
 )
 
 
-def _assert_is_equal_up_to_phase(actual, expected):
-    quotient = actual / expected
-    multipliers = quotient[~np.isnan(quotient)]
-    assert multipliers.shape != (0,)
-    np.testing.assert_allclose(actual, expected * multipliers[0])
-    np.testing.assert_allclose(abs(multipliers[0]), 1)
+def _assert_unitaries_equal_up_to_phase(actual, expected):
+    supposedly_scalar = actual @ expected.conj().T
+    np.testing.assert_allclose(
+        supposedly_scalar, np.diag([supposedly_scalar[0, 0]] * actual.shape[0]), atol=1e-10
+    )
 
 
 def _v0_ref(phi):
@@ -78,7 +77,7 @@ def test_decomposed_v0_dagger_is_equal_to_the_original_one(phi, native_only):
     actual = v0_dag_circuit(phi, native_only=native_only)(0).as_unitary()
     expected = _v0_ref(phi).conj().T
 
-    _assert_is_equal_up_to_phase(actual, expected)
+    _assert_unitaries_equal_up_to_phase(actual, expected)
 
 
 @pytest.mark.parametrize("native_only", [True, False])
@@ -87,7 +86,7 @@ def test_decomposed_v1_is_equal_to_the_original_one(phi, native_only):
     actual = v1_circuit_dag(phi, native_only=native_only)(0).as_unitary()
     expected = _v1_ref(phi).conj().T
 
-    _assert_is_equal_up_to_phase(actual, expected)
+    _assert_unitaries_equal_up_to_phase(actual, expected)
 
 
 @pytest.mark.parametrize("native_only", [True, False])
@@ -96,7 +95,7 @@ def test_decomposed_v0_v1_circuit_is_equal_to_the_original_one_up_to_phase(phi, 
     actual = controlled_v0_v1_dag(phi, native_only=native_only)(0, 1).as_unitary()
     expected = _v0_v1_block_diag_ref(phi).conj().T
 
-    _assert_is_equal_up_to_phase(actual, expected)
+    _assert_unitaries_equal_up_to_phase(actual, expected)
 
 
 def test_computed_exact_probabilities_are_feasible():
