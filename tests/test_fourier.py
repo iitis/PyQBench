@@ -73,7 +73,7 @@ def test_measurement_circuit_has_correct_unitary(phi):
 
 @pytest.mark.parametrize("native_only", [True, False])
 @pytest.mark.parametrize("phi", np.linspace(0, 2 * np.pi, 100))
-def test_decomposed_v0_dagger_is_equal_to_the_original_one(phi, native_only):
+def test_decomposed_v0_dagger_is_equal_to_the_original_one(phi: float, native_only):
     actual = v0_dag_circuit(phi, native_only=native_only)(0).as_unitary()
     expected = _v0_ref(phi).conj().T
 
@@ -82,7 +82,7 @@ def test_decomposed_v0_dagger_is_equal_to_the_original_one(phi, native_only):
 
 @pytest.mark.parametrize("native_only", [True, False])
 @pytest.mark.parametrize("phi", np.linspace(0, 2 * np.pi, 100))
-def test_decomposed_v1_is_equal_to_the_original_one(phi, native_only):
+def test_decomposed_v1_is_equal_to_the_original_one(phi: float, native_only):
     actual = v1_circuit_dag(phi, native_only=native_only)(0).as_unitary()
     expected = _v1_ref(phi).conj().T
 
