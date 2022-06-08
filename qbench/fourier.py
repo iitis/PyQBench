@@ -54,13 +54,12 @@ def v0_dag_circuit(phi: float, native_only: bool = False) -> Callable[[int], cir
     def _circuit_factory(target: int) -> circuits.Circuit:
         return (
             circuits.Circuit()
-            .z(target)
-            .rz(target, np.pi / 2)
+            .rz(target, -np.pi / 2)
             .rx(target, np.pi / 2)
             .rz(target, -(phi + np.pi) / 2)
             .rx(target, -np.pi / 2)
             if native_only
-            else (circuits.Circuit().z(target).rz(target, np.pi / 2).ry(target, -(phi + np.pi) / 2))
+            else (circuits.Circuit().rz(target, -np.pi / 2).ry(target, -(phi + np.pi) / 2))
         )
 
     return _circuit_factory
@@ -79,15 +78,13 @@ def v1_circuit_dag(phi: float, native_only: bool = False) -> Callable[[int], cir
     def _circuit_factory(target: int) -> circuits.Circuit:
         return (
             circuits.Circuit()
-            .z(target)
-            .rz(target, -np.pi / 2)
+            .rz(target, np.pi / 2)
             .rx(target, np.pi / 2)
             .rz(target, -(np.pi - phi) / 2)
             .rx(target, -np.pi / 2)
             if native_only
             else circuits.Circuit()
-            .z(target)
-            .rz(target, np.pi / 2)
+            .rz(target, -np.pi / 2)
             .ry(target, -(phi + np.pi) / 2)
             .rx(target, -np.pi)
         )
