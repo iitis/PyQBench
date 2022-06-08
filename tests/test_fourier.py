@@ -3,11 +3,12 @@ import pytest
 from scipy import linalg
 
 from qbench.fourier import (
-    basis_change,
-    controlled_v0_v1,
-    state_preparation_circuit,
-    v0_circuit,
-    v1_circuit, exact_probability,
+    controlled_v0_v1_dag,
+    discrimination_probability_upper_bound,
+    state_preparation,
+    unitary_to_discriminate,
+    v0_dag_circuit,
+    v1_circuit_dag,
 )
 
 
@@ -58,14 +59,14 @@ def _v0_v1_block_diag_ref(phi):
 
 def test_initial_state_prepared_from_ket_zeros_is_maximally_entangled():
     ket0 = np.array([1, 0, 0, 0])
-    circuit = state_preparation_circuit(0, 1)
+    circuit = state_preparation(0, 1)
 
     np.testing.assert_allclose(circuit.as_unitary() @ ket0, [1 / np.sqrt(2), 0, 0, 1 / np.sqrt(2)])
 
 
 @pytest.mark.parametrize("phi", [np.pi, np.pi / 4, np.pi / 5, np.sqrt(2), 0])
 def test_measurement_circuit_has_correct_unitary(phi):
-    circuit = basis_change(phi)(0)
+    circuit = unitary_to_discriminate(phi)(0)
     expected_unitary = linalg.dft(2) @ np.diag([1, np.exp(-1j * phi)]) @ linalg.dft(2) / 2
 
     np.testing.assert_allclose(circuit.as_unitary(), expected_unitary, atol=1e-6)
@@ -73,9 +74,9 @@ def test_measurement_circuit_has_correct_unitary(phi):
 
 @pytest.mark.parametrize("native_only", [True, False])
 @pytest.mark.parametrize("phi", np.linspace(0, 2 * np.pi, 100))
-def test_decomposed_v0_is_equal_to_the_original_one(phi, native_only):
-    actual = v0_circuit(phi, 0, native_only=native_only).as_unitary()
-    expected = _v0_ref(phi)
+def test_decomposed_v0_dagger_is_equal_to_the_original_one(phi, native_only):
+    actual = v0_dag_circuit(phi, native_only=native_only)(0).as_unitary()
+    expected = _v0_ref(phi).conj().T
 
     _assert_is_equal_up_to_phase(actual, expected)
 
@@ -83,8 +84,8 @@ def test_decomposed_v0_is_equal_to_the_original_one(phi, native_only):
 @pytest.mark.parametrize("native_only", [True, False])
 @pytest.mark.parametrize("phi", np.linspace(0, 2 * np.pi, 100))
 def test_decomposed_v1_is_equal_to_the_original_one(phi, native_only):
-    actual = v1_circuit(phi, 0, native_only=native_only).as_unitary()
-    expected = _v1_ref(phi)
+    actual = v1_circuit_dag(phi, native_only=native_only)(0).as_unitary()
+    expected = _v1_ref(phi).conj().T
 
     _assert_is_equal_up_to_phase(actual, expected)
 
@@ -92,8 +93,8 @@ def test_decomposed_v1_is_equal_to_the_original_one(phi, native_only):
 @pytest.mark.parametrize("native_only", [True, False])
 @pytest.mark.parametrize("phi", np.linspace(0, 2 * np.pi, 100))
 def test_decomposed_v0_v1_circuit_is_equal_to_the_original_one_up_to_phase(phi, native_only):
-    actual = controlled_v0_v1(phi, native_only=native_only)(0, 1).as_unitary()
-    expected = _v0_v1_block_diag_ref(phi)
+    actual = controlled_v0_v1_dag(phi, native_only=native_only)(0, 1).as_unitary()
+    expected = _v0_v1_block_diag_ref(phi).conj().T
 
     _assert_is_equal_up_to_phase(actual, expected)
 
@@ -101,6 +102,6 @@ def test_decomposed_v0_v1_circuit_is_equal_to_the_original_one_up_to_phase(phi, 
 def test_computed_exact_probabilities_are_feasible():
     phis = np.linspace(0, 2 * np.pi, 10000)
 
-    probs = exact_probability(phis)
+    probs = discrimination_probability_upper_bound(phis)
 
     assert np.all(probs >= 0) and np.all(probs <= 1)
