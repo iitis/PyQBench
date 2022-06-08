@@ -43,8 +43,9 @@ def v0_circuit(phi: float, target: int, native_only: bool = False):
         .rz(target, (phi + np.pi) / 2)
         .rx(target, -np.pi / 2)
         .rz(target, -np.pi / 2)
+        .z(target)
         if native_only
-        else circuits.Circuit().ry(target, (phi + np.pi) / 2).rz(target, -np.pi / 2)
+        else circuits.Circuit().ry(target, (phi + np.pi) / 2).rz(target, -np.pi / 2).z(target)
     )
 
 
@@ -63,11 +64,13 @@ def v1_circuit(phi: float, target: int, native_only: bool = False):
         .rz(target, (np.pi - phi) / 2)
         .rx(target, -np.pi / 2)
         .rz(target, np.pi / 2)
+        .z(target)
         if native_only
         else circuits.Circuit()
         .rx(target, np.pi)
         .ry(target, (phi + np.pi) / 2)
         .rz(target, -np.pi / 2)
+        .z(target)
     )
 
 
@@ -99,4 +102,4 @@ def controlled_v0_v1(phi, native_only: bool = True):
 
 
 def exact_probability(phi: Union[float, np.ndarray]) -> float:
-    return 0.5 + 0.25 * abs(1 + np.exp(1j * phi))
+    return 0.5 + 0.25 * abs(1 - np.exp(1j * phi))

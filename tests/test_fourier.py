@@ -28,7 +28,7 @@ def _v0_ref(phi):
     return np.array(
         [
             [1j * np.sin(phi_adjusted), -1j * np.cos(phi_adjusted)],
-            [np.cos(phi_adjusted), np.sin(phi_adjusted)],
+            [-np.cos(phi_adjusted), -np.sin(phi_adjusted)],
         ]
     )
 
@@ -41,7 +41,7 @@ def _v1_ref(phi):
     phi_adjusted = (np.pi - phi) / 4
     return np.array(
         [
-            [-1j * np.cos(phi_adjusted), 1j * np.sin(phi_adjusted)],
+            [1j * np.cos(phi_adjusted), -1j * np.sin(phi_adjusted)],
             [np.sin(phi_adjusted), np.cos(phi_adjusted)],
         ]
     )
@@ -66,7 +66,7 @@ def test_initial_state_prepared_from_ket_zeros_is_maximally_entangled():
 @pytest.mark.parametrize("phi", [np.pi, np.pi / 4, np.pi / 5, np.sqrt(2), 0])
 def test_measurement_circuit_has_correct_unitary(phi):
     circuit = basis_change(phi)(0)
-    expected_unitary = linalg.dft(2) @ np.diag([1, np.exp(1j * phi)]) @ linalg.dft(2) / 2
+    expected_unitary = linalg.dft(2) @ np.diag([1, np.exp(-1j * phi)]) @ linalg.dft(2) / 2
 
     np.testing.assert_allclose(circuit.as_unitary(), expected_unitary, atol=1e-6)
 
