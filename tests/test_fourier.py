@@ -7,8 +7,8 @@ from qbench.fourier import (
     discrimination_probability_upper_bound,
     state_preparation,
     unitary_to_discriminate,
-    v0_dag_circuit,
-    v1_circuit_dag,
+    v0_dag,
+    v1_dag,
 )
 
 
@@ -74,7 +74,7 @@ def test_measurement_circuit_has_correct_unitary(phi):
 @pytest.mark.parametrize("native_only", [True, False])
 @pytest.mark.parametrize("phi", np.linspace(0, 2 * np.pi, 100))
 def test_decomposed_v0_dagger_is_equal_to_the_original_one(phi: float, native_only):
-    actual = v0_dag_circuit(phi, native_only=native_only)(0).as_unitary()
+    actual = v0_dag(phi, native_only=native_only)(0).as_unitary()
     expected = _v0_ref(phi).conj().T
 
     _assert_unitaries_equal_up_to_phase(actual, expected)
@@ -83,7 +83,7 @@ def test_decomposed_v0_dagger_is_equal_to_the_original_one(phi: float, native_on
 @pytest.mark.parametrize("native_only", [True, False])
 @pytest.mark.parametrize("phi", np.linspace(0, 2 * np.pi, 100))
 def test_decomposed_v1_is_equal_to_the_original_one(phi: float, native_only):
-    actual = v1_circuit_dag(phi, native_only=native_only)(0).as_unitary()
+    actual = v1_dag(phi, native_only=native_only)(0).as_unitary()
     expected = _v1_ref(phi).conj().T
 
     _assert_unitaries_equal_up_to_phase(actual, expected)
