@@ -123,11 +123,13 @@ def controlled_v0_v1_dag(phi, native_only: bool = True):
     return _circuit_factory
 
 
-def discrimination_probability_upper_bound(phi: Union[float, np.ndarray]) -> float:
+def discrimination_probability_upper_bound(
+    phi: Union[float, np.ndarray]
+) -> Union[float, np.ndarray]:
     """Compute upper bound on the probability of discrimination.
 
     :param phi: angle parametrizing the performed measurement.
     :return: maximum probability with which identity and P_U(phi)
      can be discriminated
     """
-    return 0.5 + 0.25 * abs(1 - np.exp(1j * phi))
+    return 0.5 + 0.25 * np.abs(1 - np.exp(1j * phi))
