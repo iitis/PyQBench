@@ -41,7 +41,7 @@ def unitary_to_discriminate(phi: float) -> Callable[[int], circuits.Circuit]:
     return _circuit_factory
 
 
-def v0_dag_circuit(phi: float, native_only: bool = False) -> Callable[[int], circuits.Circuit]:
+def v0_dag(phi: float, native_only: bool = False) -> Callable[[int], circuits.Circuit]:
     """Return function producing positive part of Holevo-Helstrom measurement.
 
     :param phi: rotation angle.
@@ -65,7 +65,7 @@ def v0_dag_circuit(phi: float, native_only: bool = False) -> Callable[[int], cir
     return _circuit_factory
 
 
-def v1_circuit_dag(phi: float, native_only: bool = False) -> Callable[[int], circuits.Circuit]:
+def v1_dag(phi: float, native_only: bool = False) -> Callable[[int], circuits.Circuit]:
     """Return function producing positive part of Holevo-Helstrom measurement.
 
     :param phi: rotation angle.
@@ -116,7 +116,7 @@ def controlled_v0_v1_dag(phi, native_only: bool = True):
     def _circuit_factory(target, ancilla) -> circuits.Circuit:
         return (
             circuits.Circuit().phaseshift(target, np.pi)
-            + v0_dag_circuit(phi, native_only=native_only)(ancilla)
+            + v0_dag(phi, native_only=native_only)(ancilla)
             + circuits.Circuit().cnot(target, ancilla)
         )
 
