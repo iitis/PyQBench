@@ -1,5 +1,7 @@
 from collections import Counter
 
+import pytest
+
 from qbench.utils import count_specific_measurements
 
 
