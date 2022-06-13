@@ -3,9 +3,7 @@ import pytest
 from braket import devices
 
 from qbench import fourier
-from qbench.direct import (
-    benchmark_using_controlled_unitary,
-)
+from qbench.direct import benchmark_using_controlled_unitary
 
 
 @pytest.mark.parametrize("phi", np.linspace(0, 2 * np.pi, 100))

@@ -1,5 +1,5 @@
 """Module implementing direct experiment."""
-from typing import Callable, Counter
+from typing import Callable
 
 from braket import circuits, devices
 
