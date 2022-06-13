@@ -30,12 +30,8 @@ def benchmark_using_postselection_all_cases(
     u_results_v1 = device.run(u_circuit_v1, shots=num_shots_per_measurement).result()
 
     return (
-        1
-        / 2
-        * (
-            u_results_v0.measurement_counts["00"] / num_shots_per_measurement
-            + u_results_v1.measurement_counts["10"] / num_shots_per_measurement
-            + identity_v0_results.measurement_counts["01"] / num_shots_per_measurement
-            + identity_v1_results.measurement_counts["11"] / num_shots_per_measurement
-        )
-    )
+        u_results_v0.measurement_counts["00"]
+        + u_results_v1.measurement_counts["10"]
+        + identity_v0_results.measurement_counts["01"]
+        + identity_v1_results.measurement_counts["11"]
+    ) / (2 * num_shots_per_measurement)
