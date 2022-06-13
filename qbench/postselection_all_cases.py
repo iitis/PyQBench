@@ -3,6 +3,8 @@ from typing import Callable
 
 from braket import circuits, devices
 
+from qbench.utils import count_specific_measurements
+
 
 def benchmark_using_postselection_all_cases(
     device: devices.Device,
@@ -29,13 +31,25 @@ def benchmark_using_postselection_all_cases(
     u_results_v0 = device.run(u_circuit_v0, shots=num_shots_per_measurement).result()
     u_results_v1 = device.run(u_circuit_v1, shots=num_shots_per_measurement).result()
 
-    return min(
-        (
-            u_results_v0.measurement_counts["00"]
-            + u_results_v1.measurement_counts["10"]
-            + identity_v0_results.measurement_counts["01"]
-            + identity_v1_results.measurement_counts["11"]
+    return (
+        u_results_v0.measurement_counts["00"]
+        / count_specific_measurements(
+            u_results_v0.measurement_counts, u_results_v0.measured_qubits.index(target), 0
         )
-        / (2 * num_shots_per_measurement),
-        1,
-    )
+        + u_results_v1.measurement_counts["10"]
+        / count_specific_measurements(
+            u_results_v1.measurement_counts, u_results_v1.measured_qubits.index(target), 1
+        )
+        + identity_v0_results.measurement_counts["01"]
+        / count_specific_measurements(
+            identity_v0_results.measurement_counts,
+            identity_v0_results.measured_qubits.index(target),
+            0,
+        )
+        + identity_v1_results.measurement_counts["11"]
+        / count_specific_measurements(
+            identity_v1_results.measurement_counts,
+            identity_v1_results.measured_qubits.index(target),
+            1,
+        )
+    ) / 4
