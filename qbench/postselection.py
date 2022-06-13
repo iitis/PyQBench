@@ -3,13 +3,7 @@ from typing import Callable, Counter
 
 from braket import circuits, devices
 
-
-def count_specific_measurements(measurement_counts: Counter, qubit_index: int, qubit_value: int):
-    return sum(
-        count
-        for bitstring, count in measurement_counts.items()
-        if int(bitstring[qubit_index]) == qubit_value
-    )
+from qbench.utils import count_specific_measurements
 
 
 def benchmark_using_postselection(
