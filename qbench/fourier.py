@@ -5,6 +5,14 @@ from braket import circuits
 
 
 class FourierCircuits:
+    """Class creating circuits for Fourier-measurement experiment.
+
+    :param phi: Fourier angle of measurement to discriminate.
+    :param native_only: whether to only use gates native to Rigetti architecture.
+     Defaults to faults, in which case gates in the circuits will be compiled by
+     Braket.
+    """
+
     def __init__(self, phi: float, native_only: bool = False):
         self.phi = phi
         self.native_only = native_only
@@ -25,29 +33,23 @@ class FourierCircuits:
         return circuits.Circuit().h(target).cnot(target, ancilla)
 
     def unitary_to_discriminate(self, qubit: int) -> circuits.Circuit:
-        """Create function that produces a unitary channel parametrized by angle phi.
+        """Create a unitary channel corresponding to the measurement to discriminate.
 
         .. note::
            The returned circuits can be viewed as a change of basis in which von Neumann
-           measurement is to be performed and it looks as follows (assuming target=0).
+           measurement is to be performed, and it looks as follows (assuming qubit=0).
 
            0: ───H───Phase(-ϕ)───H───
 
-        :param phi: Rotation angle used in PHASE gate.
-        :return: A function mapping qubit index (target) to circuit implementing
-         appropriate unitary channel.
+        :return: A circuit implementing appropriate unitary channel.
         """
 
         return circuits.Circuit().h(qubit).phaseshift(qubit, -self.phi).h(qubit)
 
     def v0_dag(self, qubit: int) -> circuits.Circuit:
-        """Return function producing positive part of Holevo-Helstrom measurement.
+        """Create circuit corresponding to the positive part of Holevo-Helstrom measurement.
 
-        :param phi: rotation angle.
-        :param native_only: use only gates native to current Rigetti QPUs. Use this if you
-         don't trust the compiler.
-        :return: Function mapping qubit to a circuit implementing positive part of
-         Holevo-Helstrom measurement.
+        :return: A circuit implementing positive part of Holevo-Helstrom measurement.
         """
         return (
             circuits.Circuit()
@@ -60,13 +62,9 @@ class FourierCircuits:
         )
 
     def v1_dag(self, qubit) -> circuits.Circuit:
-        """Return function producing positive part of Holevo-Helstrom measurement.
+        """Create circuit corresponding to the negative part of Holevo-Helstrom measurement.
 
-        :param phi: rotation angle.
-        :param native_only: use only gates native to current Rigetti QPUs. Use this if you
-         don't trust the compiler.
-        :return: Function mapping qubit to a circuit implementing positive part of
-         Holevo-Helstrom measurement.
+        :return: A circuit implementing positive part of Holevo-Helstrom measurement.
         """
 
         return (
@@ -83,7 +81,7 @@ class FourierCircuits:
         )
 
     def controlled_v0_v1_dag(self, target: int, ancilla: int) -> circuits.Circuit:
-        """Create a function producing controlled Holevo-Helstrom measurement.
+        """Create circuit implementing controlled Holevo-Helstrom measurement.
 
         .. note::
            In usual basis ordering, the unitaries produced by this function would be
@@ -98,8 +96,6 @@ class FourierCircuits:
            (among others) by Braket:
            https://arxiv.org/abs/1711.02086
 
-        :param phi: rotation angle for positive and negative part.
-        :param native_only: use only gates native to Rigetti architecture.
         :return: Circuit implementing V0 \\oplus V1.
         """
         return (
