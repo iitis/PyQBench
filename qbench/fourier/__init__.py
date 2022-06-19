@@ -1,7 +1,32 @@
-from typing import Union
+from typing import Optional, Protocol, Union
 
 import numpy as np
 from braket import circuits
+
+from . import _generic, _rigetti
+
+
+class CircuitsImplementation(Protocol):
+    def _state_preparation(self, target: int, ancilla: int) -> circuits.Circuit:
+        pass
+
+    def _black_box_dag(self, qubit: int, phi: float) -> circuits.Circuit:
+        pass
+
+    def _v0_dag(self, qubit: int, phi: float) -> circuits.Circuit:
+        pass
+
+    def _v1_dag(self, qubit: int, phi: float) -> circuits.Circuit:
+        pass
+
+    def _v0_v1_direct_sum(self, target: int, ancilla: int, phi: float) -> circuits.Circuit:
+        pass
+
+
+_DIALECT_MAPPING: dict[Optional[str], CircuitsImplementation] = {
+    "rigetti": _rigetti,
+    None: _generic,
+}
 
 
 class FourierCircuits:
@@ -13,12 +38,11 @@ class FourierCircuits:
      Braket.
     """
 
-    def __init__(self, phi: float, native_only: bool = False):
+    def __init__(self, phi: float, dialect: Optional[str] = None):
         self.phi = phi
-        self.native_only = native_only
+        self._module = _DIALECT_MAPPING[dialect]
 
-    @staticmethod
-    def state_preparation(target: int, ancilla: int) -> circuits.Circuit:
+    def state_preparation(self, target: int, ancilla: int) -> circuits.Circuit:
         """Create circuit initializing system into maximally entangled state.
 
         .. note::
@@ -30,7 +54,7 @@ class FourierCircuits:
 
         :return: A circuit mapping |00> to (|00> + |11>) / sqrt(2).
         """
-        return circuits.Circuit().h(target).cnot(target, ancilla)
+        return self._module._state_preparation(target, ancilla)
 
     def unitary_to_discriminate(self, qubit: int) -> circuits.Circuit:
         """Create a unitary channel corresponding to the measurement to discriminate.
@@ -44,41 +68,21 @@ class FourierCircuits:
         :return: A circuit implementing appropriate unitary channel.
         """
 
-        return circuits.Circuit().h(qubit).phaseshift(qubit, -self.phi).h(qubit)
+        return self._module._black_box_dag(qubit, self.phi)
 
     def v0_dag(self, qubit: int) -> circuits.Circuit:
         """Create circuit corresponding to the positive part of Holevo-Helstrom measurement.
 
         :return: A circuit implementing positive part of Holevo-Helstrom measurement.
         """
-        return (
-            circuits.Circuit()
-            .rz(qubit, -np.pi / 2)
-            .rx(qubit, np.pi / 2)
-            .rz(qubit, -(self.phi + np.pi) / 2)
-            .rx(qubit, -np.pi / 2)
-            if self.native_only
-            else (circuits.Circuit().rz(qubit, -np.pi / 2).ry(qubit, -(self.phi + np.pi) / 2))
-        )
+        return self._module._v0_dag(qubit, self.phi)
 
     def v1_dag(self, qubit) -> circuits.Circuit:
         """Create circuit corresponding to the negative part of Holevo-Helstrom measurement.
 
         :return: A circuit implementing positive part of Holevo-Helstrom measurement.
         """
-
-        return (
-            circuits.Circuit()
-            .rz(qubit, np.pi / 2)
-            .rx(qubit, np.pi / 2)
-            .rz(qubit, -(np.pi - self.phi) / 2)
-            .rx(qubit, -np.pi / 2)
-            if self.native_only
-            else circuits.Circuit()
-            .rz(qubit, -np.pi / 2)
-            .ry(qubit, -(self.phi + np.pi) / 2)
-            .rx(qubit, -np.pi)
-        )
+        return self._module._v1_dag(qubit, self.phi)
 
     def controlled_v0_v1_dag(self, target: int, ancilla: int) -> circuits.Circuit:
         """Create circuit implementing controlled Holevo-Helstrom measurement.
@@ -98,11 +102,7 @@ class FourierCircuits:
 
         :return: Circuit implementing V0 \\oplus V1.
         """
-        return (
-            circuits.Circuit().phaseshift(target, np.pi)
-            + self.v0_dag(ancilla)
-            + circuits.Circuit().cnot(target, ancilla)
-        )
+        return self._module._v0_v1_direct_sum(target, ancilla, self.phi)
 
 
 def discrimination_probability_upper_bound(
