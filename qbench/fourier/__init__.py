@@ -1,4 +1,4 @@
-from typing import Optional, Protocol, Union
+from typing import Optional, Protocol, Union, cast
 
 import numpy as np
 from braket import circuits
@@ -24,9 +24,9 @@ class CircuitsImplementation(Protocol):
 
 
 _GATESET_MAPPING = {
-    "lucy": _lucy,
-    "rigetti": _rigetti,
-    None: _generic,
+    "lucy": cast(CircuitsImplementation, _lucy),
+    "rigetti": cast(CircuitsImplementation, _rigetti),
+    None: cast(CircuitsImplementation, _generic),
 }
 
 
