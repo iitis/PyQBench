@@ -4,6 +4,23 @@ import numpy as np
 from braket import circuits
 
 
+def _rigetti_hadamard(qubit):
+    """Decomposition of Hadamard gate using only Rigetti native gates.
+
+    The decomposition uses the identity: H = RX(pi/2) RZ(pi/2) RX(pi/2)
+    """
+    return circuits.Circuit().rx(qubit, np.pi / 2).rz(qubit, np.pi / 2).rx(qubit, np.pi / 2)
+
+
+def _rigetti_cnot(control, target):
+    """Decomposition of CNOT gate using only Rigetti native gates.
+
+    The decomposition uses identity: CNOT(i, j) = H(j) CZ(i, j) H(j), and the hadamard gates
+    are decomposed using _rigetti_hadamard function.
+    """
+    return _rigetti_hadamard(target).cz(control, target) + _rigetti_hadamard(target)
+
+
 class FourierCircuits:
     """Class creating circuits for Fourier-measurement experiment.
 
