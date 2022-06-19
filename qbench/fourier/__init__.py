@@ -1,4 +1,4 @@
-from typing import Dict, Optional, Protocol, Union
+from typing import Optional, Protocol, Union
 
 import numpy as np
 from braket import circuits
@@ -23,7 +23,7 @@ class CircuitsImplementation(Protocol):
         pass
 
 
-_GATESET_MAPPING: Dict[Optional[str], CircuitsImplementation] = {
+_GATESET_MAPPING = {
     "lucy": _lucy,
     "rigetti": _rigetti,
     None: _generic,
