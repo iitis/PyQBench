@@ -3,7 +3,7 @@ from typing import Optional, Protocol, Union
 import numpy as np
 from braket import circuits
 
-from . import _generic, _rigetti
+from . import _generic, _lucy, _rigetti
 
 
 class CircuitsImplementation(Protocol):
@@ -24,6 +24,7 @@ class CircuitsImplementation(Protocol):
 
 
 _GATESET_MAPPING: dict[Optional[str], CircuitsImplementation] = {
+    "lucy": _lucy,
     "rigetti": _rigetti,
     None: _generic,
 }
