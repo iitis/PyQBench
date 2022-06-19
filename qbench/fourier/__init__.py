@@ -23,7 +23,7 @@ class CircuitsImplementation(Protocol):
         pass
 
 
-_DIALECT_MAPPING: dict[Optional[str], CircuitsImplementation] = {
+_GATESET_MAPPING: dict[Optional[str], CircuitsImplementation] = {
     "rigetti": _rigetti,
     None: _generic,
 }
@@ -38,9 +38,9 @@ class FourierCircuits:
      Braket.
     """
 
-    def __init__(self, phi: float, dialect: Optional[str] = None):
+    def __init__(self, phi: float, gateset: Optional[str] = None):
         self.phi = phi
-        self._module = _DIALECT_MAPPING[dialect]
+        self._module = _GATESET_MAPPING[gateset]
 
     def state_preparation(self, target: int, ancilla: int) -> circuits.Circuit:
         """Create circuit initializing system into maximally entangled state.

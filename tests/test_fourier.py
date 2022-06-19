@@ -53,42 +53,42 @@ def _proj(ket):
     return np.outer(ket, ket.conj())
 
 
-@pytest.mark.parametrize("dialect", [None, "rigetti"])
+@pytest.mark.parametrize("gateset", [None, "rigetti"])
 class TestFourierCircuits:
-    def test_initial_state_prepared_from_ket_zeros_is_maximally_entangled(self, dialect):
+    def test_initial_state_prepared_from_ket_zeros_is_maximally_entangled(self, gateset):
         bell = np.array([1 / np.sqrt(2), 0, 0, 1 / np.sqrt(2)])
         expected_proj = _proj(bell)
 
-        circuit = FourierCircuits(phi=0.1, dialect=dialect).state_preparation(0, 1)
+        circuit = FourierCircuits(phi=0.1, gateset=gateset).state_preparation(0, 1)
         actual_proj = _proj(circuit.as_unitary()[:, 0])
         np.testing.assert_allclose(actual_proj, expected_proj, atol=1e-10)
 
     @pytest.mark.parametrize("phi", [np.pi, np.pi / 4, np.pi / 5, np.sqrt(2), 0])
-    def test_black_box_has_correct_unitary(self, phi, dialect):
-        circuit = FourierCircuits(phi=phi, dialect=dialect).unitary_to_discriminate(0)
+    def test_black_box_has_correct_unitary(self, phi, gateset):
+        circuit = FourierCircuits(phi=phi, gateset=gateset).unitary_to_discriminate(0)
         expected_unitary = linalg.dft(2) @ np.diag([1, np.exp(-1j * phi)]) @ linalg.dft(2) / 2
 
         _assert_unitaries_equal_up_to_phase(circuit.as_unitary(), expected_unitary)
 
     @pytest.mark.parametrize("phi", np.linspace(0, 2 * np.pi, 100))
-    def test_decomposed_v0_dagger_is_equal_to_the_original_one(self, phi: float, dialect):
-        actual = FourierCircuits(phi=phi, dialect=dialect).v0_dag(0).as_unitary()
+    def test_decomposed_v0_dagger_is_equal_to_the_original_one(self, phi: float, gateset):
+        actual = FourierCircuits(phi=phi, gateset=gateset).v0_dag(0).as_unitary()
         expected = _v0_ref(phi).conj().T
 
         _assert_unitaries_equal_up_to_phase(actual, expected)
 
     @pytest.mark.parametrize("phi", np.linspace(0, 2 * np.pi, 100))
-    def test_decomposed_v1_is_equal_to_the_original_one(self, phi: float, dialect):
-        actual = FourierCircuits(phi=phi, dialect=dialect).v1_dag(0).as_unitary()
+    def test_decomposed_v1_is_equal_to_the_original_one(self, phi: float, gateset):
+        actual = FourierCircuits(phi=phi, gateset=gateset).v1_dag(0).as_unitary()
         expected = _v1_ref(phi).conj().T
 
         _assert_unitaries_equal_up_to_phase(actual, expected)
 
     @pytest.mark.parametrize("phi", np.linspace(0, 2 * np.pi, 100))
     def test_decomposed_v0_v1_circuit_is_equal_to_the_original_one_up_to_phase(
-        self, phi: float, dialect
+        self, phi: float, gateset
     ):
-        actual = FourierCircuits(phi=phi, dialect=dialect).controlled_v0_v1_dag(0, 1).as_unitary()
+        actual = FourierCircuits(phi=phi, gateset=gateset).controlled_v0_v1_dag(0, 1).as_unitary()
         expected = _v0_v1_block_diag_ref(phi).conj().T
 
         _assert_unitaries_equal_up_to_phase(actual, expected)
