@@ -48,7 +48,7 @@ def _v0_dag(qubit, phi):
 
 
 def _v1_dag(qubit, phi):
-    (
+    return (
         circuits.Circuit()
         .rz(qubit, np.pi / 2)
         .rx(qubit, np.pi / 2)
