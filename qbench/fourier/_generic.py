@@ -7,7 +7,7 @@ def _state_preparation(target, ancilla):
 
 
 def _black_box_dag(qubit, phi):
-    return circuits.Circuit().h(qubit).phaseshift(qubit, phi).h(qubit)
+    return circuits.Circuit().h(qubit).phaseshift(qubit, -phi).h(qubit)
 
 
 def _v0_dag(qubit, phi):
