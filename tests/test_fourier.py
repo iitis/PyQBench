@@ -45,8 +45,7 @@ def _swap_gate():
 
 
 def _v0_v1_block_diag_ref(phi):
-    swap = _swap_gate()
-    return swap @ linalg.block_diag(_v0_ref(phi), _v1_ref(phi)) @ swap
+    return linalg.block_diag(_v0_ref(phi), _v1_ref(phi))
 
 
 def _proj(ket):
@@ -60,7 +59,7 @@ class TestFourierCircuits:
         expected_proj = _proj(bell)
 
         circuit = FourierCircuits(phi=0.1, gateset=gateset).state_preparation(0, 1)
-        actual_proj = _proj(circuit.as_unitary()[:, 0])
+        actual_proj = _proj(circuit.to_unitary()[:, 0])
         np.testing.assert_allclose(actual_proj, expected_proj, atol=1e-10)
 
     @pytest.mark.parametrize("phi", [np.pi, np.pi / 4, np.pi / 5, np.sqrt(2), 0])
@@ -68,18 +67,18 @@ class TestFourierCircuits:
         circuit = FourierCircuits(phi=phi, gateset=gateset).unitary_to_discriminate(0)
         expected_unitary = linalg.dft(2) @ np.diag([1, np.exp(-1j * phi)]) @ linalg.dft(2) / 2
 
-        _assert_unitaries_equal_up_to_phase(circuit.as_unitary(), expected_unitary)
+        _assert_unitaries_equal_up_to_phase(circuit.to_unitary(), expected_unitary)
 
     @pytest.mark.parametrize("phi", np.linspace(0, 2 * np.pi, 100))
     def test_decomposed_v0_dagger_is_equal_to_the_original_one(self, phi: float, gateset):
-        actual = FourierCircuits(phi=phi, gateset=gateset).v0_dag(0).as_unitary()
+        actual = FourierCircuits(phi=phi, gateset=gateset).v0_dag(0).to_unitary()
         expected = _v0_ref(phi).conj().T
 
         _assert_unitaries_equal_up_to_phase(actual, expected)
 
     @pytest.mark.parametrize("phi", np.linspace(0, 2 * np.pi, 100))
     def test_decomposed_v1_is_equal_to_the_original_one(self, phi: float, gateset):
-        actual = FourierCircuits(phi=phi, gateset=gateset).v1_dag(0).as_unitary()
+        actual = FourierCircuits(phi=phi, gateset=gateset).v1_dag(0).to_unitary()
         expected = _v1_ref(phi).conj().T
 
         _assert_unitaries_equal_up_to_phase(actual, expected)
@@ -88,7 +87,7 @@ class TestFourierCircuits:
     def test_decomposed_v0_v1_circuit_is_equal_to_the_original_one_up_to_phase(
         self, phi: float, gateset
     ):
-        actual = FourierCircuits(phi=phi, gateset=gateset).controlled_v0_v1_dag(0, 1).as_unitary()
+        actual = FourierCircuits(phi=phi, gateset=gateset).controlled_v0_v1_dag(0, 1).to_unitary()
         expected = _v0_v1_block_diag_ref(phi).conj().T
 
         _assert_unitaries_equal_up_to_phase(actual, expected)
