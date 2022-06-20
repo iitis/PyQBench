@@ -5,14 +5,14 @@ from matplotlib import pyplot as plt
 from qbench.fourier import FourierCircuits, discrimination_probability_upper_bound
 from qbench.postselection_all_cases import benchmark_using_postselection_all_cases
 
-NUM_SHOTS_PER_MEASUREMENT = 10000
+NUM_SHOTS_PER_MEASUREMENT = 1000
 TARGET = 0
 ANCILLA = 1
-NATIVE_ONLY = True
+GATESET = "rigetti"
 
 
 def main():
-    device = devices.LocalSimulator(backend="braket_dm")
+    device = devices.LocalSimulator()
     phis = np.linspace(0, 2 * np.pi, 100)
 
     theoretical_probs = discrimination_probability_upper_bound(phis)
@@ -28,7 +28,7 @@ def main():
             v1=circuits.v1_dag,
             num_shots_per_measurement=NUM_SHOTS_PER_MEASUREMENT,
         )
-        for circuits in (FourierCircuits(phi, native_only=NATIVE_ONLY) for phi in phis)
+        for circuits in (FourierCircuits(phi, gateset=GATESET) for phi in phis)
     ]
 
     fig, ax = plt.subplots()

@@ -7,10 +7,10 @@ from qbench.postselection import benchmark_using_postselection
 
 
 @pytest.mark.parametrize("phi", np.linspace(0, 2 * np.pi, 100))
-@pytest.mark.parametrize("native_only", [False, True])
-def test_computed_discrimination_probability_is_feasible(phi: float, native_only):
+@pytest.mark.parametrize("gateset", [None, "rigetti", "lucy"])
+def test_computed_discrimination_probability_is_feasible(phi: float, gateset):
     device = devices.LocalSimulator()
-    circuits = FourierCircuits(phi=phi, native_only=native_only)
+    circuits = FourierCircuits(phi=phi, gateset=gateset)
 
     probability = benchmark_using_postselection(
         device=device,

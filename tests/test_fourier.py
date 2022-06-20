@@ -49,48 +49,49 @@ def _v0_v1_block_diag_ref(phi):
     return swap @ linalg.block_diag(_v0_ref(phi), _v1_ref(phi)) @ swap
 
 
-def test_initial_state_prepared_from_ket_zeros_is_maximally_entangled():
-    ket0 = np.array([1, 0, 0, 0])
-    circuit = FourierCircuits(phi=0.1).state_preparation(0, 1)
-
-    np.testing.assert_allclose(circuit.as_unitary() @ ket0, [1 / np.sqrt(2), 0, 0, 1 / np.sqrt(2)])
+def _proj(ket):
+    return np.outer(ket, ket.conj())
 
 
-@pytest.mark.parametrize("phi", [np.pi, np.pi / 4, np.pi / 5, np.sqrt(2), 0])
-def test_measurement_circuit_has_correct_unitary(phi):
-    circuit = FourierCircuits(phi=phi).unitary_to_discriminate(0)
-    expected_unitary = linalg.dft(2) @ np.diag([1, np.exp(-1j * phi)]) @ linalg.dft(2) / 2
+@pytest.mark.parametrize("gateset", [None, "lucy", "rigetti"])
+class TestFourierCircuits:
+    def test_initial_state_prepared_from_ket_zeros_is_maximally_entangled(self, gateset):
+        bell = np.array([1 / np.sqrt(2), 0, 0, 1 / np.sqrt(2)])
+        expected_proj = _proj(bell)
 
-    np.testing.assert_allclose(circuit.as_unitary(), expected_unitary, atol=1e-6)
+        circuit = FourierCircuits(phi=0.1, gateset=gateset).state_preparation(0, 1)
+        actual_proj = _proj(circuit.as_unitary()[:, 0])
+        np.testing.assert_allclose(actual_proj, expected_proj, atol=1e-10)
 
+    @pytest.mark.parametrize("phi", [np.pi, np.pi / 4, np.pi / 5, np.sqrt(2), 0])
+    def test_black_box_has_correct_unitary(self, phi, gateset):
+        circuit = FourierCircuits(phi=phi, gateset=gateset).unitary_to_discriminate(0)
+        expected_unitary = linalg.dft(2) @ np.diag([1, np.exp(-1j * phi)]) @ linalg.dft(2) / 2
 
-@pytest.mark.parametrize("native_only", [True, False])
-@pytest.mark.parametrize("phi", np.linspace(0, 2 * np.pi, 100))
-def test_decomposed_v0_dagger_is_equal_to_the_original_one(phi: float, native_only):
-    actual = FourierCircuits(phi=phi, native_only=native_only).v0_dag(0).as_unitary()
-    expected = _v0_ref(phi).conj().T
+        _assert_unitaries_equal_up_to_phase(circuit.as_unitary(), expected_unitary)
 
-    _assert_unitaries_equal_up_to_phase(actual, expected)
+    @pytest.mark.parametrize("phi", np.linspace(0, 2 * np.pi, 100))
+    def test_decomposed_v0_dagger_is_equal_to_the_original_one(self, phi: float, gateset):
+        actual = FourierCircuits(phi=phi, gateset=gateset).v0_dag(0).as_unitary()
+        expected = _v0_ref(phi).conj().T
 
+        _assert_unitaries_equal_up_to_phase(actual, expected)
 
-@pytest.mark.parametrize("native_only", [True, False])
-@pytest.mark.parametrize("phi", np.linspace(0, 2 * np.pi, 100))
-def test_decomposed_v1_is_equal_to_the_original_one(phi: float, native_only):
-    actual = FourierCircuits(phi=phi, native_only=native_only).v1_dag(0).as_unitary()
-    expected = _v1_ref(phi).conj().T
+    @pytest.mark.parametrize("phi", np.linspace(0, 2 * np.pi, 100))
+    def test_decomposed_v1_is_equal_to_the_original_one(self, phi: float, gateset):
+        actual = FourierCircuits(phi=phi, gateset=gateset).v1_dag(0).as_unitary()
+        expected = _v1_ref(phi).conj().T
 
-    _assert_unitaries_equal_up_to_phase(actual, expected)
+        _assert_unitaries_equal_up_to_phase(actual, expected)
 
+    @pytest.mark.parametrize("phi", np.linspace(0, 2 * np.pi, 100))
+    def test_decomposed_v0_v1_circuit_is_equal_to_the_original_one_up_to_phase(
+        self, phi: float, gateset
+    ):
+        actual = FourierCircuits(phi=phi, gateset=gateset).controlled_v0_v1_dag(0, 1).as_unitary()
+        expected = _v0_v1_block_diag_ref(phi).conj().T
 
-@pytest.mark.parametrize("native_only", [True, False])
-@pytest.mark.parametrize("phi", np.linspace(0, 2 * np.pi, 100))
-def test_decomposed_v0_v1_circuit_is_equal_to_the_original_one_up_to_phase(phi, native_only):
-    actual = (
-        FourierCircuits(phi=phi, native_only=native_only).controlled_v0_v1_dag(0, 1).as_unitary()
-    )
-    expected = _v0_v1_block_diag_ref(phi).conj().T
-
-    _assert_unitaries_equal_up_to_phase(actual, expected)
+        _assert_unitaries_equal_up_to_phase(actual, expected)
 
 
 def test_computed_exact_probabilities_are_feasible():
