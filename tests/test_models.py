@@ -90,3 +90,4 @@ class TestAngleDescription:
     def test_can_be_parsed_from_correct_input(self, input):
         with pytest.raises(ValidationError):
             AngleDescription(**input)
+            

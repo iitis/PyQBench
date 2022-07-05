@@ -23,3 +23,4 @@ class AngleDescription(BaseModel):
 
 class ResultDescription(BaseModel):
     pass
+    
