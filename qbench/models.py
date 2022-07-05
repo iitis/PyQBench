@@ -12,3 +12,12 @@ class ExperimentDescription(BaseModel):
     angle: dict 
     method: str
     number_of_shots: int
+
+class QubitsDescription(BaseModel):
+    pass
+
+class AngleDescription(BaseModel):
+    pass
+
+class ResultDescription(BaseModel):
+    pass

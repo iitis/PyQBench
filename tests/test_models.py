@@ -1,6 +1,6 @@
 from pydantic import ValidationError
 import pytest
-from qbench.models import DeviceDescription, ExperimentDescription
+from qbench.models import DeviceDescription, ExperimentDescription, QubitsDescription, AngleDescription, ResultDescription
 
 
 class TestDeviceDescription:
@@ -59,3 +59,34 @@ class TestExperimentDescription:
     def test_cannot_be_parsed_from_incorrect_input(self, input):
         with pytest.raises(ValidationError):
             ExperimentDescription(**input)
+
+class TestQubitDescription:
+    pass
+
+class TestAngleDescription:
+
+    @pytest.mark.parametrize(
+        "input",
+        [
+            {
+                "start": 0, 
+                "stop": 4,
+                "number_of_steps": 3 
+            }
+        ]
+    )
+    def test_can_be_parsed_from_correct_input(self, input):
+        description = AngleDescription(input)
+        assert description.stop == input["stop"]
+
+    @pytest.mark.parametrize(
+        "input",
+        [
+            {
+                "number_of_steps": 3 
+            }
+        ]
+    )
+    def test_can_be_parsed_from_correct_input(self, input):
+        with pytest.raises(ValidationError):
+            AngleDescription(**input)
