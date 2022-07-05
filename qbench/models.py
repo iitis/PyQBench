@@ -17,7 +17,9 @@ class QubitsDescription(BaseModel):
     pass
 
 class AngleDescription(BaseModel):
-    pass
+    start: float
+    stop: float
+    number_of_steps: int
 
 class ResultDescription(BaseModel):
     pass
