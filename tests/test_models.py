@@ -1,6 +1,6 @@
 from pydantic import ValidationError
 import pytest
-from qbench.models import DeviceDescription, ExperimentDescription, QubitsDescription, AngleDescription, ResultDescription
+from qbench.models import DeviceDescription, ExperimentDescription, QubitsDescription, AngleDescription, ResultDescription, PairOfQubitsDescription
 
 
 class TestDeviceDescription:
@@ -8,7 +8,11 @@ class TestDeviceDescription:
     @pytest.mark.parametrize(
         "input",
         [
-            {"arn": "test", "disable-qubit-rewiring": False, "gateset": "rigetti"}
+            {
+                "arn": "test", 
+                "disable_qubit_rewiring": False, 
+                "gateset": "rigetti"
+            }
         ]
     )
     def test_can_be_parsed_from_correct_input(self, input):
@@ -60,8 +64,32 @@ class TestExperimentDescription:
         with pytest.raises(ValidationError):
             ExperimentDescription(**input)
 
-class TestQubitDescription:
-    pass
+class TestQubitsDescription:
+    
+    @pytest.mark.parametrize(
+        "input",
+        [
+            {"qubits": [
+                {"target": 0, "ancilla": 2},
+                {"target": 3, "ancilla": 1}
+            ]
+            },
+            {"qubits":[ {"target": 3, "ancilla": 1}]},
+        ]
+    )
+    def test_can_be_parsed_from_correct_input(self,input):
+        description = QubitsDescription(**input)
+        assert description.qubits == input["qubits"]
+
+    @pytest.mark.parametrize(
+        "input",
+        [
+            {"qubits":{"target": 3, "ancilla": 1}}
+        ]
+    )
+    def test_cannot_be_parsed_from_incorrect_input(self,input):
+        with pytest.raises(ValidationError): 
+            QubitsDescription(**input)
 
 class TestAngleDescription:
 
@@ -76,7 +104,7 @@ class TestAngleDescription:
         ]
     )
     def test_can_be_parsed_from_correct_input(self, input):
-        description = AngleDescription(input)
+        description = AngleDescription(**input)
         assert description.stop == input["stop"]
 
     @pytest.mark.parametrize(
@@ -87,7 +115,6 @@ class TestAngleDescription:
             }
         ]
     )
-    def test_can_be_parsed_from_correct_input(self, input):
+    def test_cannot_be_parsed_from_incorrect_input(self, input):
         with pytest.raises(ValidationError):
             AngleDescription(**input)
-            
