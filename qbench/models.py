@@ -32,4 +32,6 @@ class ExperimentDescription(BaseModel):
 
 
 class ResultDescription(BaseModel):
-    pass
+    method: str
+    number_of_shots: int
+    results: list
