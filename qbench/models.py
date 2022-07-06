@@ -31,7 +31,18 @@ class ExperimentDescription(BaseModel):
     number_of_shots: int
 
 
+class ResultForSigleAngle(BaseModel):
+    phi: float
+    counts: dict
+
+
+class SingleResult(BaseModel):
+    target: int
+    ancilla: int
+    measurement_counts: List[ResultForSigleAngle]
+
+
 class ResultDescription(BaseModel):
     method: str
     number_of_shots: int
-    results: list
+    results: List[SingleResult]
