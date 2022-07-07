@@ -29,16 +29,13 @@ jobs:
         with:
           python-version: 3.9
       - uses: actions/checkout@v2
-      - name: Run quality checks
-        uses: ricardochaves/python-lint@v1.4.0
-        with:
-          python-root-list: "qbench"
-          use-pylint: false
-          use-pycodestyle: false
-          use-flake8: true
-          use-mypy: true
-          use-black: true
-          use-isort: true
-          extra-flake8-options: --max-line-length=100
-          extra-mypy-options: --ignore-missing-imports
-          extra-isort-options: --check-only --profile black
+      - name: Install dependencies and the package
+        run: |
+          python -m pip install --upgrade pip
+          pip install .[test, dev]
+      - name: Quality checks
+        run: |          
+          mypy --ignore-missing-imports .
+          flake8 --max-line-length=100 qbench
+          black --check .
+          isort --check-only --profile black qbench -c --diff
