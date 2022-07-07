@@ -1,11 +1,23 @@
+import re
 from typing import List, Literal, Optional
 
-from pydantic import BaseModel, ConstrainedInt, PositiveInt, root_validator, validator
+from pydantic import (
+    BaseModel,
+    ConstrainedInt,
+    PositiveInt,
+    StrictStr,
+    root_validator,
+    validator,
+)
 
 
 class Qubit(ConstrainedInt):
     strict = True
     ge = 0
+
+
+class ARN(StrictStr):
+    regex = re.compile(r"^arn(:[A-Za-z\d\-_]*){5}(/[A-Za-z\d\-_]*)+$")
 
 
 class StrictPositiveInt(ConstrainedInt):

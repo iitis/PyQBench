@@ -1,12 +1,46 @@
 import pytest
-from pydantic import ValidationError
+from pydantic import ValidationError, parse_obj_as
 
 from qbench.models import (
+    ARN,
     AngleDescription,
     DeviceDescription,
     ExperimentDescription,
     ResultFourierDescription,
 )
+
+
+class TestARNValidation:
+    @pytest.mark.parametrize(
+        "input",
+        [
+            "arn:aws:braket:::device/quantum-simulator/amazon/sv1",
+            "arn:aws:braket:::device/quantum-simulator/amazon/tn1",
+            "arn:aws:braket:::device/quantum-simulator/amazon/dm1",
+            "arn:aws:braket:::device/qpu/d-wave/DW_2000Q_6",
+            "arn:aws:braket:::device/qpu/d-wave/Advantage_system4",
+            "arn:aws:braket:us-west-2::device/qpu/d-wave/Advantage_system6",
+            "arn:aws:braket:::device/qpu/ionq/ionQdevice",
+            "arn:aws:braket:::device/qpu/rigetti/Aspen-11",
+            "arn:aws:braket:us-west-1::device/qpu/rigetti/Aspen-M-1",
+            "arn:aws:braket:eu-west-2::device/qpu/oqc/Lucy",
+        ],
+    )
+    def test_can_be_parsed_from_correct_input(self, input):
+        assert parse_obj_as(ARN, input) == input
+
+    @pytest.mark.parametrize(
+        "input",
+        [
+            "test",
+            "xyz:definitely:not/arn",
+            "arn:aws:braket::device/quantum-simulator/amazon/sv1",
+            "arn:aws:braket:device/quantum-simulator/amazon/sv1",
+        ],
+    )
+    def test_cannot_be_parsed_from_incorrect_input(self, input):
+        with pytest.raises(ValidationError):
+            parse_obj_as(ARN, input)
 
 
 class TestDeviceDescription:
