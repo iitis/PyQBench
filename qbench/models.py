@@ -1,10 +1,16 @@
 from typing import List, Literal, Optional
 
-from pydantic import BaseModel, conint, root_validator
-from typing_extensions import Annotated
+from pydantic import BaseModel, ConstrainedInt, PositiveInt, root_validator, validator
 
-Qubit = Annotated[int, conint(strict=True, ge=0)]
-PositiveInt = Annotated[int, conint(strict=True, ge=1)]
+
+class Qubit(ConstrainedInt):
+    strict = True
+    ge = 0
+
+
+class StrictPositiveInt(ConstrainedInt):
+    strict = True
+    gt = 0
 
 
 class DeviceDescription(BaseModel):
@@ -16,7 +22,7 @@ class DeviceDescription(BaseModel):
 class AngleDescription(BaseModel):
     start: float
     stop: float
-    number_of_steps: PositiveInt
+    number_of_steps: StrictPositiveInt
 
     @root_validator
     def check_if_start_smaller_than_stop(cls, values):
@@ -35,9 +41,9 @@ class PairOfQubits(BaseModel):
     target: Qubit
     ancilla: Qubit
 
-    @root_validator
+    @root_validator(skip_on_failure=True)
     def check_qubits_differ(cls, values):
-        if values.get("target") == values.get("ancilla"):
+        if values["target"] == values["ancilla"]:
             raise ValueError("Target and ancilla need to have different indices.")
         return values
 
@@ -47,14 +53,14 @@ class ExperimentDescription(BaseModel):
     qubits: List[PairOfQubits]
     angle: AngleDescription
     method: str
-    number_of_shots: PositiveInt
+    number_of_shots: StrictPositiveInt
 
-    @root_validator
-    def check_if_all_pairs_of_qubits_are_different(cls, values):
-        list_of_qubits = [(qubits.target, qubits.ancilla) for qubits in values.get("qubits", [])]
+    @validator("qubits")
+    def check_if_all_pairs_of_qubits_are_different(cls, qubits):
+        list_of_qubits = [(qubits.target, qubits.ancilla) for qubits in qubits]
         if len(set(list_of_qubits)) != len(list_of_qubits):
             raise ValueError("No to pairs of qubits should be exactly the same.")
-        return values
+        return qubits
 
 
 class ResultForSigleAngle(BaseModel):

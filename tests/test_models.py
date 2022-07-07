@@ -119,7 +119,7 @@ class TestExperimentDescription:
     )
     def test_cannot_be_parsed_from_incorrect_input(self, input):
         with pytest.raises(ValidationError):
-            ExperimentDescription(**input)
+            ExperimentDescription.parse_obj(input)
 
 
 class TestAngleDescription:
