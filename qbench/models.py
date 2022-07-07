@@ -1,6 +1,6 @@
 from typing import List
 
-from pydantic import BaseModel, conint
+from pydantic import BaseModel, conint, root_validator
 
 Qubit = conint(strict=True, ge=0)
 
@@ -20,6 +20,12 @@ class AngleDescription(BaseModel):
 class PairOfQubitsDescription(BaseModel):
     target: Qubit  # type: ignore
     ancilla: Qubit  # type: ignore
+
+    @root_validator
+    def check_qubits_differ(cls, values):
+        if values.get("target") == values.get("ancilla"):
+            raise ValueError("Target and ancilla need to have different indices.")
+        return values
 
 
 class ExperimentDescription(BaseModel):
