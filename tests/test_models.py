@@ -1,12 +1,12 @@
-from pydantic import ValidationError
 import pytest
+from pydantic import ValidationError
+
 from qbench.models import (
+    AngleDescription,
     DeviceDescription,
     ExperimentDescription,
     QubitsDescription,
-    AngleDescription,
     ResultDescription,
-    PairOfQubitsDescription,
 )
 
 
