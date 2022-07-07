@@ -6,7 +6,7 @@ from qbench.models import (
     AnglesRange,
     AWSDeviceDescription,
     FourierDiscriminationExperiment,
-    ResultFourierDescription,
+    FourierDiscriminationResult,
 )
 
 
@@ -195,7 +195,7 @@ class TestResultFourierDescription:
         ],
     )
     def test_can_be_parsed_from_correct_input(self, input):
-        description = ResultFourierDescription(**input)
+        description = FourierDiscriminationResult(**input)
         assert description.results == input["results"]
 
     @pytest.mark.parametrize(
@@ -225,4 +225,4 @@ class TestResultFourierDescription:
     )
     def test_cannot_be_parsed_from_incorrect_input(self, input):
         with pytest.raises(ValidationError):
-            ResultFourierDescription(**input)
+            FourierDiscriminationResult(**input)

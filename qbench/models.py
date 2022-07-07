@@ -86,7 +86,7 @@ class SingleResult(BaseModel):
     measurement_counts: List[ResultForSigleAngle]
 
 
-class ResultFourierDescription(BaseModel):
+class FourierDiscriminationResult(BaseModel):
     method: Literal["direct", "postselection"]
     number_of_shots: PositiveInt
     results: List[SingleResult]
