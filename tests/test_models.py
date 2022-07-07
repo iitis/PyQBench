@@ -11,7 +11,25 @@ from qbench.models import (
 
 class TestDeviceDescription:
     @pytest.mark.parametrize(
-        "input", [{"arn": "test", "disable_qubit_rewiring": False, "gateset": "rigetti"}]
+        "input",
+        [
+            {
+                "arn": "arn:aws:braket:eu-west-2::device/qpu/oqc/Lucy",
+                "disable_qubit_rewiring": False,
+                "gateset": "lucy",
+            },
+            {
+                "arn": "arn:aws:braket:::device/quantum-simulator/amazon/tn1",
+                "disable_qubit_rewiring": True,
+                "gateset": "rigetti",
+            },
+            {
+                "arn": "arn:aws:braket:eu-west-2::device/qpu/oqc/Lucy",
+                "disable_qubit_rewiring": False,
+            },
+            {"arn": "arn:aws:braket:::device/quantum-simulator/amazon/tn1", "gateset": "rigetti"},
+            {"arn": "arn:aws:braket:::device/quantum-simulator/amazon/tn1"},
+        ],
     )
     def test_can_be_parsed_from_correct_input(self, input):
         description = DeviceDescription(**input)

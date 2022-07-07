@@ -1,4 +1,4 @@
-from typing import List, Literal
+from typing import List, Literal, Optional
 
 from pydantic import BaseModel, conint, root_validator
 from typing_extensions import Annotated
@@ -9,8 +9,8 @@ PositiveInt = Annotated[int, conint(strict=True, ge=1)]
 
 class DeviceDescription(BaseModel):
     arn: str
-    disable_qubit_rewiring: bool
-    gateset: str
+    disable_qubit_rewiring: bool = False
+    gateset: Optional[str]
 
 
 class AngleDescription(BaseModel):
