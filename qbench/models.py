@@ -1,8 +1,10 @@
 from typing import List, Literal
 
-from pydantic import BaseModel, conint, root_validator, validator
+from pydantic import BaseModel, conint, root_validator
+from typing_extensions import Annotated
 
-Qubit = conint(strict=True, ge=0)
+Qubit = Annotated[int, conint(strict=True, ge=0)]
+PositiveInt = Annotated[int, conint(strict=True, ge=1)]
 
 
 class DeviceDescription(BaseModel):
@@ -14,7 +16,7 @@ class DeviceDescription(BaseModel):
 class AngleDescription(BaseModel):
     start: float
     stop: float
-    number_of_steps: conint(strict=True, ge=1)
+    number_of_steps: PositiveInt
 
     @root_validator
     def check_if_start_smaller_than_stop(cls, values):
@@ -30,8 +32,8 @@ class AngleDescription(BaseModel):
 
 
 class PairOfQubits(BaseModel):
-    target: Qubit  # type: ignore
-    ancilla: Qubit  # type: ignore
+    target: Qubit
+    ancilla: Qubit
 
     @root_validator
     def check_qubits_differ(cls, values):
@@ -45,14 +47,11 @@ class ExperimentDescription(BaseModel):
     qubits: List[PairOfQubits]
     angle: AngleDescription
     method: str
-    number_of_shots: conint(strict=True, ge=1)
+    number_of_shots: PositiveInt
 
     @root_validator
     def check_if_all_pairs_of_qubits_are_different(cls, values):
-        list_of_qubits = []
-        for pair in values.get("qubits"):
-            t, a = pair
-            list_of_qubits.append((t, a))
+        list_of_qubits = [(qubits.target, qubits.ancilla) for qubits in values.get("qubits", [])]
         if len(set(list_of_qubits)) != len(list_of_qubits):
             raise ValueError("No to pairs of qubits should be exactly the same.")
         return values
@@ -64,12 +63,12 @@ class ResultForSigleAngle(BaseModel):
 
 
 class SingleResult(BaseModel):
-    target: Qubit  # type: ignore
-    ancilla: Qubit  # type: ignore
+    target: Qubit
+    ancilla: Qubit
     measurement_counts: List[ResultForSigleAngle]
 
 
 class ResultFourierDescription(BaseModel):
     method: Literal["direct", "postselection"]
-    number_of_shots: int
+    number_of_shots: PositiveInt
     results: List[SingleResult]
