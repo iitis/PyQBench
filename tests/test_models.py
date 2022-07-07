@@ -85,9 +85,10 @@ class TestExperimentDescription:
                 "type": "fourier_discrimination",
                 "qubits": [{"target": 0, "ancilla": 1}, {"target": 5, "ancilla": 2}],
                 "angle": {"start": 0, "stop": 4, "number_of_steps": 3},
-                "method": "postselection",
+                "method": method,
                 "number_of_shots": 5,
             }
+            for method in ("postselection", "direct_sum")
         ],
     )
     def test_can_be_parsed_from_correct_input(self, input):

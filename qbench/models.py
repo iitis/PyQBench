@@ -64,7 +64,7 @@ class ExperimentDescription(BaseModel):
     type: str
     qubits: List[PairOfQubits]
     angle: AngleDescription
-    method: str
+    method: Literal["direct_sum", "postselection"]
     number_of_shots: StrictPositiveInt
 
     @validator("qubits")
