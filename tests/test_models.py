@@ -34,6 +34,8 @@ class TestDeviceDescription:
     def test_can_be_parsed_from_correct_input(self, input):
         description = DeviceDescription(**input)
         assert description.arn == input["arn"]
+        assert description.disable_qubit_rewiring == input.get("disable_qubit_rewiring", False)
+        assert description.gateset == input.get("gateset")
 
     @pytest.mark.parametrize("input", [{"disable-qubit-rewiring": True}])
     def test_cannot_be_parsed_from_incorrect_input(self, input):
