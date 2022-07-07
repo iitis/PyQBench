@@ -145,7 +145,31 @@ class TestResultFourierDescription:
         description = ResultFourierDescription(**input)
         assert description.results == input["results"]
 
-    @pytest.mark.parametrize("input", [{"number_of_shots": 3}])
+    @pytest.mark.parametrize(
+        "input",
+        [
+            {"number_of_shots": 3},
+            {
+                "method": "some_method",
+                "number_of_shots": 100,
+                "results": [
+                    {
+                        "target": 0,
+                        "ancilla": 1,
+                        "measurement_counts": [
+                            {"phi": 0.1, "counts": {"00": 10, "11": 2}},
+                            {"phi": 0.2, "counts": {"00": 10, "11": 2}},
+                        ],
+                    },
+                    {
+                        "target": 4,
+                        "ancilla": 3,
+                        "measurement_counts": [{"phi": 0.5, "counts": {"01": 14, "1": 14}}],
+                    },
+                ],
+            },
+        ],
+    )
     def test_cannot_be_parsed_from_incorrect_input(self, input):
         with pytest.raises(ValidationError):
             ResultFourierDescription(**input)
