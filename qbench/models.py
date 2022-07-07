@@ -59,7 +59,7 @@ class PairOfQubits(BaseModel):
         return values
 
 
-class ExperimentDescription(BaseModel):
+class FourierDiscriminationExperiment(BaseModel):
     type: str
     qubits: List[PairOfQubits]
     angle: AnglesRange
