@@ -1,6 +1,6 @@
 from typing import List
 
-from pydantic import BaseModel, conint, root_validator
+from pydantic import BaseModel, conint, root_validator, validator
 
 Qubit = conint(strict=True, ge=0)
 
@@ -14,10 +14,21 @@ class DeviceDescription(BaseModel):
 class AngleDescription(BaseModel):
     start: float
     stop: float
-    number_of_steps: int
+    number_of_steps: conint(strict = True, ge = 1)
 
+    @root_validator
+    def check_if_start_smaller_than_stop(cls, values):
+        if values.get("start") > values.get("stop"):
+            raise ValueError("Start cannot be smallet than stop.")
+        return values
+        
+    @root_validator
+    def check_if_number_of_steps_is_one_when_start_equals_stop(cls, values):
+        if (values.get("start") == values.get("stop")) and values.get("number_of_steps") != 1:
+            raise ValueError("There can be only one step if start equals stop.")
+        return values
 
-class PairOfQubitsDescription(BaseModel):
+class PairOfQubits(BaseModel):
     target: Qubit  # type: ignore
     ancilla: Qubit  # type: ignore
 
@@ -30,7 +41,7 @@ class PairOfQubitsDescription(BaseModel):
 
 class ExperimentDescription(BaseModel):
     type: str
-    qubits: List[PairOfQubitsDescription]
+    qubits: List[PairOfQubits]
     angle: AngleDescription
     method: str
     number_of_shots: int
