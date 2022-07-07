@@ -46,6 +46,15 @@ class ExperimentDescription(BaseModel):
     method: str
     number_of_shots: int
 
+    @root_validator 
+    def check_if_all_pairs_of_qubits_are_different(cls, values):
+        list_of_qubits = []
+        for pair in values.get("qubits"):
+            t, a = pair
+            list_of_qubits.append((t, a))
+        if len(set(list_of_qubits)) != len(list_of_qubits):
+            raise ValueError("No to pairs of qubits should be exactly the same.")
+        return values
 
 class ResultForSigleAngle(BaseModel):
     phi: float

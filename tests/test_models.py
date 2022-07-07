@@ -86,6 +86,17 @@ class TestExperimentDescription:
                 "method": "postselection",
                 "number_of_shots": 5,
             },
+            {
+                "type": "fourier_discrimination",
+                "qubits": [
+                    {"target": 5, "ancilla": 3},
+                    {"target": 5, "ancilla": 4},
+                    {"target": 5, "ancilla": 4},
+                ],
+                "angle": {"start": 1, "stop": 1, "number_of_steps": 5},
+                "method": "postselection",
+                "number_of_shots": 5,
+            },
         ],
     )
     def test_cannot_be_parsed_from_incorrect_input(self, input):
