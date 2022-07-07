@@ -1,6 +1,8 @@
 from typing import List
 
-from pydantic import BaseModel
+from pydantic import BaseModel, conint
+
+Qubit = conint(strict=True, ge=0)
 
 
 class DeviceDescription(BaseModel):
@@ -16,8 +18,8 @@ class AngleDescription(BaseModel):
 
 
 class PairOfQubitsDescription(BaseModel):
-    target: int
-    ancilla: int
+    target: Qubit  # type: ignore
+    ancilla: Qubit  # type: ignore
 
 
 class ExperimentDescription(BaseModel):
@@ -34,8 +36,8 @@ class ResultForSigleAngle(BaseModel):
 
 
 class SingleResult(BaseModel):
-    target: int
-    ancilla: int
+    target: Qubit  # type: ignore
+    ancilla: Qubit  # type: ignore
     measurement_counts: List[ResultForSigleAngle]
 
 

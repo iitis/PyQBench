@@ -40,7 +40,26 @@ class TestExperimentDescription:
         description = ExperimentDescription(**input)
         assert description.type == input["type"]
 
-    @pytest.mark.parametrize("input", [{"disable-qubit-rewiring": True}])
+    @pytest.mark.parametrize(
+        "input",
+        [
+            {"disable-qubit-rewiring": True},
+            {
+                "type": "fourier_discrimination",
+                "qubits": [{"target": "test", "ancilla": 1}, {"target": 5, "ancilla": 2}],
+                "angle": {"start": 0, "stop": 4, "number_of_steps": 3},
+                "method": "postselection",
+                "number_of_shots": 5,
+            },
+            {
+                "type": "fourier_discrimination",
+                "qubits": [{"target": 0, "ancilla": 1.5}, {"target": 5, "ancilla": 2}],
+                "angle": {"start": 0, "stop": 4, "number_of_steps": 3},
+                "method": "postselection",
+                "number_of_shots": 5,
+            },
+        ],
+    )
     def test_cannot_be_parsed_from_incorrect_input(self, input):
         with pytest.raises(ValidationError):
             ExperimentDescription(**input)
