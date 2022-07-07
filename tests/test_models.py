@@ -4,7 +4,7 @@ from pydantic import ValidationError, parse_obj_as
 from qbench.models import (
     ARN,
     AngleDescription,
-    DeviceDescription,
+    AWSDeviceDescription,
     ExperimentDescription,
     ResultFourierDescription,
 )
@@ -64,14 +64,14 @@ class TestDeviceDescription:
         ],
     )
     def test_can_be_parsed_from_correct_input(self, input):
-        description = DeviceDescription(**input)
+        description = AWSDeviceDescription(**input)
         assert description.arn == input["arn"]
         assert description.disable_qubit_rewiring == input.get("disable_qubit_rewiring", False)
 
     @pytest.mark.parametrize("input", [{"disable-qubit-rewiring": True}])
     def test_cannot_be_parsed_from_incorrect_input(self, input):
         with pytest.raises(ValidationError):
-            DeviceDescription(**input)
+            AWSDeviceDescription(**input)
 
 
 class TestExperimentDescription:

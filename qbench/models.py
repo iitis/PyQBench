@@ -25,7 +25,7 @@ class StrictPositiveInt(ConstrainedInt):
     gt = 0
 
 
-class DeviceDescription(BaseModel):
+class AWSDeviceDescription(BaseModel):
     arn: str
     disable_qubit_rewiring: bool = False
 
