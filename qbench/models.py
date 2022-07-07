@@ -28,7 +28,6 @@ class StrictPositiveInt(ConstrainedInt):
 class DeviceDescription(BaseModel):
     arn: str
     disable_qubit_rewiring: bool = False
-    gateset: Optional[str]
 
 
 class AngleDescription(BaseModel):
@@ -64,6 +63,7 @@ class ExperimentDescription(BaseModel):
     type: str
     qubits: List[PairOfQubits]
     angle: AngleDescription
+    gateset: Optional[str]
     method: Literal["direct_sum", "postselection"]
     number_of_shots: StrictPositiveInt
 

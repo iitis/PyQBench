@@ -50,12 +50,10 @@ class TestDeviceDescription:
             {
                 "arn": "arn:aws:braket:eu-west-2::device/qpu/oqc/Lucy",
                 "disable_qubit_rewiring": False,
-                "gateset": "lucy",
             },
             {
                 "arn": "arn:aws:braket:::device/quantum-simulator/amazon/tn1",
                 "disable_qubit_rewiring": True,
-                "gateset": "rigetti",
             },
             {
                 "arn": "arn:aws:braket:eu-west-2::device/qpu/oqc/Lucy",
@@ -69,7 +67,6 @@ class TestDeviceDescription:
         description = DeviceDescription(**input)
         assert description.arn == input["arn"]
         assert description.disable_qubit_rewiring == input.get("disable_qubit_rewiring", False)
-        assert description.gateset == input.get("gateset")
 
     @pytest.mark.parametrize("input", [{"disable-qubit-rewiring": True}])
     def test_cannot_be_parsed_from_incorrect_input(self, input):
@@ -108,6 +105,7 @@ class TestExperimentDescription:
             },
             {
                 "type": "fourier_discrimination",
+                "gateset": "rigetti",
                 "qubits": [{"target": 0, "ancilla": 1.5}, {"target": 5, "ancilla": 2}],
                 "angle": {"start": 0, "stop": 4, "number_of_steps": 3},
                 "method": "postselection",
@@ -156,7 +154,7 @@ class TestExperimentDescription:
     )
     def test_cannot_be_parsed_from_incorrect_input(self, input):
         with pytest.raises(ValidationError):
-            ExperimentDescription.parse_obj(input)
+            ExperimentDescription(**input)
 
 
 class TestAngleDescription:
