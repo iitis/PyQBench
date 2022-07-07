@@ -5,7 +5,6 @@ from qbench.models import (
     AngleDescription,
     DeviceDescription,
     ExperimentDescription,
-    QubitsDescription,
     ResultDescription,
 )
 
@@ -45,24 +44,6 @@ class TestExperimentDescription:
     def test_cannot_be_parsed_from_incorrect_input(self, input):
         with pytest.raises(ValidationError):
             ExperimentDescription(**input)
-
-
-class TestQubitsDescription:
-    @pytest.mark.parametrize(
-        "input",
-        [
-            {"qubits": [{"target": 0, "ancilla": 2}, {"target": 3, "ancilla": 1}]},
-            {"qubits": [{"target": 3, "ancilla": 1}]},
-        ],
-    )
-    def test_can_be_parsed_from_correct_input(self, input):
-        description = QubitsDescription(**input)
-        assert description.qubits == input["qubits"]
-
-    @pytest.mark.parametrize("input", [{"qubits": {"target": 3, "ancilla": 1}}])
-    def test_cannot_be_parsed_from_incorrect_input(self, input):
-        with pytest.raises(ValidationError):
-            QubitsDescription(**input)
 
 
 class TestAngleDescription:

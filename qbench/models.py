@@ -20,13 +20,9 @@ class PairOfQubitsDescription(BaseModel):
     ancilla: int
 
 
-class QubitsDescription(BaseModel):
-    qubits: List[PairOfQubitsDescription]
-
-
 class ExperimentDescription(BaseModel):
     type: str
-    qubits: list  # does not work if I write QubitsDescription
+    qubits: List[PairOfQubitsDescription]
     angle: AngleDescription
     method: str
     number_of_shots: int
