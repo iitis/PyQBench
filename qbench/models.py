@@ -30,7 +30,7 @@ class AWSDeviceDescription(BaseModel):
     disable_qubit_rewiring: bool = False
 
 
-class AngleDescription(BaseModel):
+class AnglesRange(BaseModel):
     start: float
     stop: float
     number_of_steps: StrictPositiveInt
@@ -62,7 +62,7 @@ class PairOfQubits(BaseModel):
 class ExperimentDescription(BaseModel):
     type: str
     qubits: List[PairOfQubits]
-    angle: AngleDescription
+    angle: AnglesRange
     gateset: Optional[str]
     method: Literal["direct_sum", "postselection"]
     number_of_shots: StrictPositiveInt

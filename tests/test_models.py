@@ -3,7 +3,7 @@ from pydantic import ValidationError, parse_obj_as
 
 from qbench.models import (
     ARN,
-    AngleDescription,
+    AnglesRange,
     AWSDeviceDescription,
     ExperimentDescription,
     ResultFourierDescription,
@@ -160,13 +160,13 @@ class TestExperimentDescription:
 class TestAngleDescription:
     @pytest.mark.parametrize("input", [{"start": 0, "stop": 4, "number_of_steps": 3}])
     def test_can_be_parsed_from_correct_input(self, input):
-        description = AngleDescription(**input)
+        description = AnglesRange(**input)
         assert description.stop == input["stop"]
 
     @pytest.mark.parametrize("input", [{"number_of_steps": 3}])
     def test_cannot_be_parsed_from_incorrect_input(self, input):
         with pytest.raises(ValidationError):
-            AngleDescription(**input)
+            AnglesRange(**input)
 
 
 class TestResultFourierDescription:
