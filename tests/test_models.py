@@ -5,7 +5,7 @@ from qbench.models import (
     AngleDescription,
     DeviceDescription,
     ExperimentDescription,
-    ResultDescription,
+    ResultFourierDescription,
 )
 
 
@@ -116,7 +116,7 @@ class TestAngleDescription:
             AngleDescription(**input)
 
 
-class TestResultDescription:
+class TestResultFourierDescription:
     @pytest.mark.parametrize(
         "input",
         [
@@ -142,10 +142,10 @@ class TestResultDescription:
         ],
     )
     def test_can_be_parsed_from_correct_input(self, input):
-        description = ResultDescription(**input)
+        description = ResultFourierDescription(**input)
         assert description.results == input["results"]
 
     @pytest.mark.parametrize("input", [{"number_of_shots": 3}])
     def test_cannot_be_parsed_from_incorrect_input(self, input):
         with pytest.raises(ValidationError):
-            ResultDescription(**input)
+            ResultFourierDescription(**input)

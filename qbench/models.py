@@ -44,7 +44,7 @@ class ExperimentDescription(BaseModel):
     qubits: List[PairOfQubits]
     angle: AngleDescription
     method: str
-    number_of_shots: int
+    number_of_shots: conint(strict = True, ge = 1)
 
     @root_validator 
     def check_if_all_pairs_of_qubits_are_different(cls, values):
@@ -67,7 +67,7 @@ class SingleResult(BaseModel):
     measurement_counts: List[ResultForSigleAngle]
 
 
-class ResultDescription(BaseModel):
+class ResultFourierDescription(BaseModel):
     method: str
     number_of_shots: int
     results: List[SingleResult]
