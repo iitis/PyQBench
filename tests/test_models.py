@@ -75,9 +75,9 @@ class TestFourierDiscriminationExperiment:
             {
                 "type": "fourier_discrimination",
                 "qubits": [{"target": 0, "ancilla": 1}, {"target": 5, "ancilla": 2}],
-                "angle": {"start": 0, "stop": 4, "number_of_steps": 3},
+                "angle": {"start": 0, "stop": 4, "num_steps": 3},
                 "method": method,
-                "number_of_shots": 5,
+                "num_shots": 5,
             }
             for method in ("postselection", "direct_sum")
         ],
@@ -92,19 +92,19 @@ class TestFourierDiscriminationExperiment:
             {
                 "type": "fourier_discrimination",
                 "qubits": [{"target": 0, "ancilla": 1}, {"target": 5, "ancilla": 2}],
-                "angle": {"start": 0, "stop": 4, "number_of_steps": 3},
+                "angle": {"start": 0, "stop": 4, "num_steps": 3},
                 "method": "postselection",
             },
             {
                 "type": "fourier_discrimination",
                 "gateset": "rigetti",
                 "qubits": [{"target": 0, "ancilla": 1.5}, {"target": 5, "ancilla": 2}],
-                "angle": {"start": 0, "stop": 4, "number_of_steps": 3},
+                "angle": {"start": 0, "stop": 4, "num_steps": 3},
                 "number_of_shots": 5,
             },
             {
                 "qubits": [{"target": 0, "ancilla": 1}, {"target": 5, "ancilla": 5}],
-                "angle": {"start": 0, "stop": 4, "number_of_steps": 3},
+                "angle": {"start": 0, "stop": 4, "num_steps": 3},
                 "method": "postselection",
                 "number_of_shots": 5,
             },
@@ -118,7 +118,7 @@ class TestFourierDiscriminationExperiment:
         input = {
             "type": "fourier",
             "qubits": [{"target": 0, "ancilla": 1}, {"target": 5, "ancilla": 2}],
-            "angle": {"start": 0, "stop": 4, "number_of_steps": 3},
+            "angle": {"start": 0, "stop": 4, "num_steps": 3},
             "method": "postselection",
             "number_of_shots": 5,
         }
@@ -146,7 +146,7 @@ class TestFourierDiscriminationExperiment:
                 {"target": 5, "ancilla": 4},
                 {"target": 5, "ancilla": 4},
             ],
-            "angle": {"start": 1, "stop": 1, "number_of_steps": 5},
+            "angle": {"start": 1, "stop": 1, "num_steps": 5},
             "method": "postselection",
             "number_of_shots": 5,
         }
@@ -155,16 +155,16 @@ class TestFourierDiscriminationExperiment:
 
 
 class TestAnglesRange:
-    @pytest.mark.parametrize("input", [{"start": 0, "stop": 4, "number_of_steps": 3}])
+    @pytest.mark.parametrize("input", [{"start": 0, "stop": 4, "num_steps": 3}])
     def test_can_be_parsed_from_correct_input(self, input):
         description = AnglesRange(**input)
         assert description.start == input["start"]
         assert description.stop == input["stop"]
 
     def test_degenerate_range_can_contain_only_one_angle(self):
-        angle_range = AnglesRange(start=10, stop=10, number_of_steps=1)
+        angle_range = AnglesRange(start=10, stop=10, num_steps=1)
         assert angle_range.stop == angle_range.start == 10
-        assert angle_range.number_of_steps == 1
+        assert angle_range.num_steps == 1
 
         with pytest.raises(ValidationError):
-            AnglesRange(start=10, stop=10, number_of_steps=2)
+            AnglesRange(start=10, stop=10, num_steps=2)

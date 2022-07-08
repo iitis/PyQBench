@@ -26,7 +26,7 @@ class AWSDeviceDescription(BaseModel):
 class AnglesRange(BaseModel):
     start: float
     stop: float
-    number_of_steps: StrictPositiveInt
+    num_steps: StrictPositiveInt
 
     @root_validator
     def check_if_start_smaller_than_stop(cls, values):
@@ -36,12 +36,12 @@ class AnglesRange(BaseModel):
 
     @root_validator
     def check_if_number_of_steps_is_one_when_start_equals_stop(cls, values):
-        if (values.get("start") == values.get("stop")) and values.get("number_of_steps") != 1:
+        if (values.get("start") == values.get("stop")) and values.get("num_steps") != 1:
             raise ValueError("There can be only one step if start equals stop.")
         return values
 
 
-class PairOfQubits(BaseModel):
+class QubitsPair(BaseModel):
     target: Qubit
     ancilla: Qubit
 
@@ -54,11 +54,11 @@ class PairOfQubits(BaseModel):
 
 class FourierDiscriminationExperiment(BaseModel):
     type: Literal["fourier_discrimination"]
-    qubits: List[PairOfQubits]
+    qubits: List[QubitsPair]
     angle: AnglesRange
     gateset: Optional[str]
     method: Literal["direct_sum", "postselection"]
-    number_of_shots: StrictPositiveInt
+    num_shots: StrictPositiveInt
 
     @validator("qubits")
     def check_if_all_pairs_of_qubits_are_different(cls, qubits):
