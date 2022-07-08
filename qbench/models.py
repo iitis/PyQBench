@@ -1,5 +1,5 @@
 import re
-from typing import List, Literal, Optional
+from typing import Dict, List, Literal, Optional
 
 from pydantic import BaseModel, ConstrainedInt, StrictStr, root_validator, validator
 
@@ -11,6 +11,10 @@ class Qubit(ConstrainedInt):
 
 class ARN(StrictStr):
     regex = re.compile(r"^arn(:[A-Za-z\d\-_]*){5}(/[A-Za-z\d\-_]*)+$")
+
+
+class TwoQubitBitstring(StrictStr):
+    regex = re.compile("^[01]{2}$")
 
 
 class StrictPositiveInt(ConstrainedInt):
@@ -68,15 +72,16 @@ class FourierDiscriminationExperiment(BaseModel):
         return qubits
 
 
-class ResultForSingleAngle(BaseModel):
+class ResultForAngle(BaseModel):
     phi: float
-    counts: dict
+    counts: Dict[TwoQubitBitstring, StrictPositiveInt]
 
 
 class SingleResult(BaseModel):
     target: Qubit
     ancilla: Qubit
-    measurement_counts: List[ResultForSingleAngle]
+    measurement_counts: List[ResultForAngle]
+    measured_qubits: List[Qubit]
 
 
 class FourierDiscriminationMetadata(BaseModel):

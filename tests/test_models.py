@@ -6,6 +6,7 @@ from qbench.models import (
     AnglesRange,
     AWSDeviceDescription,
     FourierDiscriminationExperiment,
+    ResultForAngle,
 )
 
 
@@ -180,3 +181,16 @@ class TestAnglesRange:
 
         with pytest.raises(ValidationError):
             AnglesRange(start=10, stop=10, num_steps=2)
+
+
+class TestResultForAngle:
+    @pytest.mark.parametrize(
+        "input",
+        [
+            {"phi": 0.1, "counts": {"111": 20, "01": 5}},
+            {"phi": 0.2, "counts": {"xyz": 20, "01": 5}},
+        ],
+    )
+    def test_fails_to_validate_if_counts_does_not_contain_two_qubit_bitstrings_only(self, input):
+        with pytest.raises(ValidationError):
+            ResultForAngle(**input)
