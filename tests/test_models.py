@@ -86,6 +86,18 @@ class TestFourierDiscriminationExperiment:
         description = FourierDiscriminationExperiment(**input)
         assert description.type == input["type"]
 
+    def test_fails_to_validate_if_qubit_index_is_not_integral(self):
+        input = {
+            "type": "fourier_discrimination",
+            "qubits": [{"target": 0, "ancilla": 1.0}, {"target": 5, "ancilla": 2}],
+            "angle": {"start": 0, "stop": 4, "num_steps": 3},
+            "method": "direct_sum",
+            "num_shots": 5,
+        }
+
+        with pytest.raises(ValidationError):
+            FourierDiscriminationExperiment(**input)
+
     @pytest.mark.parametrize(
         "input",
         [
