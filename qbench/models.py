@@ -71,7 +71,7 @@ class FourierDiscriminationExperiment(BaseModel):
     def check_if_all_pairs_of_qubits_are_different(cls, qubits):
         list_of_qubits = [(qubits.target, qubits.ancilla) for qubits in qubits]
         if len(set(list_of_qubits)) != len(list_of_qubits):
-            raise ValueError("No to pairs of qubits should be exactly the same.")
+            raise ValueError("All pairs of qubits should be distinct.")
         return qubits
 
 
