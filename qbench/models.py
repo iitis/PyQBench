@@ -75,7 +75,7 @@ class FourierDiscriminationExperiment(BaseModel):
         return qubits
 
 
-class ResultForSigleAngle(BaseModel):
+class ResultForSingleAngle(BaseModel):
     phi: float
     counts: dict
 
@@ -83,7 +83,7 @@ class ResultForSigleAngle(BaseModel):
 class SingleResult(BaseModel):
     target: Qubit
     ancilla: Qubit
-    measurement_counts: List[ResultForSigleAngle]
+    measurement_counts: List[ResultForSingleAngle]
 
 
 class FourierDiscriminationResult(BaseModel):
