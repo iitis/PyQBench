@@ -201,10 +201,20 @@ class TestResultFourierDescription:
     @pytest.mark.parametrize(
         "input",
         [
-            {"number_of_shots": 3},
             {
-                "method": "some_method",
-                "number_of_shots": 100,
+                "metadata": {
+                    "experiment": {
+                        "type": "fourier_discrimination",
+                        "qubits": [{"target": 0, "ancilla": 1}, {"target": 5, "ancilla": 2}],
+                        "angle": {"start": 0, "stop": 4, "number_of_steps": 3},
+                        "method": "postselection",
+                        "number_of_shots": 5,
+                    },
+                    "device": {
+                        "arn": "arn:aws:braket:eu-west-2::device/qpu/oqc/Lucy",
+                        "disable_qubit_rewiring": False,
+                    },
+                },
                 "results": [
                     {
                         "target": 0,

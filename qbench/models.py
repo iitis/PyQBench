@@ -1,14 +1,7 @@
 import re
 from typing import List, Literal, Optional
 
-from pydantic import (
-    BaseModel,
-    ConstrainedInt,
-    PositiveInt,
-    StrictStr,
-    root_validator,
-    validator,
-)
+from pydantic import BaseModel, ConstrainedInt, StrictStr, root_validator, validator
 
 
 class Qubit(ConstrainedInt):
@@ -86,7 +79,11 @@ class SingleResult(BaseModel):
     measurement_counts: List[ResultForSingleAngle]
 
 
+class FourierDiscriminationMetadata(BaseModel):
+    experiment: FourierDiscriminationExperiment
+    device_description: AWSDeviceDescription
+
+
 class FourierDiscriminationResult(BaseModel):
-    method: Literal["direct", "postselection"]
-    number_of_shots: PositiveInt
+    metadata: FourierDiscriminationMetadata
     results: List[SingleResult]
