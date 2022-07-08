@@ -6,7 +6,6 @@ from qbench.models import (
     AnglesRange,
     AWSDeviceDescription,
     FourierDiscriminationExperiment,
-    FourierDiscriminationResult,
 )
 
 
@@ -43,38 +42,33 @@ class TestARNValidation:
             parse_obj_as(ARN, input)
 
 
-class TestDeviceDescription:
-    @pytest.mark.parametrize(
-        "input",
-        [
-            {
-                "arn": "arn:aws:braket:eu-west-2::device/qpu/oqc/Lucy",
-                "disable_qubit_rewiring": False,
-            },
-            {
-                "arn": "arn:aws:braket:::device/quantum-simulator/amazon/tn1",
-                "disable_qubit_rewiring": True,
-            },
-            {
-                "arn": "arn:aws:braket:eu-west-2::device/qpu/oqc/Lucy",
-                "disable_qubit_rewiring": False,
-            },
-            {"arn": "arn:aws:braket:::device/quantum-simulator/amazon/tn1", "gateset": "rigetti"},
-            {"arn": "arn:aws:braket:::device/quantum-simulator/amazon/tn1"},
-        ],
-    )
-    def test_can_be_parsed_from_correct_input(self, input):
+class TestAWSDeviceDescription:
+    def test_disable_qubit_rewiring_is_optional_and_false_by_default(self):
+        input = {
+            "arn": "arn:aws:braket:eu-west-2::device/qpu/oqc/Lucy",
+        }
+
         description = AWSDeviceDescription(**input)
         assert description.arn == input["arn"]
-        assert description.disable_qubit_rewiring == input.get("disable_qubit_rewiring", False)
+        assert not description.disable_qubit_rewiring
+
+    def test_can_be_parsed_from_full_input(self):
+        input = {
+            "arn": "arn:aws:braket:eu-west-2::device/qpu/oqc/Lucy",
+            "disable_qubit_rewiring": True,
+        }
+
+        description = AWSDeviceDescription(**input)
+        assert description.arn == input["arn"]
+        assert description.disable_qubit_rewiring
 
     @pytest.mark.parametrize("input", [{"disable-qubit-rewiring": True}])
-    def test_cannot_be_parsed_from_incorrect_input(self, input):
+    def test_cannot_be_parsed_if_arn_is_missing(self, input):
         with pytest.raises(ValidationError):
             AWSDeviceDescription(**input)
 
 
-class TestExperimentDescription:
+class TestFourierDiscriminationExperiment:
     @pytest.mark.parametrize(
         "input",
         [
@@ -95,155 +89,82 @@ class TestExperimentDescription:
     @pytest.mark.parametrize(
         "input",
         [
-            {"disable-qubit-rewiring": True},
             {
                 "type": "fourier_discrimination",
-                "qubits": [{"target": "test", "ancilla": 1}, {"target": 5, "ancilla": 2}],
+                "qubits": [{"target": 0, "ancilla": 1}, {"target": 5, "ancilla": 2}],
                 "angle": {"start": 0, "stop": 4, "number_of_steps": 3},
                 "method": "postselection",
-                "number_of_shots": 5,
             },
             {
                 "type": "fourier_discrimination",
                 "gateset": "rigetti",
                 "qubits": [{"target": 0, "ancilla": 1.5}, {"target": 5, "ancilla": 2}],
                 "angle": {"start": 0, "stop": 4, "number_of_steps": 3},
-                "method": "postselection",
                 "number_of_shots": 5,
             },
             {
-                "type": "fourier_discrimination",
                 "qubits": [{"target": 0, "ancilla": 1}, {"target": 5, "ancilla": 5}],
                 "angle": {"start": 0, "stop": 4, "number_of_steps": 3},
                 "method": "postselection",
                 "number_of_shots": 5,
             },
-            {
-                "type": "fourier_discrimination",
-                "qubits": [{"target": 0, "ancilla": 1}, {"target": 5, "ancilla": 4}],
-                "angle": {"start": 4, "stop": 1, "number_of_steps": 3},
-                "method": "postselection",
-                "number_of_shots": 5,
-            },
-            {
-                "type": "fourier_discrimination",
-                "qubits": [{"target": 0, "ancilla": 1}, {"target": 5, "ancilla": 4}],
-                "angle": {"start": 1, "stop": 1, "number_of_steps": 0},
-                "method": "postselection",
-                "number_of_shots": 5,
-            },
-            {
-                "type": "fourier_discrimination",
-                "qubits": [{"target": 0, "ancilla": 1}, {"target": 5, "ancilla": 4}],
-                "angle": {"start": 1, "stop": 1, "number_of_steps": 5},
-                "method": "postselection",
-                "number_of_shots": 5,
-            },
-            {
-                "type": "fourier_discrimination",
-                "qubits": [
-                    {"target": 5, "ancilla": 3},
-                    {"target": 5, "ancilla": 4},
-                    {"target": 5, "ancilla": 4},
-                ],
-                "angle": {"start": 1, "stop": 1, "number_of_steps": 5},
-                "method": "postselection",
-                "number_of_shots": 5,
-            },
         ],
     )
-    def test_cannot_be_parsed_from_incorrect_input(self, input):
+    def test_fails_to_validate_if_some_fields_are_missing(self, input):
+        with pytest.raises(ValidationError):
+            FourierDiscriminationExperiment(**input)
+
+    def test_fails_to_validate_if_experiment_type_is_different_from_fourier_discrimination(self):
+        input = {
+            "type": "fourier",
+            "qubits": [{"target": 0, "ancilla": 1}, {"target": 5, "ancilla": 2}],
+            "angle": {"start": 0, "stop": 4, "number_of_steps": 3},
+            "method": "postselection",
+            "number_of_shots": 5,
+        }
+
+        with pytest.raises(ValidationError):
+            FourierDiscriminationExperiment(**input)
+
+    def test_fails_to_validate_if_method_is_unknown(self):
+        input = {
+            "type": "fourier",
+            "qubits": [{"target": 0, "ancilla": 1}, {"target": 5, "ancilla": 2}],
+            "angle": {"start": 0, "stop": 4, "number_of_steps": 3},
+            "method": "unknown-method",
+            "number_of_shots": 5,
+        }
+
+        with pytest.raises(ValidationError):
+            FourierDiscriminationExperiment(**input)
+
+    def test_cannot_be_parsed_if_there_are_duplicate_qubit_pairs(self):
+        input = {
+            "type": "fourier_discrimination",
+            "qubits": [
+                {"target": 5, "ancilla": 3},
+                {"target": 5, "ancilla": 4},
+                {"target": 5, "ancilla": 4},
+            ],
+            "angle": {"start": 1, "stop": 1, "number_of_steps": 5},
+            "method": "postselection",
+            "number_of_shots": 5,
+        }
         with pytest.raises(ValidationError):
             FourierDiscriminationExperiment(**input)
 
 
-class TestAngleDescription:
+class TestAnglesRange:
     @pytest.mark.parametrize("input", [{"start": 0, "stop": 4, "number_of_steps": 3}])
     def test_can_be_parsed_from_correct_input(self, input):
         description = AnglesRange(**input)
+        assert description.start == input["start"]
         assert description.stop == input["stop"]
 
-    @pytest.mark.parametrize("input", [{"number_of_steps": 3}])
-    def test_cannot_be_parsed_from_incorrect_input(self, input):
+    def test_degenerate_range_can_contain_only_one_angle(self):
+        angle_range = AnglesRange(start=10, stop=10, number_of_steps=1)
+        assert angle_range.stop == angle_range.start == 10
+        assert angle_range.number_of_steps == 1
+
         with pytest.raises(ValidationError):
-            AnglesRange(**input)
-
-
-class TestResultFourierDescription:
-    @pytest.mark.parametrize(
-        "input",
-        [
-            {
-                "metadata": {
-                    "experiment": {
-                        "type": "fourier_discrimination",
-                        "qubits": [{"target": 0, "ancilla": 1}, {"target": 5, "ancilla": 2}],
-                        "angle": {"start": 0, "stop": 4, "number_of_steps": 3},
-                        "method": "postselection",
-                        "number_of_shots": 5,
-                    },
-                    "device_description": {
-                        "arn": "arn:aws:braket:eu-west-2::device/qpu/oqc/Lucy",
-                        "disable_qubit_rewiring": False,
-                    },
-                },
-                "results": [
-                    {
-                        "target": 0,
-                        "ancilla": 1,
-                        "measurement_counts": [
-                            {"phi": 0.1, "counts": {"00": 10, "11": 2}},
-                            {"phi": 0.2, "counts": {"00": 10, "11": 2}},
-                        ],
-                    },
-                    {
-                        "target": 4,
-                        "ancilla": 3,
-                        "measurement_counts": [{"phi": 0.5, "counts": {"01": 14, "01": 14}}],
-                    },
-                ],
-            }
-        ],
-    )
-    def test_can_be_parsed_from_correct_input(self, input):
-        description = FourierDiscriminationResult(**input)
-        assert description.results == input["results"]
-
-    @pytest.mark.parametrize(
-        "input",
-        [
-            {
-                "metadata": {
-                    "experiment": {
-                        "type": "fourier_discrimination",
-                        "qubits": [{"target": 0, "ancilla": 1}, {"target": 5, "ancilla": 2}],
-                        "angle": {"start": 0, "stop": 4, "number_of_steps": 3},
-                        "method": "postselection",
-                        "number_of_shots": 5,
-                    },
-                    "device": {
-                        "arn": "arn:aws:braket:eu-west-2::device/qpu/oqc/Lucy",
-                        "disable_qubit_rewiring": False,
-                    },
-                },
-                "results": [
-                    {
-                        "target": 0,
-                        "ancilla": 1,
-                        "measurement_counts": [
-                            {"phi": 0.1, "counts": {"00": 10, "11": 2}},
-                            {"phi": 0.2, "counts": {"00": 10, "11": 2}},
-                        ],
-                    },
-                    {
-                        "target": 4,
-                        "ancilla": 3,
-                        "measurement_counts": [{"phi": 0.5, "counts": {"01": 14, "1": 14}}],
-                    },
-                ],
-            },
-        ],
-    )
-    def test_cannot_be_parsed_from_incorrect_input(self, input):
-        with pytest.raises(ValidationError):
-            FourierDiscriminationResult(**input)
+            AnglesRange(start=10, stop=10, number_of_steps=2)
