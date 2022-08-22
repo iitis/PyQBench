@@ -1,53 +1,55 @@
 import numpy as np
-from braket import circuits
+from qiskit import QuantumCircuit
 
 
-def _state_preparation(target, ancilla):
-    return circuits.Circuit().v(target).rz(target, np.pi).x(target).v(ancilla).ecr(target, ancilla)
+def _state_preparation():
+    circuit = QuantumCircuit(2)
+    circuit.sx(0)
+    circuit.rz(np.pi, 0)
+    circuit.x(0)
+    circuit.sx(1)
+    circuit.ecr(0, 1)
+    return circuit
 
 
-def _black_box_dag(qubit, phi):
-    return (
-        circuits.Circuit()
-        .v(qubit)
-        .rz(qubit, np.pi / 2)
-        .v(qubit)
-        .rz(qubit, -phi)
-        .v(qubit)
-        .rz(qubit, np.pi / 2)
-        .v(qubit)
-    )
+def _black_box_dag(phi):
+    circuit = QuantumCircuit(1)
+    circuit.sx(0)
+    circuit.rz(np.pi / 2, 0)
+    circuit.sx(0)
+    circuit.rz(-phi, 0)
+    circuit.sx(0)
+    circuit.rz(np.pi / 2, 0)
+    circuit.sx(0)
+    return circuit
 
 
-def _v0_dag(qubit, phi):
-    return (
-        circuits.Circuit()
-        .rz(qubit, -np.pi / 2)
-        .v(qubit)
-        .rz(qubit, -(phi + np.pi) / 2)
-        .v(qubit)
-        .x(qubit)
-    )
+def _v0_dag(phi):
+    circuit = QuantumCircuit(1)
+    circuit.rz(-np.pi / 2, 0)
+    circuit.sx(0)
+    circuit.rz(-(phi + np.pi) / 2, 0)
+    circuit.sx(0)
+    circuit.x(0)
+    return circuit
 
 
-def _v1_dag(qubit, phi):
-    return (
-        circuits.Circuit()
-        .rz(qubit, np.pi / 2)
-        .v(qubit)
-        .rz(qubit, -(np.pi - phi) / 2)
-        .x(qubit)
-        .v(qubit)
-    )
+def _v1_dag(phi):
+    circuit = QuantumCircuit(1)
+    circuit.rz(np.pi / 2, 0)
+    circuit.sx(0)
+    circuit.rz(-(np.pi - phi) / 2, 0)
+    circuit.x(0)
+    circuit.sx(0)
+    return circuit
 
 
-def _v0_v1_direct_sum(target, ancilla, phi):
-    return (
-        circuits.Circuit()
-        .rz(ancilla, -np.pi / 2)
-        .v(ancilla)
-        .rz(ancilla, -(phi + np.pi) / 2)
-        .rz(target, 3 * np.pi / 2)
-        .x(target)
-        .ecr(target, ancilla)
-    )
+def _v0_v1_direct_sum(phi):
+    circuit = QuantumCircuit(2)
+    circuit.rz(-np.pi / 2, 1)
+    circuit.sx(1)
+    circuit.rz(-(phi + np.pi) / 2, 1)
+    circuit.rz(3 * np.pi / 2, 0)
+    circuit.x(0)
+    circuit.ecr(0, 1)
+    return circuit
