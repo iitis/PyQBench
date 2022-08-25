@@ -25,6 +25,7 @@ class FourierCircuits:
         self.phi = phi
         self._module = _GATESET_MAPPING[gateset]
 
+    @property
     def state_preparation(self) -> circuits.Circuit:
         """Create circuit initializing system into maximally entangled state.
 
@@ -39,6 +40,7 @@ class FourierCircuits:
         """
         return self._module._state_preparation()
 
+    @property
     def unitary_to_discriminate(self) -> circuits.Circuit:
         """Create a unitary channel corresponding to the measurement to discriminate.
 
@@ -53,6 +55,7 @@ class FourierCircuits:
 
         return self._module._black_box_dag(self.phi)
 
+    @property
     def v0_dag(self) -> circuits.Circuit:
         """Create circuit corresponding to the positive part of Holevo-Helstrom measurement.
 
@@ -60,6 +63,7 @@ class FourierCircuits:
         """
         return self._module._v0_dag(self.phi)
 
+    @property
     def v1_dag(self) -> circuits.Circuit:
         """Create circuit corresponding to the negative part of Holevo-Helstrom measurement.
 
@@ -67,6 +71,7 @@ class FourierCircuits:
         """
         return self._module._v1_dag(self.phi)
 
+    @property
     def controlled_v0_v1_dag(self) -> circuits.Circuit:
         """Create circuit implementing controlled Holevo-Helstrom measurement.
 
