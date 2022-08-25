@@ -48,7 +48,7 @@ def black_box_dag(phi):
 
 
 def v0_dag(phi):
-    circuit = QuantumCircuit(1, "v0-dag")
+    circuit = QuantumCircuit(1, name="v0-dag")
     circuit.rz(-np.pi / 2, 0)
     circuit.rx(np.pi / 2, 0)
     circuit.rz(-(phi + np.pi) / 2, 0)
@@ -57,7 +57,7 @@ def v0_dag(phi):
 
 
 def v1_dag(phi):
-    circuit = QuantumCircuit(1, "v1-dag")
+    circuit = QuantumCircuit(1, name="v1-dag")
     circuit.rz(np.pi / 2, 0)
     circuit.rx(np.pi / 2, 0)
     circuit.rz(-(np.pi - phi) / 2, 0)
