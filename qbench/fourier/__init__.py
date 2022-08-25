@@ -1,7 +1,6 @@
 from typing import Optional, Union
 
 import numpy as np
-from braket import circuits
 from qiskit.circuit import Instruction
 
 from . import _generic, _lucy, _rigetti
@@ -39,7 +38,7 @@ class FourierCircuits:
 
         :return: A circuit mapping |00> to (|00> + |11>) / sqrt(2).
         """
-        return self._module._state_preparation()
+        return self._module.state_preparation()
 
     @property
     def unitary_to_discriminate(self) -> Instruction:
@@ -54,7 +53,7 @@ class FourierCircuits:
         :return: A circuit implementing appropriate unitary channel.
         """
 
-        return self._module._black_box_dag(self.phi)
+        return self._module.black_box_dag(self.phi)
 
     @property
     def v0_dag(self) -> Instruction:
@@ -62,7 +61,7 @@ class FourierCircuits:
 
         :return: A circuit implementing positive part of Holevo-Helstrom measurement.
         """
-        return self._module._v0_dag(self.phi)
+        return self._module.v0_dag(self.phi)
 
     @property
     def v1_dag(self) -> Instruction:
@@ -70,10 +69,10 @@ class FourierCircuits:
 
         :return: A circuit implementing positive part of Holevo-Helstrom measurement.
         """
-        return self._module._v1_dag(self.phi)
+        return self._module.v1_dag(self.phi)
 
     @property
-    def controlled_v0_v1_dag(self) -> circuits.Circuit:
+    def controlled_v0_v1_dag(self) -> Instruction:
         """Create circuit implementing controlled Holevo-Helstrom measurement.
 
         .. note::
@@ -91,7 +90,7 @@ class FourierCircuits:
 
         :return: Circuit implementing V0 \\oplus V1.
         """
-        return self._module._v0_v1_direct_sum(self.phi)
+        return self._module.v0_v1_direct_sum(self.phi)
 
 
 def discrimination_probability_upper_bound(

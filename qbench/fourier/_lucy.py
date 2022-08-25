@@ -2,7 +2,7 @@ import numpy as np
 from qiskit import QuantumCircuit
 
 
-def _state_preparation():
+def state_preparation():
     circuit = QuantumCircuit(2)
     circuit.sx(0)
     circuit.rz(np.pi, 0)
@@ -12,7 +12,7 @@ def _state_preparation():
     return circuit.to_instruction()
 
 
-def _black_box_dag(phi):
+def black_box_dag(phi):
     circuit = QuantumCircuit(1)
     circuit.sx(0)
     circuit.rz(np.pi / 2, 0)
@@ -24,7 +24,7 @@ def _black_box_dag(phi):
     return circuit.to_instruction()
 
 
-def _v0_dag(phi):
+def v0_dag(phi):
     circuit = QuantumCircuit(1)
     circuit.rz(-np.pi / 2, 0)
     circuit.sx(0)
@@ -34,7 +34,7 @@ def _v0_dag(phi):
     return circuit.to_instruction()
 
 
-def _v1_dag(phi):
+def v1_dag(phi):
     circuit = QuantumCircuit(1)
     circuit.rz(np.pi / 2, 0)
     circuit.sx(0)
@@ -44,7 +44,7 @@ def _v1_dag(phi):
     return circuit.to_instruction()
 
 
-def _v0_v1_direct_sum(phi):
+def v0_v1_direct_sum(phi):
     circuit = QuantumCircuit(2)
     circuit.rz(-np.pi / 2, 1)
     circuit.sx(1)
