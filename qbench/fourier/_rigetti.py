@@ -66,7 +66,7 @@ def v1_dag(phi):
 
 
 def v0_v1_direct_sum(phi):
-    circuit = QuantumCircuit(2, name="v0 \\oplus v1-dag")
+    circuit = QuantumCircuit(2, name="v0 ⊕ v1-dag")
     circuit.rz(np.pi, 0)
     circuit.append(v0_dag(phi), [1])
     circuit.append(_rigetti_cnot(), [0, 1])
