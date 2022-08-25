@@ -2,6 +2,7 @@ from typing import Optional, Union
 
 import numpy as np
 from braket import circuits
+from qiskit.circuit import Instruction
 
 from . import _generic, _lucy, _rigetti
 
@@ -26,7 +27,7 @@ class FourierCircuits:
         self._module = _GATESET_MAPPING[gateset]
 
     @property
-    def state_preparation(self) -> circuits.Circuit:
+    def state_preparation(self) -> Instruction:
         """Create circuit initializing system into maximally entangled state.
 
         .. note::
@@ -41,7 +42,7 @@ class FourierCircuits:
         return self._module._state_preparation()
 
     @property
-    def unitary_to_discriminate(self) -> circuits.Circuit:
+    def unitary_to_discriminate(self) -> Instruction:
         """Create a unitary channel corresponding to the measurement to discriminate.
 
         .. note::
@@ -56,7 +57,7 @@ class FourierCircuits:
         return self._module._black_box_dag(self.phi)
 
     @property
-    def v0_dag(self) -> circuits.Circuit:
+    def v0_dag(self) -> Instruction:
         """Create circuit corresponding to the positive part of Holevo-Helstrom measurement.
 
         :return: A circuit implementing positive part of Holevo-Helstrom measurement.
@@ -64,7 +65,7 @@ class FourierCircuits:
         return self._module._v0_dag(self.phi)
 
     @property
-    def v1_dag(self) -> circuits.Circuit:
+    def v1_dag(self) -> Instruction:
         """Create circuit corresponding to the negative part of Holevo-Helstrom measurement.
 
         :return: A circuit implementing positive part of Holevo-Helstrom measurement.
