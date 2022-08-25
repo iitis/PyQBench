@@ -34,7 +34,7 @@ def _state_preparation():
     circuit = QuantumCircuit(2)
     circuit.append(_rigetti_hadamard(), [0])
     circuit.append(_rigetti_cnot(), [0, 1])
-    return circuit
+    return circuit.to_instruction()
 
 
 def _black_box_dag(phi):
@@ -44,7 +44,7 @@ def _black_box_dag(phi):
     circuit.rz(-phi, 0)
     circuit.rx(-np.pi / 2, 0)
     circuit.rz(-np.pi / 2, 0)
-    return circuit
+    return circuit.to_instruction()
 
 
 def _v0_dag(phi):
@@ -53,7 +53,7 @@ def _v0_dag(phi):
     circuit.rx(np.pi / 2, 0)
     circuit.rz(-(phi + np.pi) / 2, 0)
     circuit.rx(-np.pi / 2, 0)
-    return circuit
+    return circuit.to_instruction()
 
 
 def _v1_dag(phi):
@@ -62,12 +62,12 @@ def _v1_dag(phi):
     circuit.rx(np.pi / 2, 0)
     circuit.rz(-(np.pi - phi) / 2, 0)
     circuit.rx(-np.pi / 2, 0)
-    return circuit
+    return circuit.to_instruction()
 
 
 def _v0_v1_direct_sum(phi):
     circuit = QuantumCircuit(2)
     circuit.rz(np.pi, 0)
-    circuit.append(_v0_dag(phi).to_instruction(), [1])
+    circuit.append(_v0_dag(phi), [1])
     circuit.append(_rigetti_cnot(), [0, 1])
-    return circuit
+    return circuit.to_instruction()
