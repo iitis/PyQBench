@@ -87,7 +87,7 @@ class TestFourierCircuits:
 
     @pytest.mark.parametrize("phi", [np.pi, np.pi / 4, np.pi / 5, np.sqrt(2), 0])
     def test_black_box_has_correct_unitary(self, phi, gateset):
-        black_box = FourierCircuits(phi=phi, gateset=gateset).unitary_to_discriminate
+        black_box = FourierCircuits(phi=phi, gateset=gateset).black_box_dag
         expected_unitary = linalg.dft(2) @ np.diag([1, np.exp(-1j * phi)]) @ linalg.dft(2) / 2
 
         _assert_are_equivalent(black_box, expected_unitary)

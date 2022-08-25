@@ -41,7 +41,7 @@ class FourierCircuits:
         return self._module.state_preparation()
 
     @property
-    def unitary_to_discriminate(self) -> Instruction:
+    def black_box_dag(self) -> Instruction:
         """Create a unitary channel corresponding to the measurement to discriminate.
 
         .. note::
