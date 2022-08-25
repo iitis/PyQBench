@@ -16,9 +16,8 @@ class FourierCircuits:
     """Class creating circuits for Fourier-measurement experiment.
 
     :param phi: Fourier angle of measurement to discriminate.
-    :param native_only: whether to only use gates native to Rigetti architecture.
-     Defaults to faults, in which case gates in the circuits will be compiled by
-     Braket.
+    :param gateset: one of predefined basis gate sets to use. One of ["lucy", "rigetti"].
+     If not provided, high-level definitions of gates will be used without restrictions.
     """
 
     def __init__(self, phi: float, gateset: Optional[str] = None):
@@ -27,68 +26,78 @@ class FourierCircuits:
 
     @property
     def state_preparation(self) -> Instruction:
-        """Create circuit initializing system into maximally entangled state.
+        """Instruction performing state preparation |00> -> bell state
 
         .. note::
-           The returned circuit is (assuming target=0, ancilla=1) of the form:
+           The corresponding circuit is:
 
-           0: ───H───@───
-                     │
-           1: ───────X───
-
-        :return: A circuit mapping |00> to (|00> + |11>) / sqrt(2).
+                ┌───┐
+           q_0: ┤ H ├──■──
+                └───┘┌─┴─┐
+           q_1: ─────┤ X ├
+                     └───┘
         """
         return self._module.state_preparation()
 
     @property
     def black_box_dag(self) -> Instruction:
-        """Create a unitary channel corresponding to the measurement to discriminate.
+        """Black box to be discriminated from Z-basis measurement.
 
         .. note::
-           The returned circuits can be viewed as a change of basis in which von Neumann
-           measurement is to be performed, and it looks as follows (assuming qubit=0).
+           This instruction is needed because on actual devices we can only measure in Z-basis.
+           The corresponding unitary changes basis so that subsequent measurement in Z-basis can
+           be considered as performing desired von Neumann measurement to be discriminated from
+           the Z-basis one. The corresponding circuit is:
 
-           0: ───H───Phase(-ϕ)───H───
-
-        :return: A circuit implementing appropriate unitary channel.
+              ┌───┐┌─────────────────┐┌───┐
+           q: ┤ H ├┤ Phase(-1.0*phi) ├┤ H ├
+              └───┘└─────────────────┘└───┘
         """
 
         return self._module.black_box_dag(self.phi)
 
     @property
     def v0_dag(self) -> Instruction:
-        """Create circuit corresponding to the positive part of Holevo-Helstrom measurement.
+        """Instruction corresponding to the positive part of Holevo-Helstrom measurement.
 
-        :return: A circuit implementing positive part of Holevo-Helstrom measurement.
+        .. note::
+           The corresponding circuit is:
+
+              ┌──────────┐┌────────────────────┐
+           q: ┤ Rz(-π/2) ├┤ Ry(-0.5*phi - π/2) ├
+              └──────────┘└────────────────────┘
         """
         return self._module.v0_dag(self.phi)
 
     @property
     def v1_dag(self) -> Instruction:
-        """Create circuit corresponding to the negative part of Holevo-Helstrom measurement.
+        """Instruction corresponding to the negative part of Holevo-Helstrom measurement.
 
-        :return: A circuit implementing positive part of Holevo-Helstrom measurement.
+        .. note::
+           The corresponding circuit is:
+
+              ┌──────────┐┌────────────────────┐┌────────┐
+           q: ┤ Rz(-π/2) ├┤ Ry(-0.5*phi - π/2) ├┤ Rx(-π) ├
+              └──────────┘└────────────────────┘└────────┘
         """
         return self._module.v1_dag(self.phi)
 
     @property
     def controlled_v0_v1_dag(self) -> Instruction:
-        """Create circuit implementing controlled Holevo-Helstrom measurement.
+        """Direct sum of positive and negative part of Holeve-Helstrom measurement (V0 \\oplus V1).
 
         .. note::
            In usual basis ordering, the unitaries produced by this function would be
            block-diagonal, with blocks corresponding to positive and negative parts
            of Holevo-Helstrom measurement.
 
-           However, Braket enumerates basis vectors in reverse, so the produced unitaries
+           However, Qiskit enumerates basis vectors in reverse, so the produced unitaries
            are not block-diagonal, unless the qubits are swapped.
            See accompanying tests to see how it's done.
 
            The following article contains more details on basis vectors ordering used
-           (among others) by Braket:
+           (among others) by Qiskit and Braket:
            https://arxiv.org/abs/1711.02086
-
-        :return: Circuit implementing V0 \\oplus V1.
         """
         return self._module.v0_v1_direct_sum(self.phi)
 
