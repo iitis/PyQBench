@@ -58,10 +58,12 @@ def benchmark_using_postselection_all_cases(
     u_results_v1 = backend.run(u_circuit_v1, shots=num_shots_per_measurement).result()
 
     return (
-        u_results_v0.get_counts()["00"] / marginal_counts(u_results_v0.get_counts(), [0])["0"]
-        + u_results_v1.get_counts()["01"] / marginal_counts(u_results_v1.get_counts(), [0])["1"]
-        + identity_v0_results.get_counts()["10"]
-        / marginal_counts(identity_v0_results.get_counts(), [0])["0"]
-        + identity_v1_results.get_counts()["11"]
-        / marginal_counts(identity_v1_results.get_counts(), [0])["1"]
+        u_results_v0.get_counts().get("00", 0)
+        / marginal_counts(u_results_v0.get_counts(), [0]).get("0", 0)
+        + u_results_v1.get_counts().get("01", 0)
+        / marginal_counts(u_results_v1.get_counts(), [0]).get("1", 0)
+        + identity_v0_results.get_counts().get("10")
+        / marginal_counts(identity_v0_results.get_counts(), [0]).get("0", 0)
+        + identity_v1_results.get_counts().get("11", 0)
+        / marginal_counts(identity_v1_results.get_counts(), [0]).get("1", 0)
     ) / 4

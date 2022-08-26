@@ -40,8 +40,10 @@ def benchmark_using_postselection(
     identity_results = backend.run(identity_circuit, shots=num_shots_per_measurement).result()
     u_results = backend.run(u_circuit, shots=num_shots_per_measurement).result()
 
-    return (u_results.get_counts()["00"]) / (
-        2 * marginal_counts(u_results.get_counts(), [1])["0"]
-    ) + (identity_results.get_counts()["11"]) / (
-        2 * marginal_counts(identity_results.get_counts(), [1])["1"]
+    return (
+        u_results.get_counts().get("00", 0)
+        / (2 * marginal_counts(u_results.get_counts(), [1]).get("0"))
+    ) + (
+        identity_results.get_counts().get("11", 0)
+        / (2 * marginal_counts(identity_results.get_counts(), [1]).get("1", 0))
     )
