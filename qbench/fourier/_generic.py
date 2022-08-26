@@ -37,4 +37,4 @@ def v0_v1_direct_sum(phi):
     circuit.p(np.pi, 0)
     circuit.append(v0_dag(phi), [1])
     circuit.cnot(0, 1)
-    return circuit.to_instruction()
+    return circuit.decompose(["v0-dag"]).to_instruction()
