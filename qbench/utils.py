@@ -1,5 +1,6 @@
 """Module containing utilities, maybe combinatorial ones."""
 from collections import Counter
+from typing import Dict
 
 from qiskit import QuantumCircuit, transpile
 
@@ -12,7 +13,7 @@ def count_specific_measurements(measurement_counts: Counter, qubit_index: int, q
     )
 
 
-def remap_qubits(circuit: QuantumCircuit, virtual_to_physical: dict[int, int]):
+def remap_qubits(circuit: QuantumCircuit, virtual_to_physical: Dict[int, int]):
     assert len(circuit.qregs) == 1
     qreg = circuit.qregs[0]
     return transpile(
