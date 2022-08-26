@@ -1,6 +1,6 @@
 import numpy as np
-from braket import devices
 from matplotlib import pyplot as plt
+from qiskit_braket_provider import BraketLocalBackend
 
 from qbench.fourier import FourierCircuits, discrimination_probability_upper_bound
 from qbench.postselection_all_cases import benchmark_using_postselection_all_cases
@@ -12,18 +12,18 @@ GATESET = "rigetti"
 
 
 def main():
-    device = devices.LocalSimulator()
+    backend = BraketLocalBackend()
     phis = np.linspace(0, 2 * np.pi, 100)
 
     theoretical_probs = discrimination_probability_upper_bound(phis)
 
     actual_probs = [
         benchmark_using_postselection_all_cases(
-            device=device,
+            backend=backend,
             target=TARGET,
             ancilla=ANCILLA,
             state_preparation=circuits.state_preparation,
-            basis_change=circuits.unitary_to_discriminate,
+            basis_change=circuits.black_box_dag,
             v0=circuits.v0_dag,
             v1=circuits.v1_dag,
             num_shots_per_measurement=NUM_SHOTS_PER_MEASUREMENT,
