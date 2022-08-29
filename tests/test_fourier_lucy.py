@@ -1,6 +1,7 @@
 import pytest
-from braket.aws import AwsDevice
 from braket.circuits import Circuit
+from qiskit import QuantumCircuit
+from qiskit_braket_provider import AWSBraketProvider
 
 from qbench.fourier import FourierCircuits
 
@@ -12,9 +13,20 @@ def _assert_can_be_run_in_verbatim_mode(device, circuit):
     assert resp.result()
 
 
+def _assert_can_be_run(backend, circuit):
+    assert backend.run(circuit, shots=10).results()
+
+
+def _instruction_as_circuit(instruction, qubits):
+    circuit = QuantumCircuit(len(qubits))
+    circuit.append(instruction, qubits)
+    circuit.measure_all()
+    return circuit
+
+
 @pytest.fixture()
 def lucy():
-    return AwsDevice("arn:aws:braket:eu-west-2::device/qpu/oqc/Lucy")
+    return AWSBraketProvider().get_backend("Lucy")
 
 
 @pytest.fixture()
@@ -26,15 +38,31 @@ def circuits():
 
 
 @pytest.mark.skipif("not config.getoption('lucy')")
-class TestLucyDeviceCanRunDecomposedCircuitsInVerbatimMode:
+class TestLucyDeviceCanRunDecomposedCircuits:
     def test_black_box_can_be_run(self, lucy, circuits):
-        _assert_can_be_run_in_verbatim_mode(lucy, circuits.unitary_to_discriminate(0))
+        _assert_can_be_run(lucy, circuits.black_box_dag)
 
     def test_v0_dag_can_be_run(self, lucy, circuits):
-        _assert_can_be_run_in_verbatim_mode(lucy, circuits.v0_dag(0))
+        _assert_can_be_run(lucy, circuits.v0_dag)
 
     def test_v1_dag_can_be_run(self, lucy, circuits):
-        _assert_can_be_run_in_verbatim_mode(lucy, circuits.v1_dag(0))
+        _assert_can_be_run(lucy, circuits.v1_dag)
 
     def test_v0_v1_direct_sum_dag_can_be_run(self, lucy, circuits):
-        _assert_can_be_run_in_verbatim_mode(lucy, circuits.controlled_v0_v1_dag(0, 1))
+        _assert_can_be_run(lucy, circuits.controlled_v0_v1_dag)
+
+
+# @pytest.mark.skipif("not config.getoption('lucy')")
+@pytest.mark.skip
+class TestLucyDeviceCanRunDecomposedCircuitsInVerbatimMode:
+    def test_black_box_can_be_run(self, lucy, circuits):
+        _assert_can_be_run_in_verbatim_mode(lucy, circuits.black_box_dag)
+
+    def test_v0_dag_can_be_run(self, lucy, circuits):
+        _assert_can_be_run_in_verbatim_mode(lucy, circuits.v0_dag)
+
+    def test_v1_dag_can_be_run(self, lucy, circuits):
+        _assert_can_be_run_in_verbatim_mode(lucy, circuits.v1_dag)
+
+    def test_v0_v1_direct_sum_dag_can_be_run(self, lucy, circuits):
+        _assert_can_be_run_in_verbatim_mode(lucy, circuits.controlled_v0_v1_dag)

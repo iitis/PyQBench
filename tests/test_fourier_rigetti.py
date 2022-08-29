@@ -28,7 +28,7 @@ def circuits():
 @pytest.mark.skipif("not config.getoption('rigetti')")
 class TestRigettiDeviceCanRunDecomposedCircuitsInVerbatimMode:
     def test_black_box_can_be_run(self, aspen, circuits):
-        _assert_can_be_run_in_verbatim_mode(aspen, circuits.unitary_to_discriminate(0))
+        _assert_can_be_run_in_verbatim_mode(aspen, circuits.black_box_dag(0))
 
     def test_v0_dag_can_be_run(self, aspen, circuits):
         _assert_can_be_run_in_verbatim_mode(aspen, circuits.v0_dag(0))
