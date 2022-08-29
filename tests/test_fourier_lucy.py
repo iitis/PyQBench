@@ -14,12 +14,12 @@ def _assert_can_be_run_in_verbatim_mode(device, circuit):
 
 
 def _assert_can_be_run(backend, circuit):
-    assert backend.run(circuit, shots=10).results()
+    assert backend.run(circuit.decompose(), shots=10).result()
 
 
-def _instruction_as_circuit(instruction, qubits):
-    circuit = QuantumCircuit(len(qubits))
-    circuit.append(instruction, qubits)
+def _instruction_as_circuit(instruction, num_qubits):
+    circuit = QuantumCircuit(num_qubits)
+    circuit.append(instruction, list(range(num_qubits)))
     circuit.measure_all()
     return circuit
 
@@ -40,16 +40,16 @@ def circuits():
 @pytest.mark.skipif("not config.getoption('lucy')")
 class TestLucyDeviceCanRunDecomposedCircuits:
     def test_black_box_can_be_run(self, lucy, circuits):
-        _assert_can_be_run(lucy, circuits.black_box_dag)
+        _assert_can_be_run(lucy, _instruction_as_circuit(circuits.black_box_dag, 1))
 
     def test_v0_dag_can_be_run(self, lucy, circuits):
-        _assert_can_be_run(lucy, circuits.v0_dag)
+        _assert_can_be_run(lucy, _instruction_as_circuit(circuits.v0_dag, 1))
 
     def test_v1_dag_can_be_run(self, lucy, circuits):
-        _assert_can_be_run(lucy, circuits.v1_dag)
+        _assert_can_be_run(lucy, _instruction_as_circuit(circuits.v1_dag, 1))
 
     def test_v0_v1_direct_sum_dag_can_be_run(self, lucy, circuits):
-        _assert_can_be_run(lucy, circuits.controlled_v0_v1_dag)
+        _assert_can_be_run(lucy, _instruction_as_circuit(circuits.controlled_v0_v1_dag, 2))
 
 
 # @pytest.mark.skipif("not config.getoption('lucy')")
