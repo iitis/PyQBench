@@ -1,8 +1,18 @@
 import pytest
+from qiskit import QuantumCircuit
+from qiskit.circuit import Instruction
 from qiskit_braket_provider import AWSBraketProvider
 
 from qbench.fourier import FourierCircuits
-from qbench.utils import assert_can_be_run_in_verbatim_mode
+
+
+def _assert_can_be_run_in_verbatim_mode(backend, instruction: Instruction):
+    circuit = QuantumCircuit(instruction.num_qubits)
+    circuit.append(instruction, list(range(instruction.num_qubits)))
+    circuit.measure_all()
+    resp = backend.run(circuit.decompose(), shots=10, verbatim=True)
+    assert resp.result()
+    assert sum(resp.result().get_counts().values()) == 10
 
 
 @pytest.fixture(scope="module")
@@ -21,13 +31,13 @@ def circuits():
 @pytest.mark.skipif("not config.getoption('lucy')")
 class TestLucyDeviceCanRunDecomposedCircuitsInVerbatimMode:
     def test_black_box_can_be_run(self, lucy, circuits):
-        assert_can_be_run_in_verbatim_mode(lucy, circuits.black_box_dag)
+        _assert_can_be_run_in_verbatim_mode(lucy, circuits.black_box_dag)
 
     def test_v0_dag_can_be_run(self, lucy, circuits):
-        assert_can_be_run_in_verbatim_mode(lucy, circuits.v0_dag)
+        _assert_can_be_run_in_verbatim_mode(lucy, circuits.v0_dag)
 
     def test_v1_dag_can_be_run(self, lucy, circuits):
-        assert_can_be_run_in_verbatim_mode(lucy, circuits.v1_dag)
+        _assert_can_be_run_in_verbatim_mode(lucy, circuits.v1_dag)
 
     def test_v0_v1_direct_sum_dag_can_be_run(self, lucy, circuits):
-        assert_can_be_run_in_verbatim_mode(lucy, circuits.controlled_v0_v1_dag)
+        _assert_can_be_run_in_verbatim_mode(lucy, circuits.controlled_v0_v1_dag)
