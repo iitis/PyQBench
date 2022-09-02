@@ -62,7 +62,7 @@ def benchmark_using_postselection_all_cases(
         / marginal_counts(u_results_v0.get_counts(), [0]).get("0", 0)
         + u_results_v1.get_counts().get("01", 0)
         / marginal_counts(u_results_v1.get_counts(), [0]).get("1", 0)
-        + identity_v0_results.get_counts().get("10")
+        + identity_v0_results.get_counts().get("10", 0)
         / marginal_counts(identity_v0_results.get_counts(), [0]).get("0", 0)
         + identity_v1_results.get_counts().get("11", 0)
         / marginal_counts(identity_v1_results.get_counts(), [0]).get("1", 0)
