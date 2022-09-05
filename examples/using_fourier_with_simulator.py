@@ -2,8 +2,8 @@ import numpy as np
 from matplotlib import pyplot as plt
 from qiskit_braket_provider import BraketLocalBackend
 
-from qbench.direct import benchmark_using_controlled_unitary
-from qbench.fourier import FourierCircuits, discrimination_probability_upper_bound
+from qbench.direct_sum import benchmark_using_controlled_unitary
+from qbench.fourier import FourierComponents, discrimination_probability_upper_bound
 
 NUM_SHOTS_PER_MEASUREMENT = 1000
 TARGET = 0
@@ -27,7 +27,7 @@ def main():
             v0_v1_direct_sum_dag=circuits.controlled_v0_v1_dag,
             num_shots_per_measurement=NUM_SHOTS_PER_MEASUREMENT,
         )
-        for circuits in (FourierCircuits(phi, gateset=GATESET) for phi in phis)
+        for circuits in (FourierComponents(phi, gateset=GATESET) for phi in phis)
     ]
 
     fig, ax = plt.subplots()

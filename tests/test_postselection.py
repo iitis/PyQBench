@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 from qiskit_braket_provider import BraketLocalBackend
 
-from qbench.fourier import FourierCircuits
+from qbench.fourier import FourierComponents
 from qbench.postselection import benchmark_using_postselection
 
 
@@ -10,7 +10,7 @@ from qbench.postselection import benchmark_using_postselection
 @pytest.mark.parametrize("gateset", [None, "rigetti", "lucy"])
 def test_computed_discrimination_probability_is_feasible(phi: float, gateset):
     backend = BraketLocalBackend()
-    circuits = FourierCircuits(phi=phi, gateset=gateset)
+    circuits = FourierComponents(phi=phi, gateset=gateset)
 
     probability = benchmark_using_postselection(
         backend=backend,

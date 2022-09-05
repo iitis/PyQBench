@@ -3,7 +3,7 @@ import pytest
 from qiskit.quantum_info import Operator
 from scipy import linalg
 
-from qbench.fourier import FourierCircuits, discrimination_probability_upper_bound
+from qbench.fourier import FourierComponents, discrimination_probability_upper_bound
 
 SWAP_MATRIX = np.array(
     [
@@ -81,27 +81,27 @@ class TestFourierCircuits:
         bell = np.array([1 / np.sqrt(2), 0, 0, 1 / np.sqrt(2)])
         expected_proj = _proj(bell)
 
-        circuit = FourierCircuits(phi=0.1, gateset=gateset).state_preparation
+        circuit = FourierComponents(phi=0.1, gateset=gateset).state_preparation
         actual_proj = _proj(Operator(circuit).data[:, 0])
         np.testing.assert_allclose(actual_proj, expected_proj, atol=1e-10)
 
     @pytest.mark.parametrize("phi", [np.pi, np.pi / 4, np.pi / 5, np.sqrt(2), 0])
     def test_black_box_has_correct_unitary(self, phi, gateset):
-        black_box = FourierCircuits(phi=phi, gateset=gateset).black_box_dag
+        black_box = FourierComponents(phi=phi, gateset=gateset).black_box_dag
         expected_unitary = linalg.dft(2) @ np.diag([1, np.exp(-1j * phi)]) @ linalg.dft(2) / 2
 
         _assert_are_equivalent(black_box, expected_unitary)
 
     @pytest.mark.parametrize("phi", np.linspace(0, 2 * np.pi, 100))
     def test_decomposed_v0_dagger_is_equal_to_the_original_one(self, phi: float, gateset):
-        v0_dag = FourierCircuits(phi=phi, gateset=gateset).v0_dag
+        v0_dag = FourierComponents(phi=phi, gateset=gateset).v0_dag
         expected = _v0_ref(phi).conj().T
 
         _assert_are_equivalent(v0_dag, expected)
 
     @pytest.mark.parametrize("phi", np.linspace(0, 2 * np.pi, 100))
     def test_decomposed_v1_is_equal_to_the_original_one(self, phi: float, gateset):
-        v1_dag = FourierCircuits(phi=phi, gateset=gateset).v1_dag
+        v1_dag = FourierComponents(phi=phi, gateset=gateset).v1_dag
         expected = _v1_ref(phi).conj().T
 
         _assert_are_equivalent(v1_dag, expected)
@@ -110,7 +110,7 @@ class TestFourierCircuits:
     def test_decomposed_v0_v1_circuit_is_equal_to_the_original_one_up_to_phase(
         self, phi: float, gateset
     ):
-        v0_v1_direct_sum = FourierCircuits(phi=phi, gateset=gateset).controlled_v0_v1_dag
+        v0_v1_direct_sum = FourierComponents(phi=phi, gateset=gateset).controlled_v0_v1_dag
         expected = _v0_v1_block_diag_ref(phi).conj().T
 
         _assert_are_equivalent(v0_v1_direct_sum, expected)

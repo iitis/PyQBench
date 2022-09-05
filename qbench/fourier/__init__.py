@@ -1,3 +1,4 @@
+"""Implementation of components and exact probabilities needed in Fourier experiment."""
 from typing import Optional, Union
 
 import numpy as np
@@ -12,15 +13,16 @@ _GATESET_MAPPING = {
 }
 
 
-class FourierCircuits:
-    """Class creating circuits for Fourier-measurement experiment.
-
-    :param phi: Fourier angle of measurement to discriminate.
-    :param gateset: one of predefined basis gate sets to use. One of ["lucy", "rigetti"].
-     If not provided, high-level definitions of gates will be used without restrictions.
-    """
+class FourierComponents:
+    """Class defining components for Fourier-measurement experiment."""
 
     def __init__(self, phi: float, gateset: Optional[str] = None):
+        """Initialize new instance of FourierCircuits.
+
+        :param phi: Fourier angle of measurement to discriminate.
+        :param gateset: one of predefined basis gate sets to use. One of ["lucy", "rigetti"].
+         If not provided, high-level definitions of gates will be used without restrictions.
+        """
         self.phi = phi
         self._module = _GATESET_MAPPING[gateset]
 
@@ -49,9 +51,9 @@ class FourierCircuits:
            be considered as performing desired von Neumann measurement to be discriminated from
            the Z-basis one. The corresponding circuit is:
 
-              ┌───┐┌─────────────────┐┌───┐
-           q: ┤ H ├┤ Phase(-1.0*phi) ├┤ H ├
-              └───┘└─────────────────┘└───┘
+              ┌───┐┌─────────────┐┌───┐
+           q: ┤ H ├┤ Phase(-phi) ├┤ H ├
+              └───┘└─────────────┘└───┘
         """
 
         return self._module.black_box_dag(self.phi)
@@ -63,9 +65,9 @@ class FourierCircuits:
         .. note::
            The corresponding circuit is:
 
-              ┌──────────┐┌────────────────────┐
-           q: ┤ Rz(-π/2) ├┤ Ry(-0.5*phi - π/2) ├
-              └──────────┘└────────────────────┘
+              ┌──────────┐┌──────────────────┐
+           q: ┤ Rz(-π/2) ├┤ Ry(-phi/2 - π/2) ├
+              └──────────┘└──────────────────┘
         """
         return self._module.v0_dag(self.phi)
 
@@ -76,15 +78,15 @@ class FourierCircuits:
         .. note::
            The corresponding circuit is:
 
-              ┌──────────┐┌────────────────────┐┌────────┐
-           q: ┤ Rz(-π/2) ├┤ Ry(-0.5*phi - π/2) ├┤ Rx(-π) ├
-              └──────────┘└────────────────────┘└────────┘
+              ┌──────────┐┌──────────────────┐┌────────┐
+           q: ┤ Rz(-π/2) ├┤ Ry(-phi/2 - π/2) ├┤ Rx(-π) ├
+              └──────────┘└──────────────────┘└────────┘
         """
         return self._module.v1_dag(self.phi)
 
     @property
     def controlled_v0_v1_dag(self) -> Instruction:
-        """Direct sum of positive and negative part of Holeve-Helstrom measurement (V0 \\oplus V1).
+        """Direct sum of positive and negative part of Holevo-Helstrom measurement (V0 \\oplus V1).
 
         .. note::
            In usual basis ordering, the unitaries produced by this function would be

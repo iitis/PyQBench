@@ -1,3 +1,7 @@
+"""Generic implementation of Fourier components not tailored for any specific device.
+
+Note that using components from this module on physical device typically requires compilation.
+"""
 import numpy as np
 from qiskit.circuit import QuantumCircuit
 

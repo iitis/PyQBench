@@ -2,7 +2,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from qiskit_braket_provider import BraketLocalBackend
 
-from qbench.fourier import FourierCircuits, discrimination_probability_upper_bound
+from qbench.fourier import FourierComponents, discrimination_probability_upper_bound
 from qbench.postselection import benchmark_using_postselection
 
 NUM_SHOTS_PER_MEASUREMENT = 1000
@@ -28,7 +28,7 @@ def main():
             v1_dag=circuits.v1_dag,
             num_shots_per_measurement=NUM_SHOTS_PER_MEASUREMENT,
         )
-        for circuits in (FourierCircuits(phi, gateset=GATESET) for phi in phis)
+        for circuits in (FourierComponents(phi, gateset=GATESET) for phi in phis)
     ]
 
     fig, ax = plt.subplots()

@@ -1,3 +1,4 @@
+"""Components for Fourier experiment specifically compiled for OQC Lucy device."""
 import numpy as np
 from qiskit import QuantumCircuit
 

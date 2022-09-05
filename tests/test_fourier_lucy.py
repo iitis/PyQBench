@@ -3,7 +3,7 @@ from qiskit import QuantumCircuit
 from qiskit.circuit import Instruction
 from qiskit_braket_provider import AWSBraketProvider
 
-from qbench.fourier import FourierCircuits
+from qbench.fourier import FourierComponents
 
 
 def _assert_can_be_run_in_verbatim_mode(backend, instruction: Instruction):
@@ -25,7 +25,7 @@ def circuits():
     # We only use one value of phi that is not a characteristic multiple of pi/2
     # It should be enough to verify that circuits can be run, while not incurring
     # too big costs when tests are run.
-    return FourierCircuits(phi=0.1, gateset="lucy")
+    return FourierComponents(phi=0.1, gateset="lucy")
 
 
 @pytest.mark.skipif("not config.getoption('lucy')")
