@@ -26,7 +26,7 @@ def _construct_black_box_circuit(state_preparation, black_box_dag, v_dag):
     return circuit
 
 
-def asemble_all_cases_postselection_circuits(
+def asemble_postselection_circuits(
     state_preparation: Instruction,
     black_box_dag: Instruction,
     v0_dag: Instruction,
@@ -43,9 +43,7 @@ def asemble_all_cases_postselection_circuits(
     return [remap_qubits(circuit, {0: target, 1: ancilla}).decompose() for circuit in raw_circuits]
 
 
-def interpret_postselection_all_cases_measurements(
-    id_v0_counts, id_v1_counts, u_v0_counts, u_v1_counts
-):
+def interpret_postselection_measurements(id_v0_counts, id_v1_counts, u_v0_counts, u_v1_counts):
     return (
         u_v0_counts.get("00", 0) / marginal_counts(u_v0_counts, [0]).get("0", 0)
         + u_v1_counts.get("01", 0) / marginal_counts(u_v1_counts, [0]).get("1", 0)
@@ -54,7 +52,7 @@ def interpret_postselection_all_cases_measurements(
     ) / 4
 
 
-def benchmark_using_postselection_all_cases(
+def benchmark_using_postselection(
     backend: Union[BackendV1, BackendV2],
     target: int,
     ancilla: int,
@@ -93,12 +91,7 @@ def benchmark_using_postselection_all_cases(
        for i=0,1, j=0,1 where M0 = U, M1 = identity.
        Refer to the paper for details how the terminal measurements are interpreted.
     """
-    (
-        id_circuit_v0,
-        id_circuit_v1,
-        u_circuit_v0,
-        u_circuit_v1,
-    ) = asemble_all_cases_postselection_circuits(
+    (id_circuit_v0, id_circuit_v1, u_circuit_v0, u_circuit_v1,) = asemble_postselection_circuits(
         state_preparation=state_preparation,
         black_box_dag=black_box_dag,
         v0_dag=v0_dag,
@@ -113,6 +106,6 @@ def benchmark_using_postselection_all_cases(
     u_v0_counts = backend.run(u_circuit_v0, shots=num_shots_per_measurement).result().get_counts()
     u_v1_counts = backend.run(u_circuit_v1, shots=num_shots_per_measurement).result().get_counts()
 
-    return interpret_postselection_all_cases_measurements(
+    return interpret_postselection_measurements(
         id_v0_counts, id_v1_counts, u_v0_counts, u_v1_counts
     )
