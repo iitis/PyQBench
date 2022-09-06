@@ -9,7 +9,7 @@ from qiskit.result import marginal_counts
 from qbench.utils import remap_qubits
 
 
-def assemble_postselection_circuits(
+def assemble_simplified_postselection_circuits(
     state_preparation: Instruction,
     black_box_dag: Instruction,
     v0_dag: Instruction,
@@ -34,13 +34,13 @@ def assemble_postselection_circuits(
     )
 
 
-def interpret_postselection_measurements(id_counts, u_counts):
+def interpret_simplified_postselection_measurements(id_counts, u_counts):
     return (u_counts.get("00", 0) / (2 * marginal_counts(u_counts, [1]).get("0"))) + (
         id_counts.get("11", 0) / (2 * marginal_counts(id_counts, [1]).get("1", 0))
     )
 
 
-def benchmark_using_postselection(
+def benchmark_using_simplified_postselection(
     backend: Union[BackendV1, BackendV2],
     target: int,
     ancilla: int,
@@ -80,7 +80,7 @@ def benchmark_using_postselection(
        for i=0,1, where M0 = U, M1 = identity.
        Refer to the paper for details how the terminal measurements are interpreted.
     """
-    id_circuit, u_circuit = assemble_postselection_circuits(
+    id_circuit, u_circuit = assemble_simplified_postselection_circuits(
         state_preparation=state_preparation,
         black_box_dag=black_box_dag,
         v0_dag=v0_dag,
@@ -92,4 +92,4 @@ def benchmark_using_postselection(
     id_counts = backend.run(id_circuit, shots=num_shots_per_measurement).result().get_counts()
     u_counts = backend.run(u_circuit, shots=num_shots_per_measurement).result().get_counts()
 
-    return interpret_postselection_measurements(id_counts, u_counts)
+    return interpret_simplified_postselection_measurements(id_counts, u_counts)

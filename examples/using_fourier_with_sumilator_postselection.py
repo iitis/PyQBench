@@ -3,7 +3,7 @@ from matplotlib import pyplot as plt
 from qiskit_braket_provider import BraketLocalBackend
 
 from qbench.fourier import FourierComponents, discrimination_probability_upper_bound
-from qbench.postselection import benchmark_using_postselection
+from qbench.simplified_postselection import benchmark_using_simplified_postselection
 
 NUM_SHOTS_PER_MEASUREMENT = 1000
 TARGET = 0
@@ -18,7 +18,7 @@ def main():
     theoretical_probs = discrimination_probability_upper_bound(phis)
 
     actual_probs = [
-        benchmark_using_postselection(
+        benchmark_using_simplified_postselection(
             backend=backend,
             target=TARGET,
             ancilla=ANCILLA,
