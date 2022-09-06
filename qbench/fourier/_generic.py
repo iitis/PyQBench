@@ -1,26 +1,44 @@
+"""Generic implementation of Fourier components not tailored for any specific device.
+
+Note that using components from this module on physical device typically requires compilation.
+"""
 import numpy as np
-from braket import circuits
+from qiskit.circuit import QuantumCircuit
 
 
-def _state_preparation(target, ancilla):
-    return circuits.Circuit().h(target).cnot(target, ancilla)
+def state_preparation():
+    circuit = QuantumCircuit(2, name="state-prep")
+    circuit.h(0)
+    circuit.cnot(0, 1)
+    return circuit.to_instruction()
 
 
-def _black_box_dag(qubit, phi):
-    return circuits.Circuit().h(qubit).phaseshift(qubit, -phi).h(qubit)
+def black_box_dag(phi):
+    circuit = QuantumCircuit(1, name="U-dag")
+    circuit.h(0)
+    circuit.p(-phi, 0)
+    circuit.h(0)
+    return circuit.to_instruction()
 
 
-def _v0_dag(qubit, phi):
-    return circuits.Circuit().rz(qubit, -np.pi / 2).ry(qubit, -(phi + np.pi) / 2)
+def v0_dag(phi):
+    circuit = QuantumCircuit(1, name="v0-dag")
+    circuit.rz(-np.pi / 2, 0)
+    circuit.ry(-(phi + np.pi) / 2, 0)
+    return circuit.to_instruction()
 
 
-def _v1_dag(qubit, phi):
-    return circuits.Circuit().rz(qubit, -np.pi / 2).ry(qubit, -(phi + np.pi) / 2).rx(qubit, -np.pi)
+def v1_dag(phi):
+    circuit = QuantumCircuit(1, name="v1-dag")
+    circuit.rz(-np.pi / 2, 0)
+    circuit.ry(-(phi + np.pi) / 2, 0)
+    circuit.rx(-np.pi, 0)
+    return circuit.to_instruction()
 
 
-def _v0_v1_direct_sum(target, ancilla, phi):
-    return (
-        circuits.Circuit().phaseshift(target, np.pi)
-        + _v0_dag(ancilla, phi)
-        + circuits.Circuit().cnot(target, ancilla)
-    )
+def v0_v1_direct_sum(phi):
+    circuit = QuantumCircuit(2, name="v0 ⊕ v1-dag")
+    circuit.p(np.pi, 0)
+    circuit.append(v0_dag(phi), [1])
+    circuit.cnot(0, 1)
+    return circuit.decompose(["v0-dag"]).to_instruction()

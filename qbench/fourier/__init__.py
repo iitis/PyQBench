@@ -1,109 +1,107 @@
-from typing import Optional, Protocol, Union, cast
+"""Implementation of components and exact probabilities needed in Fourier experiment."""
+from typing import Optional, Union
 
 import numpy as np
-from braket import circuits
+from qiskit.circuit import Instruction
 
 from . import _generic, _lucy, _rigetti
 
-
-class CircuitsImplementation(Protocol):
-    def _state_preparation(self, target: int, ancilla: int) -> circuits.Circuit:
-        pass
-
-    def _black_box_dag(self, qubit: int, phi: float) -> circuits.Circuit:
-        pass
-
-    def _v0_dag(self, qubit: int, phi: float) -> circuits.Circuit:
-        pass
-
-    def _v1_dag(self, qubit: int, phi: float) -> circuits.Circuit:
-        pass
-
-    def _v0_v1_direct_sum(self, target: int, ancilla: int, phi: float) -> circuits.Circuit:
-        pass
-
-
 _GATESET_MAPPING = {
-    "lucy": cast(CircuitsImplementation, _lucy),
-    "rigetti": cast(CircuitsImplementation, _rigetti),
-    None: cast(CircuitsImplementation, _generic),
+    "lucy": _lucy,
+    "rigetti": _rigetti,
+    None: _generic,
 }
 
 
-class FourierCircuits:
-    """Class creating circuits for Fourier-measurement experiment.
-
-    :param phi: Fourier angle of measurement to discriminate.
-    :param native_only: whether to only use gates native to Rigetti architecture.
-     Defaults to faults, in which case gates in the circuits will be compiled by
-     Braket.
-    """
+class FourierComponents:
+    """Class defining components for Fourier-measurement experiment."""
 
     def __init__(self, phi: float, gateset: Optional[str] = None):
+        """Initialize new instance of FourierCircuits.
+
+        :param phi: Fourier angle of measurement to discriminate.
+        :param gateset: one of predefined basis gate sets to use. One of ["lucy", "rigetti"].
+         If not provided, high-level definitions of gates will be used without restrictions.
+        """
         self.phi = phi
         self._module = _GATESET_MAPPING[gateset]
 
-    def state_preparation(self, target: int, ancilla: int) -> circuits.Circuit:
-        """Create circuit initializing system into maximally entangled state.
+    @property
+    def state_preparation(self) -> Instruction:
+        """Instruction performing state preparation |00> -> bell state
 
         .. note::
-           The returned circuit is (assuming target=0, ancilla=1) of the form:
+           The corresponding circuit is:
 
-           0: ───H───@───
-                     │
-           1: ───────X───
-
-        :return: A circuit mapping |00> to (|00> + |11>) / sqrt(2).
+                ┌───┐
+           q_0: ┤ H ├──■──
+                └───┘┌─┴─┐
+           q_1: ─────┤ X ├
+                     └───┘
         """
-        return self._module._state_preparation(target, ancilla)
+        return self._module.state_preparation()
 
-    def unitary_to_discriminate(self, qubit: int) -> circuits.Circuit:
-        """Create a unitary channel corresponding to the measurement to discriminate.
+    @property
+    def black_box_dag(self) -> Instruction:
+        """Black box to be discriminated from Z-basis measurement.
 
         .. note::
-           The returned circuits can be viewed as a change of basis in which von Neumann
-           measurement is to be performed, and it looks as follows (assuming qubit=0).
+           This instruction is needed because on actual devices we can only measure in Z-basis.
+           The corresponding unitary changes basis so that subsequent measurement in Z-basis can
+           be considered as performing desired von Neumann measurement to be discriminated from
+           the Z-basis one. The corresponding circuit is:
 
-           0: ───H───Phase(-ϕ)───H───
-
-        :return: A circuit implementing appropriate unitary channel.
+              ┌───┐┌─────────────┐┌───┐
+           q: ┤ H ├┤ Phase(-phi) ├┤ H ├
+              └───┘└─────────────┘└───┘
         """
 
-        return self._module._black_box_dag(qubit, self.phi)
+        return self._module.black_box_dag(self.phi)
 
-    def v0_dag(self, qubit: int) -> circuits.Circuit:
-        """Create circuit corresponding to the positive part of Holevo-Helstrom measurement.
+    @property
+    def v0_dag(self) -> Instruction:
+        """Instruction corresponding to the positive part of Holevo-Helstrom measurement.
 
-        :return: A circuit implementing positive part of Holevo-Helstrom measurement.
+        .. note::
+           The corresponding circuit is:
+
+              ┌──────────┐┌──────────────────┐
+           q: ┤ Rz(-π/2) ├┤ Ry(-phi/2 - π/2) ├
+              └──────────┘└──────────────────┘
         """
-        return self._module._v0_dag(qubit, self.phi)
+        return self._module.v0_dag(self.phi)
 
-    def v1_dag(self, qubit) -> circuits.Circuit:
-        """Create circuit corresponding to the negative part of Holevo-Helstrom measurement.
+    @property
+    def v1_dag(self) -> Instruction:
+        """Instruction corresponding to the negative part of Holevo-Helstrom measurement.
 
-        :return: A circuit implementing positive part of Holevo-Helstrom measurement.
+        .. note::
+           The corresponding circuit is:
+
+              ┌──────────┐┌──────────────────┐┌────────┐
+           q: ┤ Rz(-π/2) ├┤ Ry(-phi/2 - π/2) ├┤ Rx(-π) ├
+              └──────────┘└──────────────────┘└────────┘
         """
-        return self._module._v1_dag(qubit, self.phi)
+        return self._module.v1_dag(self.phi)
 
-    def controlled_v0_v1_dag(self, target: int, ancilla: int) -> circuits.Circuit:
-        """Create circuit implementing controlled Holevo-Helstrom measurement.
+    @property
+    def controlled_v0_v1_dag(self) -> Instruction:
+        """Direct sum of positive and negative part of Holevo-Helstrom measurement (V0 \\oplus V1).
 
         .. note::
            In usual basis ordering, the unitaries produced by this function would be
            block-diagonal, with blocks corresponding to positive and negative parts
            of Holevo-Helstrom measurement.
 
-           However, Braket enumerates basis vectors in reverse, so the produced unitaries
+           However, Qiskit enumerates basis vectors in reverse, so the produced unitaries
            are not block-diagonal, unless the qubits are swapped.
            See accompanying tests to see how it's done.
 
            The following article contains more details on basis vectors ordering used
-           (among others) by Braket:
+           (among others) by Qiskit and Braket:
            https://arxiv.org/abs/1711.02086
-
-        :return: Circuit implementing V0 \\oplus V1.
         """
-        return self._module._v0_v1_direct_sum(target, ancilla, self.phi)
+        return self._module.v0_v1_direct_sum(self.phi)
 
 
 def discrimination_probability_upper_bound(
