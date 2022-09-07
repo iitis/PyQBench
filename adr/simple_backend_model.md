@@ -1,4 +1,4 @@
-# Defining backend model for simple providers
+# Defining backend model for simple backends obtained from providers
 
 ## Deciders
 
