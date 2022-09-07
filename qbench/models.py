@@ -1,36 +1,63 @@
 import re
 from importlib import import_module
-from typing import Dict, List, Literal, Optional
+from typing import Any, Dict, List, Literal, Optional
 
-from pydantic import BaseModel, ConstrainedInt, StrictStr, root_validator, validator
+from pydantic import (
+    BaseModel,
+    ConstrainedInt,
+    Field,
+    StrictStr,
+    root_validator,
+    validator,
+)
+
+
+def _check_is_correct_object_path(path):
+    parts = path.split(":")
+
+    if len(parts) != 2:
+        raise ValueError("Incorrect provider format. Expected precisely one colon.")
+
+    module_path, obj_name = parts
+
+    if not all(s.isidentifier() for s in module_path.split(".")):
+        raise ValueError("Incorrect module's fully qualified path.")
+
+    if not obj_name.isidentifier():
+        raise ValueError("Incorrect class name.")
+
+    return path
+
+
+def _import_object(object_spec):
+    module_path, obj_name = object_spec.split(":")
+    module = import_module(module_path)
+    return getattr(module, obj_name)
 
 
 class SimpleBackendDescription(BaseModel):
     provider: str
     name: str
+    run_options: Dict[str, Any] = Field(default_factory=dict)
 
-    @validator("provider")
-    def check_if_provider_comprises_fully_qualified_path_and_class_name(cls, provider):
-        parts = provider.split(":")
-
-        if len(parts) != 2:
-            raise ValueError("Incorrect provider format. Expected precisely one colon.")
-
-        module_path, cls_name = parts
-
-        if not all(s.isidentifier() for s in module_path.split(".")):
-            raise ValueError("Incorrect module's fully qualified path.")
-
-        if not cls_name.isidentifier():
-            raise ValueError("Incorrect class name.")
-
-        return provider
+    _verify_provider = validator("provider", allow_reuse=True)(_check_is_correct_object_path)
 
     def create_backend(self):
-        module_path, cls_name = self.provider.split(":")
-        module = import_module(module_path)
-        provider = getattr(module, cls_name)()
+        provider = _import_object(self.provider)()
         return provider.get_backend(self.name)
+
+
+class BackendFactoryDescription(BaseModel):
+    factory: str
+    args: List[Any] = Field(default_factory=list)
+    kw: Dict[str, Any] = Field(default_factory=dict)
+    run_options: Dict[str, Any] = Field(default_factory=dict)
+
+    _verify_factory = validator("factory", allow_reuse=True)(_check_is_correct_object_path)
+
+    def create_backend(self):
+        factory = _import_object(self.factory)
+        return factory(*self.args, **self.kw)
 
 
 class Qubit(ConstrainedInt):

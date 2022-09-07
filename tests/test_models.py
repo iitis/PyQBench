@@ -1,11 +1,13 @@
 import pytest
 from pydantic import ValidationError, parse_obj_as
 from qiskit.providers.aer import AerProvider
+from qiskit_braket_provider import BraketLocalBackend
 
 from qbench.models import (
     ARN,
     AnglesRange,
     AWSDeviceDescription,
+    BackendFactoryDescription,
     FourierDiscriminationExperiment,
     ResultForAngle,
     SimpleBackendDescription,
@@ -26,6 +28,48 @@ class TestSimpleBackendDescription:
     def test_does_not_validate_if_provider_string_is_incorrectly_formatted(self, provider):
         with pytest.raises(ValidationError):
             SimpleBackendDescription(provider=provider, name="lucy")
+
+    @pytest.mark.parametrize(
+        "description, backend_name",
+        [
+            (
+                BackendFactoryDescription(
+                    factory="qiskit_braket_provider:BraketLocalBackend", args=("braket_sv",)
+                ),
+                "braket_sv",
+            ),
+            (
+                BackendFactoryDescription(
+                    factory="qiskit_braket_provider:BraketLocalBackend",
+                    kwargs={"name": "braket_dm"},
+                ),
+                "braket_dm",
+            ),
+        ],
+    )
+    def test_braket_local_backend_created_from_factory_description_has_correct_name(
+        self, description, backend_name
+    ):
+        backend = description.create_backend()
+        assert isinstance(backend, BraketLocalBackend)
+        assert backend.name == "sv_simulator"
+        assert backend.backend_name == backend_name
+
+
+class TestBackendFactoryDescription:
+    @pytest.mark.parametrize(
+        "factory",
+        [
+            "this is not a good factory specs",
+            "factory.path:test:xyz",
+            "1factory.path:some_factory",
+            "provider:2Factory",
+            "provider.path:Factory:factory)",
+        ],
+    )
+    def test_does_not_validate_if_factory_path_string_is_incorrectly_formatted(self, factory):
+        with pytest.raises(ValidationError):
+            BackendFactoryDescription(factory=factory, args=("BraketLocalBackend",))
 
     @pytest.mark.parametrize(
         "provider, name, provider_cls",
