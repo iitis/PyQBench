@@ -4,6 +4,28 @@ from typing import Dict, List, Literal, Optional
 from pydantic import BaseModel, ConstrainedInt, StrictStr, root_validator, validator
 
 
+class SimpleBackendDescription(BaseModel):
+    provider: str
+    name: str
+
+    @validator("provider")
+    def check_if_provider_comprises_fully_qualified_path_and_class_name(cls, provider):
+        parts = provider.split(":")
+
+        if len(parts) != 2:
+            raise ValueError("Incorrect provider format. Expected precisely one colon.")
+
+        module_path, cls_name = parts
+
+        if not all(s.isidentifier() for s in module_path.split(".")):
+            raise ValueError("Incorrect module's fully qualified path.")
+
+        if not cls_name.isidentifier():
+            raise ValueError("Incorrect class name.")
+
+        return provider
+
+
 class Qubit(ConstrainedInt):
     strict = True
     ge = 0

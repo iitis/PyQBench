@@ -7,7 +7,24 @@ from qbench.models import (
     AWSDeviceDescription,
     FourierDiscriminationExperiment,
     ResultForAngle,
+    SimpleBackendDescription,
 )
+
+
+class TestSimpleBackendDescription:
+    @pytest.mark.parametrize(
+        "provider",
+        [
+            "this is not a good provider specs",
+            "provider.path:test:xyz",
+            "1provider.path:Provider",
+            "provider:2Provider",
+            "provider.path:Provider)",
+        ],
+    )
+    def test_does_not_validate_if_provider_string_is_incorrectly_formatted(self, provider):
+        with pytest.raises(ValidationError):
+            SimpleBackendDescription(provider=provider, name="lucy")
 
 
 class TestARNValidation:
