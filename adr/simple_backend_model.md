@@ -65,8 +65,8 @@ run_options:
 
 The corresponding pydantic model should:
 
-- validate that the provider specification is semantically correct (i.e. it is a
-  correct fully qualified path followed by colon and correct class name)
+- validate that the provider specification is syntactically correct (i.e. it 
+  is a correct fully qualified path followed by colon and correct class name)
 - provide `create_backend` method returning the described backend.
 
 
