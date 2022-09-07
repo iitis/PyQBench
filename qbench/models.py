@@ -1,4 +1,5 @@
 import re
+from importlib import import_module
 from typing import Dict, List, Literal, Optional
 
 from pydantic import BaseModel, ConstrainedInt, StrictStr, root_validator, validator
@@ -24,6 +25,12 @@ class SimpleBackendDescription(BaseModel):
             raise ValueError("Incorrect class name.")
 
         return provider
+
+    def create_backend(self):
+        module_path, cls_name = self.provider.split(":")
+        module = import_module(module_path)
+        provider = getattr(module, cls_name)()
+        return provider.get_backend(self.name)
 
 
 class Qubit(ConstrainedInt):

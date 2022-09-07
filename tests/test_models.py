@@ -1,5 +1,6 @@
 import pytest
 from pydantic import ValidationError, parse_obj_as
+from qiskit.providers.aer import AerProvider
 
 from qbench.models import (
     ARN,
@@ -25,6 +26,20 @@ class TestSimpleBackendDescription:
     def test_does_not_validate_if_provider_string_is_incorrectly_formatted(self, provider):
         with pytest.raises(ValidationError):
             SimpleBackendDescription(provider=provider, name="lucy")
+
+    @pytest.mark.parametrize(
+        "provider, name, provider_cls",
+        [
+            ("qiskit.providers.aer:AerProvider", "aer_simulator", AerProvider),
+        ],
+    )
+    def test_backend_created_from_description_has_correct_name_and_provider(
+        self, provider, name, provider_cls
+    ):
+        backend = SimpleBackendDescription(provider=provider, name=name).create_backend()
+
+        assert backend.name() == name
+        assert isinstance(backend.provider(), provider_cls)
 
 
 class TestARNValidation:
