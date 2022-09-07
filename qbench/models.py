@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Literal, Optional
 from pydantic import (
     BaseModel,
     ConstrainedInt,
+    Extra,
     Field,
     StrictStr,
     root_validator,
@@ -35,7 +36,7 @@ def _import_object(object_spec):
     return getattr(module, obj_name)
 
 
-class SimpleBackendDescription(BaseModel):
+class SimpleBackendDescription(BaseModel, extra=Extra.forbid):
     provider: str
     name: str
     run_options: Dict[str, Any] = Field(default_factory=dict)
@@ -50,14 +51,18 @@ class SimpleBackendDescription(BaseModel):
 class BackendFactoryDescription(BaseModel):
     factory: str
     args: List[Any] = Field(default_factory=list)
-    kw: Dict[str, Any] = Field(default_factory=dict)
+    kwargs: Dict[str, Any] = Field(default_factory=dict)  # type: ignore
     run_options: Dict[str, Any] = Field(default_factory=dict)
 
     _verify_factory = validator("factory", allow_reuse=True)(_check_is_correct_object_path)
 
     def create_backend(self):
         factory = _import_object(self.factory)
-        return factory(*self.args, **self.kw)
+        return factory(*self.args, **self.kwargs)
+
+    # This is only to satisfy MyPy plugin
+    class Config:
+        extra = "forbid"
 
 
 class Qubit(ConstrainedInt):
