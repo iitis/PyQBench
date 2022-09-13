@@ -25,8 +25,8 @@ aesthetics, so the splitting seems to be justified.
 The precise form of the commands would be:
 
 ```shell
-qbench benchmark disc-fourier experiment.yml backend.yml --output result.yml
-qbench plot disc-fourier result.yml --output plots.pdf
+qbench disc-fourier benchmark experiment.yml backend.yml --output result.yml
+qbench disc-fourier plot result.yml --output plots.pdf
 ```
 
 Note that later we might wish to extend the plotting command with additional arguments 
