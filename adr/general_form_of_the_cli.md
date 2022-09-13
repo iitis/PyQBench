@@ -46,8 +46,8 @@ The proposed form of the CLI achieves our needs because:
 1. Passing commands before the experiment type. 
 
     ```shell
-    qbench benchmark fourier-disc experiment.yml backend.yml --output result.yml
-    qbench plot fourier-disc result.yml --output plots.pdf
+    qbench benchmark disc-fourier experiment.yml backend.yml --output result.yml
+    qbench plot disc-fourier result.yml --output plots.pdf
     ```
 
    We rejected this one because future experiment types may not have the same set of operations 
