@@ -58,7 +58,7 @@ The proposed form of the CLI achieves our needs because:
    qbench plot stome-other-scheme experiment.yml backend.yml --output plots.pdf
    ```
 
-4. Creating separate command for each experiment type, e.g.:
+2. Creating separate command for each experiment type, e.g.:
 
     ```shell
     qbench-fourier-disc benchmark experiment.yml backend.yml --output result.yml
