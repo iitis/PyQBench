@@ -120,7 +120,7 @@ class QubitsPair(BaseModel):
 class FourierDiscriminationExperiment(BaseModel):
     type: Literal["fourier_discrimination"]
     qubits: List[QubitsPair]
-    angle: AnglesRange
+    angles: AnglesRange
     gateset: Optional[str]
     method: Literal["direct_sum", "postselection"]
     num_shots: StrictPositiveInt
