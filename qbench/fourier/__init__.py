@@ -114,3 +114,51 @@ def discrimination_probability_upper_bound(
      can be discriminated
     """
     return 0.5 + 0.25 * np.abs(1 - np.exp(1j * phi))
+
+
+def add_fourier_parser(parent_parser):
+    parser = parent_parser.add_parser("disc-fourier")
+
+    subcommands = parser.add_subparsers()
+
+    benchmark = subcommands.add_parser(
+        "benchmark",
+        description=(
+            "Run benchmarking experiment utilizing measurement discrimination "
+            "with parametrized Fourier family of measurements."
+        ),
+    )
+
+    benchmark.add_argument(
+        "experiment-file", help="path to the file describing the experiment", type=str
+    )
+    benchmark.add_argument(
+        "backend-file", help="path to the file describing the backend to be used", type=str
+    )
+
+    benchmark.add_argument(
+        "--output",
+        help="optional path to the output file. If not provided, output will be printed to stdout",
+        type=str,
+    )
+
+    plot = subcommands.add_parser("plot")
+
+    plot.add_argument(
+        "result",
+        help=(
+            "result of discrimination experiment which can be obtained by running "
+            "qbench benchmark"
+        ),
+        type=str,
+    )
+
+    plot.add_argument(
+        "--output",
+        help=(
+            "optional path to the output file. If not provided, the plots will be shown "
+            "but not saved. The extension of the output file determines the output format "
+            "and it can be any of the ones supported by the matplotlib"
+        ),
+        type=str,
+    )
