@@ -1,7 +1,10 @@
+from pathlib import Path
+
 import pytest
 from pydantic import ValidationError, parse_obj_as
 from qiskit.providers.aer import AerProvider
 from qiskit_braket_provider import BraketLocalBackend
+from yaml import safe_load
 
 from qbench.models import (
     ARN,
@@ -12,6 +15,8 @@ from qbench.models import (
     ResultForAngle,
     SimpleBackendDescription,
 )
+
+WORK_DIR = Path.cwd()
 
 
 class TestSimpleBackendDescription:
@@ -270,3 +275,11 @@ class TestResultForAngle:
     def test_fails_to_validate_if_counts_does_not_contain_two_qubit_bitstrings_only(self, input):
         with pytest.raises(ValidationError):
             ResultForAngle(**input)
+
+
+class TestExampleYamlInputsAreMatchingModels:
+    def test_fourier_discrimination_experiment_input_matches_model(self):
+        path = WORK_DIR / "../examples/fourier-discrimination-experiment.yml"
+        with open(path) as f:
+            data = safe_load(f)
+            FourierDiscriminationExperiment(**data)
