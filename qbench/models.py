@@ -12,6 +12,17 @@ from pydantic import (
     validator,
 )
 
+from ._expressions import eval_expr
+
+
+def _parse_arithmetic_expression(expr):
+    if isinstance(expr, (float, int)):
+        return expr
+    try:
+        return eval_expr(expr)
+    except (TypeError, ValueError) as e:
+        raise ValueError(f"Invalid expression: {expr}") from e
+
 
 def _check_is_correct_object_path(path):
     parts = path.split(":")
@@ -92,6 +103,9 @@ class AnglesRange(BaseModel):
     start: float
     stop: float
     num_steps: StrictPositiveInt
+
+    validate_start = validator("start", allow_reuse=True, pre=True)(_parse_arithmetic_expression)
+    validate_stop = validator("stop", allow_reuse=True, pre=True)(_parse_arithmetic_expression)
 
     @root_validator
     def check_if_start_smaller_than_stop(cls, values):

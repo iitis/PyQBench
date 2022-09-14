@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import numpy as np
 import pytest
 from pydantic import ValidationError, parse_obj_as
 from qiskit.providers.aer import AerProvider
@@ -16,7 +17,7 @@ from qbench.models import (
     SimpleBackendDescription,
 )
 
-WORK_DIR = Path.cwd()
+EXAMPLES_PATH = Path(__file__).parent / "../examples"
 
 
 class TestSimpleBackendDescription:
@@ -155,9 +156,9 @@ class TestFourierDiscriminationExperiment:
         "input",
         [
             {
-                "type": "fourier_discrimination",
+                "type": "discrimination-fourier",
                 "qubits": [{"target": 0, "ancilla": 1}, {"target": 5, "ancilla": 2}],
-                "angle": {"start": 0, "stop": 4, "num_steps": 3},
+                "angles": {"start": 0, "stop": 4, "num_steps": 3},
                 "method": method,
                 "num_shots": 5,
             }
@@ -263,6 +264,12 @@ class TestAnglesRange:
         with pytest.raises(ValidationError):
             AnglesRange(start=10, stop=10, num_steps=2)
 
+    def test_start_and_stop_can_contain_arithmetic_expression_with_pi(self):
+        angles_range = AnglesRange(start="2 * pi", stop="3 * pi", num_steps=10)
+        assert angles_range.start == 2 * np.pi
+        assert angles_range.stop == 3 * np.pi
+        assert angles_range.num_steps == 10
+
 
 class TestResultForAngle:
     @pytest.mark.parametrize(
@@ -279,7 +286,7 @@ class TestResultForAngle:
 
 class TestExampleYamlInputsAreMatchingModels:
     def test_fourier_discrimination_experiment_input_matches_model(self):
-        path = WORK_DIR / "../examples/fourier-discrimination-experiment.yml"
+        path = EXAMPLES_PATH / "../examples/fourier-discrimination-experiment.yml"
         with open(path) as f:
             data = safe_load(f)
             FourierDiscriminationExperiment(**data)
