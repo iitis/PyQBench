@@ -118,7 +118,7 @@ class QubitsPair(BaseModel):
 
 
 class FourierDiscriminationExperiment(BaseModel):
-    type: Literal["fourier_discrimination"]
+    type: Literal["discrimination-fourier"]
     qubits: List[QubitsPair]
     angles: AnglesRange
     gateset: Optional[str]
