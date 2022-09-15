@@ -8,7 +8,7 @@ from qbench.postselection import benchmark_using_postselection
 NUM_SHOTS_PER_MEASUREMENT = 1000
 TARGET = 0
 ANCILLA = 1
-GATESET = "rigetti"
+GATESET = "ibmq"
 
 
 def main():
