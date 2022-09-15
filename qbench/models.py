@@ -84,10 +84,6 @@ class Qubit(ConstrainedInt):
     ge = 0
 
 
-class ARN(StrictStr):
-    regex = re.compile(r"^arn(:[A-Za-z\d\-_]*){5}(/[A-Za-z\d\-_]*)+$")
-
-
 class TwoQubitBitstring(StrictStr):
     regex = re.compile("^[01]{2}$")
 
@@ -95,11 +91,6 @@ class TwoQubitBitstring(StrictStr):
 class StrictPositiveInt(ConstrainedInt):
     strict = True
     gt = 0
-
-
-class AWSDeviceDescription(BaseModel):
-    arn: str
-    disable_qubit_rewiring: bool = False
 
 
 class AnglesRange(BaseModel):
