@@ -286,7 +286,16 @@ class TestResultForAngle:
 
 class TestExampleYamlInputsAreMatchingModels:
     def test_fourier_discrimination_experiment_input_matches_model(self):
-        path = EXAMPLES_PATH / "../examples/fourier-discrimination-experiment.yml"
+        path = EXAMPLES_PATH / "fourier-discrimination-experiment.yml"
         with open(path) as f:
             data = safe_load(f)
             FourierDiscriminationExperiment(**data)
+
+    @pytest.mark.parametrize(
+        "filename", ["simple-backend.yml", "simple-backend-with-run-options.yml"]
+    )
+    def test_simple_backend_can_input_matches_model(self, filename):
+        path = EXAMPLES_PATH / filename
+        with open(path) as f:
+            data = safe_load(f)
+            SimpleBackendDescription(**data)

@@ -1,0 +1,5 @@
+provider: qiskit_braket_provider:AWSBraketProvider
+name: "lucy"
+run_options:
+  verbatim: true
+  disable_qubit_rewiring: true
