@@ -21,7 +21,7 @@ def ibmq():
     token = os.getenv("IBMQ_TOKEN")
     IBMQ.enable_account(token)
     provider = IBMQ.get_provider()
-    return provider.get_backend("ibm_nairobi")
+    return provider.get_backend("ibmq_manila")
 
 
 @pytest.fixture()
