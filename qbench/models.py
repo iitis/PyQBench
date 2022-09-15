@@ -1,6 +1,6 @@
 import re
 from importlib import import_module
-from typing import Any, Dict, List, Literal, Optional
+from typing import Any, Dict, List, Literal, Optional, Union
 
 from pydantic import (
     BaseModel,
@@ -74,6 +74,9 @@ class BackendFactoryDescription(BaseModel):
     # This is only to satisfy MyPy plugin
     class Config:
         extra = "forbid"
+
+
+BackendDescription = Union[SimpleBackendDescription, BackendFactoryDescription]
 
 
 class Qubit(ConstrainedInt):
@@ -161,7 +164,7 @@ class SingleResult(BaseModel):
 
 class FourierDiscriminationMetadata(BaseModel):
     experiment: FourierDiscriminationExperiment
-    device_description: AWSDeviceDescription
+    device_description: BackendDescription
 
 
 class FourierDiscriminationResult(BaseModel):
