@@ -1,17 +1,22 @@
+from pathlib import Path
+
+import numpy as np
 import pytest
-from pydantic import ValidationError, parse_obj_as
+from pydantic import ValidationError
 from qiskit.providers.aer import AerProvider
 from qiskit_braket_provider import BraketLocalBackend
+from yaml import safe_load
 
 from qbench.models import (
-    ARN,
     AnglesRange,
-    AWSDeviceDescription,
     BackendFactoryDescription,
     FourierDiscriminationExperiment,
+    FourierDiscriminationResult,
     ResultForAngle,
     SimpleBackendDescription,
 )
+
+EXAMPLES_PATH = Path(__file__).parent / "../examples"
 
 
 class TestSimpleBackendDescription:
@@ -86,73 +91,14 @@ class TestBackendFactoryDescription:
         assert isinstance(backend.provider(), provider_cls)
 
 
-class TestARNValidation:
-    @pytest.mark.parametrize(
-        "input",
-        [
-            "arn:aws:braket:::device/quantum-simulator/amazon/sv1",
-            "arn:aws:braket:::device/quantum-simulator/amazon/tn1",
-            "arn:aws:braket:::device/quantum-simulator/amazon/dm1",
-            "arn:aws:braket:::device/qpu/d-wave/DW_2000Q_6",
-            "arn:aws:braket:::device/qpu/d-wave/Advantage_system4",
-            "arn:aws:braket:us-west-2::device/qpu/d-wave/Advantage_system6",
-            "arn:aws:braket:::device/qpu/ionq/ionQdevice",
-            "arn:aws:braket:::device/qpu/rigetti/Aspen-11",
-            "arn:aws:braket:us-west-1::device/qpu/rigetti/Aspen-M-1",
-            "arn:aws:braket:eu-west-2::device/qpu/oqc/Lucy",
-        ],
-    )
-    def test_can_be_parsed_from_correct_input(self, input):
-        assert parse_obj_as(ARN, input) == input
-
-    @pytest.mark.parametrize(
-        "input",
-        [
-            "test",
-            "xyz:definitely:not/arn",
-            "arn:aws:braket::device/quantum-simulator/amazon/sv1",
-            "arn:aws:braket:device/quantum-simulator/amazon/sv1",
-        ],
-    )
-    def test_cannot_be_parsed_from_incorrect_input(self, input):
-        with pytest.raises(ValidationError):
-            parse_obj_as(ARN, input)
-
-
-class TestAWSDeviceDescription:
-    def test_disable_qubit_rewiring_is_optional_and_false_by_default(self):
-        input = {
-            "arn": "arn:aws:braket:eu-west-2::device/qpu/oqc/Lucy",
-        }
-
-        description = AWSDeviceDescription(**input)
-        assert description.arn == input["arn"]
-        assert not description.disable_qubit_rewiring
-
-    def test_can_be_parsed_from_full_input(self):
-        input = {
-            "arn": "arn:aws:braket:eu-west-2::device/qpu/oqc/Lucy",
-            "disable_qubit_rewiring": True,
-        }
-
-        description = AWSDeviceDescription(**input)
-        assert description.arn == input["arn"]
-        assert description.disable_qubit_rewiring
-
-    @pytest.mark.parametrize("input", [{"disable-qubit-rewiring": True}])
-    def test_cannot_be_parsed_if_arn_is_missing(self, input):
-        with pytest.raises(ValidationError):
-            AWSDeviceDescription(**input)
-
-
 class TestFourierDiscriminationExperiment:
     @pytest.mark.parametrize(
         "input",
         [
             {
-                "type": "fourier_discrimination",
+                "type": "discrimination-fourier",
                 "qubits": [{"target": 0, "ancilla": 1}, {"target": 5, "ancilla": 2}],
-                "angle": {"start": 0, "stop": 4, "num_steps": 3},
+                "angles": {"start": 0, "stop": 4, "num_steps": 3},
                 "method": method,
                 "num_shots": 5,
             }
@@ -258,6 +204,12 @@ class TestAnglesRange:
         with pytest.raises(ValidationError):
             AnglesRange(start=10, stop=10, num_steps=2)
 
+    def test_start_and_stop_can_contain_arithmetic_expression_with_pi(self):
+        angles_range = AnglesRange(start="2 * pi", stop="3 * pi", num_steps=10)
+        assert angles_range.start == 2 * np.pi
+        assert angles_range.stop == 3 * np.pi
+        assert angles_range.num_steps == 10
+
 
 class TestResultForAngle:
     @pytest.mark.parametrize(
@@ -270,3 +222,35 @@ class TestResultForAngle:
     def test_fails_to_validate_if_counts_does_not_contain_two_qubit_bitstrings_only(self, input):
         with pytest.raises(ValidationError):
             ResultForAngle(**input)
+
+
+class TestExampleYamlInputsAreMatchingModels:
+    def test_fourier_discrimination_experiment_input_matches_model(self):
+        path = EXAMPLES_PATH / "fourier-discrimination-experiment.yml"
+        with open(path) as f:
+            data = safe_load(f)
+            FourierDiscriminationExperiment(**data)
+
+    @pytest.mark.parametrize(
+        "filename", ["simple-backend.yml", "simple-backend-with-run-options.yml"]
+    )
+    def test_simple_backend_input_matches_model(self, filename):
+        path = EXAMPLES_PATH / filename
+        with open(path) as f:
+            data = safe_load(f)
+            SimpleBackendDescription(**data)
+
+    @pytest.mark.parametrize(
+        "filename", ["backend-factory.yml", "backend-factory-with-run-options.yml"]
+    )
+    def test_backend_factory_input_matches_model(self, filename):
+        path = EXAMPLES_PATH / filename
+        with open(path) as f:
+            data = safe_load(f)
+            BackendFactoryDescription(**data)
+
+    def test_fourier_discrimination_result_matches_model(self):
+        path = EXAMPLES_PATH / "fourier-discrimination-result.yml"
+        with open(path) as f:
+            data = safe_load(f)
+            FourierDiscriminationResult(**data)

@@ -1,0 +1,15 @@
+type: discrimination-fourier
+qubits:
+  - target: 0
+    ancilla: 1
+  - target: 2
+    ancilla: 3
+  - target: 1
+    ancilla: 0
+angles:
+  start: 0
+  stop: 2 * pi
+  num_steps: 10
+gateset: lucy
+method: postselection
+num_shots: 100

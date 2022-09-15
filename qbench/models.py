@@ -1,16 +1,25 @@
 import re
 from importlib import import_module
-from typing import Any, Dict, List, Literal, Optional
+from typing import Any, Dict, List, Literal, Optional, Union
 
-from pydantic import (
-    BaseModel,
-    ConstrainedInt,
-    Extra,
-    Field,
-    StrictStr,
-    root_validator,
-    validator,
-)
+from pydantic import BaseModel as PydanticBaseModel
+from pydantic import ConstrainedInt, Extra, Field, StrictStr, root_validator, validator
+
+from ._expressions import eval_expr
+
+
+class BaseModel(PydanticBaseModel):
+    class Config:
+        extra = "forbid"
+
+
+def _parse_arithmetic_expression(expr):
+    if isinstance(expr, (float, int)):
+        return expr
+    try:
+        return eval_expr(expr)
+    except (TypeError, ValueError) as e:
+        raise ValueError(f"Invalid expression: {expr}") from e
 
 
 def _check_is_correct_object_path(path):
@@ -65,13 +74,12 @@ class BackendFactoryDescription(BaseModel):
         extra = "forbid"
 
 
+BackendDescription = Union[SimpleBackendDescription, BackendFactoryDescription]
+
+
 class Qubit(ConstrainedInt):
     strict = True
     ge = 0
-
-
-class ARN(StrictStr):
-    regex = re.compile(r"^arn(:[A-Za-z\d\-_]*){5}(/[A-Za-z\d\-_]*)+$")
 
 
 class TwoQubitBitstring(StrictStr):
@@ -83,15 +91,13 @@ class StrictPositiveInt(ConstrainedInt):
     gt = 0
 
 
-class AWSDeviceDescription(BaseModel):
-    arn: str
-    disable_qubit_rewiring: bool = False
-
-
 class AnglesRange(BaseModel):
     start: float
     stop: float
     num_steps: StrictPositiveInt
+
+    validate_start = validator("start", allow_reuse=True, pre=True)(_parse_arithmetic_expression)
+    validate_stop = validator("stop", allow_reuse=True, pre=True)(_parse_arithmetic_expression)
 
     @root_validator
     def check_if_start_smaller_than_stop(cls, values):
@@ -118,9 +124,9 @@ class QubitsPair(BaseModel):
 
 
 class FourierDiscriminationExperiment(BaseModel):
-    type: Literal["fourier_discrimination"]
+    type: Literal["discrimination-fourier"]
     qubits: List[QubitsPair]
-    angle: AnglesRange
+    angles: AnglesRange
     gateset: Optional[str]
     method: Literal["direct_sum", "postselection"]
     num_shots: StrictPositiveInt
@@ -135,19 +141,18 @@ class FourierDiscriminationExperiment(BaseModel):
 
 class ResultForAngle(BaseModel):
     phi: float
-    counts: Dict[TwoQubitBitstring, StrictPositiveInt]
+    histogram: Dict[TwoQubitBitstring, StrictPositiveInt]
 
 
 class SingleResult(BaseModel):
     target: Qubit
     ancilla: Qubit
     measurement_counts: List[ResultForAngle]
-    measured_qubits: List[Qubit]
 
 
 class FourierDiscriminationMetadata(BaseModel):
     experiment: FourierDiscriminationExperiment
-    device_description: AWSDeviceDescription
+    backend_description: BackendDescription
 
 
 class FourierDiscriminationResult(BaseModel):

@@ -1,0 +1,5 @@
+factory: qiskit_braket_provider:BraketLocalBackend
+args:
+  - "braket_dm"
+run_options:
+  verbatim: true
