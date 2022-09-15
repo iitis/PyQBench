@@ -4,11 +4,12 @@ from typing import Optional, Union
 import numpy as np
 from qiskit.circuit import Instruction
 
-from . import _generic, _lucy, _rigetti
+from . import _generic, _ibmq, _lucy, _rigetti
 
 _GATESET_MAPPING = {
     "lucy": _lucy,
     "rigetti": _rigetti,
+    "ibmq": _ibmq,
     None: _generic,
 }
 
@@ -20,8 +21,9 @@ class FourierComponents:
         """Initialize new instance of FourierCircuits.
 
         :param phi: Fourier angle of measurement to discriminate.
-        :param gateset: one of predefined basis gate sets to use. One of ["lucy", "rigetti"].
-         If not provided, high-level definitions of gates will be used without restrictions.
+        :param gateset: one of predefined basis gate sets to use. One of
+        ["lucy", "rigetti", "imbq"]. If not provided, high-level definitions of gates
+        will be used without restrictions.
         """
         self.phi = phi
         self._module = _GATESET_MAPPING[gateset]
