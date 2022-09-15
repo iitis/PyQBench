@@ -35,7 +35,7 @@ jobs:
           pip install .[test,dev]
       - name: Quality checks
         run: |          
-          mypy --ignore-missing-imports --install-types tests qbench
+          mypy --ignore-missing-imports --install-types --non-interactive tests qbench
           flake8 --max-line-length=100 qbench
           black --check .
           isort --check-only --profile black qbench -c --diff
