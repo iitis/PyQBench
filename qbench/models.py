@@ -2,17 +2,15 @@ import re
 from importlib import import_module
 from typing import Any, Dict, List, Literal, Optional, Union
 
-from pydantic import (
-    BaseModel,
-    ConstrainedInt,
-    Extra,
-    Field,
-    StrictStr,
-    root_validator,
-    validator,
-)
+from pydantic import BaseModel as PydanticBaseModel
+from pydantic import ConstrainedInt, Extra, Field, StrictStr, root_validator, validator
 
 from ._expressions import eval_expr
+
+
+class BaseModel(PydanticBaseModel):
+    class Config:
+        extra = "forbid"
 
 
 def _parse_arithmetic_expression(expr):
