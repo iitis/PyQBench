@@ -13,6 +13,7 @@ from qbench.models import (
     AWSDeviceDescription,
     BackendFactoryDescription,
     FourierDiscriminationExperiment,
+    FourierDiscriminationResult,
     ResultForAngle,
     SimpleBackendDescription,
 )
@@ -308,3 +309,9 @@ class TestExampleYamlInputsAreMatchingModels:
         with open(path) as f:
             data = safe_load(f)
             BackendFactoryDescription(**data)
+
+    def test_fourier_discrimination_result_matches_model(self):
+        path = EXAMPLES_PATH / "fourier-discrimination-result.yml"
+        with open(path) as f:
+            data = safe_load(f)
+            FourierDiscriminationResult(**data)

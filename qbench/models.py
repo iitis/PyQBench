@@ -152,19 +152,18 @@ class FourierDiscriminationExperiment(BaseModel):
 
 class ResultForAngle(BaseModel):
     phi: float
-    counts: Dict[TwoQubitBitstring, StrictPositiveInt]
+    histogram: Dict[TwoQubitBitstring, StrictPositiveInt]
 
 
 class SingleResult(BaseModel):
     target: Qubit
     ancilla: Qubit
     measurement_counts: List[ResultForAngle]
-    measured_qubits: List[Qubit]
 
 
 class FourierDiscriminationMetadata(BaseModel):
     experiment: FourierDiscriminationExperiment
-    device_description: BackendDescription
+    backend_description: BackendDescription
 
 
 class FourierDiscriminationResult(BaseModel):
