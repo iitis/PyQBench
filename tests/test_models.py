@@ -294,8 +294,17 @@ class TestExampleYamlInputsAreMatchingModels:
     @pytest.mark.parametrize(
         "filename", ["simple-backend.yml", "simple-backend-with-run-options.yml"]
     )
-    def test_simple_backend_can_input_matches_model(self, filename):
+    def test_simple_backend_input_matches_model(self, filename):
         path = EXAMPLES_PATH / filename
         with open(path) as f:
             data = safe_load(f)
             SimpleBackendDescription(**data)
+
+    @pytest.mark.parametrize(
+        "filename", ["backend-factory.yml", "backend-factory-with-run-options.yml"]
+    )
+    def test_backend_factory_input_matches_model(self, filename):
+        path = EXAMPLES_PATH / filename
+        with open(path) as f:
+            data = safe_load(f)
+            BackendFactoryDescription(**data)
