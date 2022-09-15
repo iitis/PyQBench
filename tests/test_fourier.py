@@ -75,7 +75,7 @@ def _proj(ket):
     return np.outer(ket, ket.conj())
 
 
-@pytest.mark.parametrize("gateset", [None, "lucy", "rigetti"])
+@pytest.mark.parametrize("gateset", [None, "lucy", "rigetti", "ibmq"])
 class TestFourierCircuits:
     def test_initial_state_prepared_from_ket_zeros_is_maximally_entangled(self, gateset):
         bell = np.array([1 / np.sqrt(2), 0, 0, 1 / np.sqrt(2)])

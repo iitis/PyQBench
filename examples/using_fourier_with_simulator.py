@@ -5,10 +5,10 @@ from qiskit_braket_provider import BraketLocalBackend
 from qbench.direct_sum import benchmark_using_controlled_unitary
 from qbench.fourier import FourierComponents, discrimination_probability_upper_bound
 
-NUM_SHOTS_PER_MEASUREMENT = 1000
+NUM_SHOTS_PER_MEASUREMENT = 10000
 TARGET = 0
 ANCILLA = 1
-GATESET = "rigetti"
+GATESET = "ibmq"
 
 
 def main():
