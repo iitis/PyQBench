@@ -1,9 +1,11 @@
+import os
 import re
 from importlib import import_module
 from typing import Any, Dict, List, Literal, Optional, Union
 
 from pydantic import BaseModel as PydanticBaseModel
 from pydantic import ConstrainedInt, Extra, Field, StrictStr, root_validator, validator
+from qiskit import IBMQ
 
 from ._expressions import eval_expr
 
@@ -52,6 +54,10 @@ class SimpleBackendDescription(BaseModel, extra=Extra.forbid):
 
     _verify_provider = validator("provider", allow_reuse=True)(_check_is_correct_object_path)
 
+    @property
+    def asynchronous(self) -> bool:
+        return False
+
     def create_backend(self):
         provider = _import_object(self.provider)()
         return provider.get_backend(self.name)
@@ -65,6 +71,10 @@ class BackendFactoryDescription(BaseModel):
 
     _verify_factory = validator("factory", allow_reuse=True)(_check_is_correct_object_path)
 
+    @property
+    def asynchronous(self):
+        return False
+
     def create_backend(self):
         factory = _import_object(self.factory)
         return factory(*self.args, **self.kwargs)
@@ -74,7 +84,30 @@ class BackendFactoryDescription(BaseModel):
         extra = "forbid"
 
 
-BackendDescription = Union[SimpleBackendDescription, BackendFactoryDescription]
+class IBMQProviderDescription(BaseModel):
+    group: Optional[str]
+    hub: Optional[str]
+    project: Optional[str]
+
+
+class IBMQBackendDescription(BaseModel):
+    name: str
+    asynchronous: bool = False
+    provider: IBMQProviderDescription
+
+    def create_backend(self):
+        provider = IBMQ.enable_account(
+            os.getenv("IBMQ_TOKEN"),
+            hub=self.provider.hub,
+            group=self.provider.group,
+            project=self.provider.project,
+        )
+        return provider.get_backend(self.name)
+
+
+BackendDescription = Union[
+    SimpleBackendDescription, BackendFactoryDescription, IBMQBackendDescription
+]
 
 
 class Qubit(ConstrainedInt):
@@ -139,9 +172,16 @@ class FourierDiscriminationExperiment(BaseModel):
         return qubits
 
 
+SynchronousHistogram = Dict[TwoQubitBitstring, StrictPositiveInt]
+
+
+class IbMQJObDescription(BaseModel):
+    ibmq_job_id: str
+
+
 class ResultForAngle(BaseModel):
     phi: float
-    histogram: Dict[TwoQubitBitstring, StrictPositiveInt]
+    histogram: Union[SynchronousHistogram, IbMQJObDescription]
 
 
 class SingleResult(BaseModel):

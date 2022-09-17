@@ -12,6 +12,7 @@ from qbench.models import (
     BackendFactoryDescription,
     FourierDiscriminationExperiment,
     FourierDiscriminationResult,
+    IBMQBackendDescription,
     ResultForAngle,
     SimpleBackendDescription,
 )
@@ -254,3 +255,15 @@ class TestExampleYamlInputsAreMatchingModels:
         with open(path) as f:
             data = safe_load(f)
             FourierDiscriminationResult(**data)
+
+    def test_fourier_discrimination_async_result_matches_model(self):
+        path = EXAMPLES_PATH / "fourier-discrimination-async-result.yml"
+        with open(path) as f:
+            data = safe_load(f)
+            FourierDiscriminationResult(**data)
+
+    def tests_ibmq_backend_input_matches_model(self):
+        path = EXAMPLES_PATH / "ibmq-backend.yml"
+        with open(path) as f:
+            data = safe_load(f)
+            IBMQBackendDescription(**data)

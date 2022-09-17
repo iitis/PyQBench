@@ -1,0 +1,47 @@
+metadata:
+  experiment:
+    type: discrimination-fourier
+    qubits:
+      - target: 0
+        ancilla: 1
+      - target: 2
+        ancilla: 3
+    angles:
+      start: 0
+      stop: 2
+      num_steps: 3
+    gateset: lucy
+    method: postselection
+    num_shots: 100
+  backend_description:
+    factory: qiskit_braket_provider:BraketLocalBackend
+    args:
+      - "braket_dm"
+    run_options:
+      verbatim: true
+results:
+  - target: 0
+    ancilla: 1
+    measurement_counts:
+      - phi: 0
+        histogram:
+          ibmq_job_id: 6325bded0d41675e850873d2
+      - phi: 1
+        histogram:
+          ibmq_job_id: 6325bded0d41675e850873d1
+      - phi: 2
+        histogram:
+          ibmq_job_id: 6325bded0d41675e850873d3
+  - target: 1
+    ancilla: 2
+    measurement_counts:
+      - phi: 0
+        histogram:
+          ibmq_job_id: 6325bded0d41675e850873d4
+      - phi: 1
+        histogram:
+          ibmq_job_id: 6325bded0d41675e850873d5
+      - phi: 2
+        histogram:
+          ibmq_job_id: 6325bded0d41675e850873d6
+
