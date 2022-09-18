@@ -5,6 +5,7 @@ import numpy as np
 
 from ._cli import add_fourier_parser
 from ._components import FourierComponents
+from ._models import FourierDiscriminationExperiment, FourierDiscriminationResult
 
 
 def discrimination_probability_upper_bound(
@@ -19,4 +20,10 @@ def discrimination_probability_upper_bound(
     return 0.5 + 0.25 * np.abs(1 - np.exp(1j * phi))
 
 
-__all__ = ["discrimination_probability_upper_bound", "add_fourier_parser", "FourierComponents"]
+__all__ = [
+    "discrimination_probability_upper_bound",
+    "add_fourier_parser",
+    "FourierComponents",
+    "FourierDiscriminationResult",
+    "FourierDiscriminationExperiment",
+]

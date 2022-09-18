@@ -7,15 +7,14 @@ from qiskit.providers.aer import AerProvider
 from qiskit_braket_provider import BraketLocalBackend
 from yaml import safe_load
 
-from qbench.models import (
+from qbench.common_models import (
     AnglesRange,
     BackendFactoryDescription,
-    FourierDiscriminationExperiment,
-    FourierDiscriminationResult,
     IBMQBackendDescription,
-    ResultForAngle,
     SimpleBackendDescription,
 )
+from qbench.fourier import FourierDiscriminationExperiment, FourierDiscriminationResult
+from qbench.fourier._models import ResultForAngle
 
 EXAMPLES_PATH = Path(__file__).parent / "../examples"
 

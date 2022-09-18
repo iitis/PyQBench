@@ -24,24 +24,42 @@ results:
     ancilla: 1
     measurement_counts:
       - phi: 0
-        histogram:
-          ibmq_job_id: 6325bded0d41675e850873d2
+        histograms:
+          u:
+            ibmq_job_id: 6325bded0d41675e850873d2
+          id:
+            ibmq_job_id: 5325bded0d41675e850873d2
       - phi: 1
-        histogram:
-          ibmq_job_id: 6325bded0d41675e850873d1
+        histograms:
+          u:
+            ibmq_job_id: 6325bded0d41675e850873d1
+          id:
+            ibmq_job_id: 5325bded0d41675e850873d1
       - phi: 2
-        histogram:
-          ibmq_job_id: 6325bded0d41675e850873d3
+        histograms:
+          u:
+            ibmq_job_id: 6325bded0d41675e850873d3
+          id:
+            ibmq_job_id: 5325bded0d41675e850873d3
   - target: 1
     ancilla: 2
     measurement_counts:
       - phi: 0
-        histogram:
-          ibmq_job_id: 6325bded0d41675e850873d4
+        histograms:
+          u:
+            ibmq_job_id: 6325bded0d41675e850873d4
+          id:
+            ibmq_job_id: 5325bded0d41675e850873d4
       - phi: 1
-        histogram:
-          ibmq_job_id: 6325bded0d41675e850873d5
+        histograms:
+          u:
+            ibmq_job_id: 6325bded0d41675e850873d4
+          id:
+            ibmq_job_id: 5325bded0d41675e850873d4
       - phi: 2
-        histogram:
-          ibmq_job_id: 6325bded0d41675e850873d6
+        histograms:
+          u:
+            ibmq_job_id: 6325bded0d41675e850873d4
+          id:
+            ibmq_job_id: 5325bded0d41675e850873d4
 
