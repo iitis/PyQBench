@@ -73,13 +73,13 @@ class QubitsPair(BaseModel):
 SynchronousHistogram = Dict[TwoQubitBitstring, StrictPositiveInt]
 
 
-class IbMQJObDescription(BaseModel):
+class IBMQJobDescription(BaseModel):
     ibmq_job_id: str
 
 
 class ResultForAngle(BaseModel):
     phi: float
-    histograms: Dict[str, Union[SynchronousHistogram, IbMQJObDescription]]
+    histograms: Dict[str, Union[SynchronousHistogram, IBMQJobDescription]]
 
 
 def _import_object(object_spec):
