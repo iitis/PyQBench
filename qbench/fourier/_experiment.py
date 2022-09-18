@@ -1,9 +1,13 @@
+from logging import getLogger
+
 import numpy as np
+from qiskit.circuit import Parameter
 from tqdm import tqdm
 
-from ..backend_models import IbMQJObDescription
+from ..backend_models import BackendDescription, IbMQJObDescription
 from ..direct_sum import asemble_direct_sum_circuits
 from ._components import FourierComponents
+from ._models import FourierDiscriminationExperiment, FourierDiscriminationResult
 
 
 def _wrap_result_ibmq_job(job):
@@ -18,6 +22,15 @@ _EXECUTION_MODE_TO_RESULT_WRAPPER = {
     True: _wrap_result_ibmq_job,  # async=True
     False: _wrap_result_counts,  # async=False
 }
+
+
+def _log_fourier_experiment(experiment, logger):
+    logger.info("Running Fourier-discrimination experiment")
+    logger.info("Number of qubit-pairs: %d", len(experiment.qubits))
+    logger.info("Number of phi values: %d", experiment.angles.num_steps)
+    logger.info("Number of shots per circuit: %d", experiment.num_shots)
+    logger.info("Probability estimation method: %s", experiment.method)
+    logger.info("Gateset: %s", experiment.gateset)
 
 
 def _execute_direct_sum_experiment(
@@ -54,3 +67,47 @@ def _execute_direct_sum_experiment(
         results.append({"phi": phi_, "histograms": _partial_result})
 
     return {"target": target, "ancilla": ancilla, "measurement_counts": results}
+
+
+def run_experiment(
+    experiment: FourierDiscriminationExperiment, backend_description: BackendDescription
+):
+    logger = getLogger("qbench")
+
+    _log_fourier_experiment(experiment, logger)
+
+    phi = Parameter("phi")
+    components = FourierComponents(phi, gateset=experiment.gateset)
+    phi_range = np.linspace(
+        experiment.angles.start, experiment.angles.stop, experiment.angles.num_steps
+    )
+
+    backend = backend_description.create_backend()
+    logger.info(f"Backend type: {type(backend).__name__}, backend name: {backend.name}")
+
+    if experiment.method == "direct_sum":
+        _execute = _execute_direct_sum_experiment
+    else:
+        raise NotImplementedError()
+
+    all_results = [
+        _execute(
+            pair.target,
+            pair.ancilla,
+            phi_range,
+            experiment.num_shots,
+            components,
+            backend,
+            backend_description.asynchronous,
+        )
+        for pair in tqdm(experiment.qubits, leave=False, desc="Qubit pair")
+    ]
+
+    logger.info("Completed successfully")
+    return FourierDiscriminationResult(
+        metadata={
+            "experiment": experiment,
+            "backend_description": backend_description,
+        },
+        results=all_results,
+    )
