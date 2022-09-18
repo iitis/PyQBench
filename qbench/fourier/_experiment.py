@@ -4,7 +4,7 @@ import numpy as np
 from qiskit.circuit import Parameter
 from tqdm import tqdm
 
-from ..backend_models import BackendDescription, IbMQJObDescription
+from ..common_models import BackendDescription, IbMQJObDescription
 from ..direct_sum import asemble_direct_sum_circuits
 from ._components import FourierComponents
 from ._models import FourierDiscriminationExperiment, FourierDiscriminationResult
