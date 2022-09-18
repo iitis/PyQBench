@@ -4,14 +4,14 @@ import numpy as np
 from qiskit.circuit import Parameter
 from tqdm import tqdm
 
-from ..common_models import BackendDescription, IbMQJObDescription
+from ..common_models import BackendDescription, IBMQJobDescription
 from ..direct_sum import asemble_direct_sum_circuits
 from ._components import FourierComponents
 from ._models import FourierDiscriminationExperiment, FourierDiscriminationResult
 
 
 def _wrap_result_ibmq_job(job):
-    return IbMQJObDescription(ibmq_job_id=job.job_id())
+    return IBMQJobDescription(ibmq_job_id=job.job_id())
 
 
 def _wrap_result_counts(job):
