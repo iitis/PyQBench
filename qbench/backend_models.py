@@ -3,10 +3,10 @@ import os
 from importlib import import_module
 from typing import Any, Dict, List, Optional, Union
 
-from pydantic import Extra, Field, validator
+from pydantic import Field, validator
 from qiskit import IBMQ
 
-from qbench.models import BaseModel
+from qbench.common_models import BaseModel
 
 
 def _import_object(object_spec):
@@ -32,7 +32,7 @@ def _check_is_correct_object_path(path):
     return path
 
 
-class SimpleBackendDescription(BaseModel, extra=Extra.forbid):
+class SimpleBackendDescription(BaseModel):
     provider: str
     name: str
     run_options: Dict[str, Any] = Field(default_factory=dict)
