@@ -28,3 +28,5 @@ def configure_logging():
     logging.basicConfig(format=FORMAT)
     logging.setLogRecordFactory(_logrecord_factory)
     logging.getLogger("qbench").setLevel("INFO")
+    # Lower the loglevel for websocket, or get lots of "websocket connected messages
+    logging.getLogger("websocket").setLevel("ERROR")
