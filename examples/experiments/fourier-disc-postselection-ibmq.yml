@@ -1,0 +1,11 @@
+type: discrimination-fourier
+qubits:
+  - target: 0
+    ancilla: 1
+angles:
+  start: 0
+  stop: 2 * pi
+  num_steps: 50
+gateset: ibmq
+method: postselection
+num_shots: 100
