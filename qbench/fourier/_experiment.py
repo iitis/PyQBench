@@ -115,7 +115,7 @@ def run_experiment(
     )
 
 
-def _fetch_statuses(async_results: FourierDiscriminationResult):
+def fetch_statuses(async_results: FourierDiscriminationResult):
     logger = getLogger("qbench")
 
     if not async_results.metadata.backend_description.asynchronous:
@@ -134,7 +134,7 @@ def _fetch_statuses(async_results: FourierDiscriminationResult):
     return dict(Counter(statuses))
 
 
-def _resolve_results(async_results: FourierDiscriminationResult):
+def resolve_results(async_results: FourierDiscriminationResult):
     logger = getLogger("qbench")
 
     if not async_results.metadata.backend_description.asynchronous:

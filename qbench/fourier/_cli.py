@@ -3,7 +3,7 @@ from argparse import FileType
 from yaml import safe_dump, safe_load
 
 from ..common_models import BackendDescriptionRoot
-from ._experiment import _fetch_statuses, _resolve_results, run_experiment
+from ._experiment import fetch_statuses, resolve_results, run_experiment
 from ._models import FourierDiscriminationExperiment, FourierDiscriminationResult
 
 
@@ -17,13 +17,13 @@ def _run_benchmark(args):
 
 def _status(args):
     results = FourierDiscriminationResult(**safe_load(args.async_results))
-    counts = _fetch_statuses(results)
+    counts = fetch_statuses(results)
     print(counts)
 
 
 def _resolve(args):
     results = FourierDiscriminationResult(**safe_load(args.async_results))
-    resolved = _resolve_results(results)
+    resolved = resolve_results(results)
     safe_dump(resolved.dict(), args.output, sort_keys=False)
 
 
