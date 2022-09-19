@@ -3,8 +3,8 @@ from argparse import FileType
 from yaml import safe_dump, safe_load
 
 from ..common_models import BackendDescriptionRoot
-from ._experiment import run_experiment
-from ._models import FourierDiscriminationExperiment
+from ._experiment import _fetch_statuses, run_experiment
+from ._models import FourierDiscriminationExperiment, FourierDiscriminationResult
 
 
 def _run_benchmark(args):
@@ -13,6 +13,12 @@ def _run_benchmark(args):
 
     result = run_experiment(experiment, backend_description)
     safe_dump(result.dict(), args.output, sort_keys=False)
+
+
+def _status(args):
+    results = FourierDiscriminationResult(**safe_load(args.async_results))
+    counts = _fetch_statuses(results)
+    print(counts)
 
 
 def add_fourier_parser(parent_parser):
@@ -76,7 +82,7 @@ def add_fourier_parser(parent_parser):
     )
 
     resolve.add_argument(
-        "async-result",
+        "async_result",
         help=(
             "path to the file with results of discrimination experiment which can be obtained by "
             "running qbench benchmark using backend with asynchronous flag equal to True."
@@ -97,10 +103,12 @@ def add_fourier_parser(parent_parser):
     )
 
     status.add_argument(
-        "async-results",
+        "async_results",
         help=(
             "path to the file with results of discrimination experiment which can be obtained by "
             "running qbench benchmark using backend with asynchronous flag equal to True."
         ),
-        type=str,
+        type=FileType("r"),
     )
+
+    status.set_defaults(func=_status)

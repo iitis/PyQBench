@@ -1,4 +1,6 @@
+from collections import Counter
 from logging import getLogger
+from typing import cast
 
 import numpy as np
 from qiskit.circuit import Parameter
@@ -111,3 +113,22 @@ def run_experiment(
         },
         results=all_results,
     )
+
+
+def _fetch_statuses(async_results: FourierDiscriminationResult):
+    logger = getLogger("qbench")
+
+    if not async_results.metadata.backend_description.asynchronous:
+        logger.error("Specified file seems to contain results from synchronous experiment")
+        exit(1)
+
+    backend = async_results.metadata.backend_description.create_backend()
+
+    statuses = [
+        backend.retrieve_job(cast(IBMQJobDescription, job_description).ibmq_job_id).status().name
+        for entry in async_results.results
+        for measurements in entry.measurement_counts
+        for job_description in measurements.histograms.values()
+    ]
+
+    return dict(Counter(statuses))
