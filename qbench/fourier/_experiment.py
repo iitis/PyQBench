@@ -8,6 +8,7 @@ from tqdm import tqdm
 
 from ..common_models import BackendDescription, IBMQJobDescription
 from ..direct_sum import asemble_direct_sum_circuits
+from ..postselection import asemble_postselection_circuits
 from ._components import FourierComponents
 from ._models import FourierDiscriminationExperiment, FourierDiscriminationResult
 
@@ -71,6 +72,47 @@ def _execute_direct_sum_experiment(
     return {"target": target, "ancilla": ancilla, "measurement_counts": results}
 
 
+def _execute_postselection_experiment(
+    target: int,
+    ancilla: int,
+    phi_range: np.ndarray,
+    num_shots: int,
+    components: FourierComponents,
+    backend,
+    asynchronous: bool,
+):
+    id_v0_circuit, id_v1_circuit, u_v0_circuit, u_v1_circuit = asemble_postselection_circuits(
+        state_preparation=components.state_preparation,
+        black_box_dag=components.black_box_dag,
+        v0_dag=components.v0_dag,
+        v1_dag=components.v1_dag,
+        target=target,
+        ancilla=ancilla,
+    )
+    phi = id_v0_circuit.parameters[0]
+
+    wrap_result = _EXECUTION_MODE_TO_RESULT_WRAPPER[asynchronous]
+
+    results = []
+    for phi_ in tqdm(phi_range, leave=False, desc="phi"):
+        phi_ = float(phi_)  # or else we get into yaml serialization issues
+        bound_id_v0_circuit = id_v0_circuit.bind_parameters({phi: phi_})
+        bound_id_v1_circuit = id_v1_circuit.bind_parameters({phi: phi_})
+        bound_u_v0_circuit = u_v0_circuit.bind_parameters({phi: phi_})
+        bound_u_v1_circuit = u_v1_circuit.bind_parameters({phi: phi_})
+
+        _partial_result = {
+            "u_v0": wrap_result(backend.run(bound_u_v0_circuit, shots=num_shots)),
+            "id_v0": wrap_result(backend.run(bound_id_v0_circuit, shots=num_shots)),
+            "u_v1": wrap_result(backend.run(bound_u_v1_circuit, shots=num_shots)),
+            "id_v1": wrap_result(backend.run(bound_id_v1_circuit, shots=num_shots)),
+        }
+
+        results.append({"phi": phi_, "histograms": _partial_result})
+
+    return {"target": target, "ancilla": ancilla, "measurement_counts": results}
+
+
 def run_experiment(
     experiment: FourierDiscriminationExperiment, backend_description: BackendDescription
 ):
@@ -90,7 +132,7 @@ def run_experiment(
     if experiment.method == "direct_sum":
         _execute = _execute_direct_sum_experiment
     else:
-        raise NotImplementedError()
+        _execute = _execute_postselection_experiment
 
     all_results = [
         _execute(
