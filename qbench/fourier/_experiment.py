@@ -132,3 +132,36 @@ def _fetch_statuses(async_results: FourierDiscriminationResult):
     ]
 
     return dict(Counter(statuses))
+
+
+def _resolve_results(async_results: FourierDiscriminationResult):
+    logger = getLogger("qbench")
+
+    if not async_results.metadata.backend_description.asynchronous:
+        logger.error("Specified file seems to contain results from synchronous experiment")
+        exit(1)
+
+    backend = async_results.metadata.backend_description.create_backend()
+
+    def _resolve_measurement_counts(counts):
+        return {
+            "phi": counts.phi,
+            "histograms": {
+                key: backend.retrieve_job(cast(IBMQJobDescription, value.ibmq_job_id))
+                .result()
+                .get_counts()
+                for key, value in counts.histograms.items()
+            },
+        }
+
+    resolved = [
+        {
+            "target": entry.target,
+            "ancilla": entry.ancilla,
+            "measurement_counts": [
+                _resolve_measurement_counts(counts) for counts in entry.measurement_counts
+            ],
+        }
+        for entry in async_results.results
+    ]
+    return FourierDiscriminationResult(metadata=async_results.metadata, results=resolved)
