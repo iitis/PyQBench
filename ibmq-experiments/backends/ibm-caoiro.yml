@@ -1,0 +1,6 @@
+name: ibm_cairo
+asynchronous: true
+provider:
+  hub: ibm-q-psnc
+  group: internal
+  project: default

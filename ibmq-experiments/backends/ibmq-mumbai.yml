@@ -1,0 +1,6 @@
+name: ibmq_mumbai
+asynchronous: true
+provider:
+  hub: ibm-q-psnc
+  group: internal
+  project: default

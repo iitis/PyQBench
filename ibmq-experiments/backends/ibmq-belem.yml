@@ -1,0 +1,6 @@
+name: ibmq_belem
+asynchronous: true
+provider:
+  hub: ibm-q-psnc
+  group: internal
+  project: default

@@ -1,0 +1,6 @@
+name: ibm_auckland
+asynchronous: true
+provider:
+  hub: ibm-q-psnc
+  group: internal
+  project: default

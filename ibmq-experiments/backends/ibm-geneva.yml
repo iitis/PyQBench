@@ -1,0 +1,6 @@
+name: ibm_geneva
+asynchronous: true
+provider:
+  hub: ibm-q-psnc
+  group: internal
+  project: default
