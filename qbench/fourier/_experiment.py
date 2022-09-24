@@ -164,8 +164,10 @@ def fetch_statuses(async_results: FourierDiscriminationResult):
         logger.error("Specified file seems to contain results from synchronous experiment")
         exit(1)
 
+    logger.info("Enabling account and creating backend")
     backend = async_results.metadata.backend_description.create_backend()
 
+    logger.info("Reading jobs ids from the input file")
     job_ids_to_fetch = [
         cast(IBMQJobDescription, job_description).ibmq_job_id
         for entry in async_results.results
@@ -173,6 +175,7 @@ def fetch_statuses(async_results: FourierDiscriminationResult):
         for job_description in measurements.histograms.values()
     ]
 
+    logger.info(f"Fetching total of {len(job_ids_to_fetch)} jobs")
     jobs = backend.jobs(db_filter={"id": {"inq": job_ids_to_fetch}})
 
     return dict(Counter(job.status().name for job in jobs))
