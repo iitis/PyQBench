@@ -9,9 +9,9 @@ def _decompose(circuit):
 
 def state_preparation():
     circuit = QuantumCircuit(2, name="state-prep")
-    circuit.rx(np.pi / 2, 0)
     circuit.rz(np.pi / 2, 0)
-    circuit.rx(np.pi / 2, 0)
+    circuit.sx(0)
+    circuit.rz(np.pi / 2, 0)
     circuit.cx(0, 1)
     return circuit.to_instruction()
 

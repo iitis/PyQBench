@@ -3,7 +3,8 @@ from matplotlib import pyplot as plt
 from qiskit_braket_provider import BraketLocalBackend
 
 from qbench.direct_sum import benchmark_using_controlled_unitary
-from qbench.fourier import FourierComponents, discrimination_probability_upper_bound
+from qbench.fourier import discrimination_probability_upper_bound
+from qbench.fourier._components import FourierComponents
 
 NUM_SHOTS_PER_MEASUREMENT = 10000
 TARGET = 0

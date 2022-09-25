@@ -3,7 +3,7 @@ import pytest
 from qiskit_braket_provider import BraketLocalBackend
 
 from qbench.direct_sum import benchmark_using_controlled_unitary
-from qbench.fourier import FourierComponents
+from qbench.fourier._components import FourierComponents
 
 
 @pytest.mark.parametrize("phi", np.linspace(0, 2 * np.pi, 100))
