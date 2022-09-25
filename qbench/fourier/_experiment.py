@@ -12,6 +12,8 @@ from ..postselection import asemble_postselection_circuits
 from ._components import FourierComponents
 from ._models import FourierDiscriminationExperiment, FourierDiscriminationResult
 
+logger = getLogger("qbench")
+
 
 def _wrap_result_ibmq_job(job):
     return IBMQJobDescription(ibmq_job_id=job.job_id())
@@ -27,7 +29,7 @@ _EXECUTION_MODE_TO_RESULT_WRAPPER = {
 }
 
 
-def _log_fourier_experiment(experiment, logger):
+def _log_fourier_experiment(experiment):
     logger.info("Running Fourier-discrimination experiment")
     logger.info("Number of qubit-pairs: %d", len(experiment.qubits))
     logger.info("Number of phi values: %d", experiment.angles.num_steps)
@@ -116,9 +118,7 @@ def _execute_postselection_experiment(
 def run_experiment(
     experiment: FourierDiscriminationExperiment, backend_description: BackendDescription
 ):
-    logger = getLogger("qbench")
-
-    _log_fourier_experiment(experiment, logger)
+    _log_fourier_experiment(experiment)
 
     phi = Parameter("phi")
     components = FourierComponents(phi, gateset=experiment.gateset)
@@ -158,8 +158,6 @@ def run_experiment(
 
 
 def fetch_statuses(async_results: FourierDiscriminationResult):
-    logger = getLogger("qbench")
-
     if not async_results.metadata.backend_description.asynchronous:
         logger.error("Specified file seems to contain results from synchronous experiment")
         exit(1)
@@ -182,8 +180,6 @@ def fetch_statuses(async_results: FourierDiscriminationResult):
 
 
 def resolve_results(async_results: FourierDiscriminationResult):
-    logger = getLogger("qbench")
-
     if not async_results.metadata.backend_description.asynchronous:
         logger.error("Specified file seems to contain results from synchronous experiment")
         exit(1)
