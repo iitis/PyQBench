@@ -29,6 +29,21 @@ _EXECUTION_MODE_TO_RESULT_WRAPPER = {
 }
 
 
+def _verify_results_are_async_or_fail(results):
+    if not results.metadata.backend_description.asynchronous:
+        logger.error("Specified file seems to contain results from synchronous experiment")
+        exit(1)
+
+
+def _collect_jobs_from_results(async_results):
+    return [
+        cast(IBMQJobDescription, job_description).ibmq_job_id
+        for entry in async_results.results
+        for measurements in entry.measurement_counts
+        for job_description in measurements.histograms.values()
+    ]
+
+
 def _log_fourier_experiment(experiment):
     logger.info("Running Fourier-discrimination experiment")
     logger.info("Number of qubit-pairs: %d", len(experiment.qubits))
@@ -158,20 +173,13 @@ def run_experiment(
 
 
 def fetch_statuses(async_results: FourierDiscriminationResult):
-    if not async_results.metadata.backend_description.asynchronous:
-        logger.error("Specified file seems to contain results from synchronous experiment")
-        exit(1)
+    _verify_results_are_async_or_fail(async_results)
 
     logger.info("Enabling account and creating backend")
     backend = async_results.metadata.backend_description.create_backend()
 
     logger.info("Reading jobs ids from the input file")
-    job_ids_to_fetch = [
-        cast(IBMQJobDescription, job_description).ibmq_job_id
-        for entry in async_results.results
-        for measurements in entry.measurement_counts
-        for job_description in measurements.histograms.values()
-    ]
+    job_ids_to_fetch = _collect_jobs_from_results(async_results)
 
     logger.info(f"Fetching total of {len(job_ids_to_fetch)} jobs")
     jobs = backend.jobs(db_filter={"id": {"inq": job_ids_to_fetch}})
@@ -180,20 +188,13 @@ def fetch_statuses(async_results: FourierDiscriminationResult):
 
 
 def resolve_results(async_results: FourierDiscriminationResult):
-    if not async_results.metadata.backend_description.asynchronous:
-        logger.error("Specified file seems to contain results from synchronous experiment")
-        exit(1)
+    _verify_results_are_async_or_fail(async_results)
 
     logger.info("Enabling account and creating backend")
     backend = async_results.metadata.backend_description.create_backend()
 
     logger.info("Reading jobs ids from the input file")
-    job_ids_to_fetch = [
-        cast(IBMQJobDescription, job_description).ibmq_job_id
-        for entry in async_results.results
-        for measurements in entry.measurement_counts
-        for job_description in measurements.histograms.values()
-    ]
+    job_ids_to_fetch = _collect_jobs_from_results(async_results)
 
     logger.info(f"Fetching total of {len(job_ids_to_fetch)} jobs")
     jobs_mapping = {
