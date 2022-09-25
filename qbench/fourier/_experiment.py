@@ -188,15 +188,27 @@ def resolve_results(async_results: FourierDiscriminationResult):
         logger.error("Specified file seems to contain results from synchronous experiment")
         exit(1)
 
+    logger.info("Enabling account and creating backend")
     backend = async_results.metadata.backend_description.create_backend()
+
+    logger.info("Reading jobs ids from the input file")
+    job_ids_to_fetch = [
+        cast(IBMQJobDescription, job_description).ibmq_job_id
+        for entry in async_results.results
+        for measurements in entry.measurement_counts
+        for job_description in measurements.histograms.values()
+    ]
+
+    logger.info(f"Fetching total of {len(job_ids_to_fetch)} jobs")
+    jobs_mapping = {
+        job.job_id(): job for job in backend.jobs(db_filter={"id": {"inq": job_ids_to_fetch}})
+    }
 
     def _resolve_measurement_counts(counts):
         return {
             "phi": counts.phi,
             "histograms": {
-                key: backend.retrieve_job(cast(IBMQJobDescription, value.ibmq_job_id))
-                .result()
-                .get_counts()
+                key: jobs_mapping[cast(IBMQJobDescription, value.ibmq_job_id)].result().get_counts()
                 for key, value in counts.histograms.items()
             },
         }
