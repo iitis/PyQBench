@@ -53,6 +53,23 @@ def _log_fourier_experiment(experiment):
     logger.info("Gateset: %s", experiment.gateset)
 
 
+def _sweep_circuits(backend, circuits_map, phi, phi_range, num_shots, wrap_result):
+    results = []
+    for phi_ in tqdm(phi_range, leave=False, desc="phi"):
+        phi_ = float(phi_)  # or else we get into yaml serialization issues
+        bound_circuits_map = {
+            key: circuit.bind_parameters({phi: phi_}) for key, circuit in circuits_map.items()
+        }
+
+        _partial_result = {
+            key: wrap_result(backend.run(circuit, shots=num_shots))
+            for key, circuit in bound_circuits_map.items()
+        }
+
+        results.append({"phi": phi_, "histograms": _partial_result})
+    return results
+
+
 def _execute_direct_sum_experiment(
     target: int,
     ancilla: int,
@@ -69,22 +86,20 @@ def _execute_direct_sum_experiment(
         target=target,
         ancilla=ancilla,
     )
+
+    circuits_map = {"U": u_circuit, "id": identity_circuit}
     phi = u_circuit.parameters[0]
 
     wrap_result = _EXECUTION_MODE_TO_RESULT_WRAPPER[asynchronous]
 
-    results = []
-    for phi_ in tqdm(phi_range, leave=False, desc="phi"):
-        phi_ = float(phi_)  # or else we get into yaml serialization issues
-        bound_identity_circuit = identity_circuit.bind_parameters({phi: phi_})
-        bound_u_circuit = identity_circuit.bind_parameters({phi: phi_})
-
-        _partial_result = {
-            "u": wrap_result(backend.run(bound_identity_circuit, shots=num_shots)),
-            "id": wrap_result(backend.run(bound_u_circuit, shots=num_shots)),
-        }
-
-        results.append({"phi": phi_, "histograms": _partial_result})
+    results = _sweep_circuits(
+        backend=backend,
+        circuits_map=circuits_map,
+        phi=phi,
+        phi_range=phi_range,
+        num_shots=num_shots,
+        wrap_result=wrap_result,
+    )
 
     return {"target": target, "ancilla": ancilla, "measurement_counts": results}
 
@@ -106,26 +121,26 @@ def _execute_postselection_experiment(
         target=target,
         ancilla=ancilla,
     )
+
+    circuits_map = {
+        "id_v0": id_v0_circuit,
+        "id_v1": id_v1_circuit,
+        "u_v0_circuit": u_v0_circuit,
+        "u_v1_circuit": u_v1_circuit,
+    }
+
     phi = id_v0_circuit.parameters[0]
 
     wrap_result = _EXECUTION_MODE_TO_RESULT_WRAPPER[asynchronous]
 
-    results = []
-    for phi_ in tqdm(phi_range, leave=False, desc="phi"):
-        phi_ = float(phi_)  # or else we get into yaml serialization issues
-        bound_id_v0_circuit = id_v0_circuit.bind_parameters({phi: phi_})
-        bound_id_v1_circuit = id_v1_circuit.bind_parameters({phi: phi_})
-        bound_u_v0_circuit = u_v0_circuit.bind_parameters({phi: phi_})
-        bound_u_v1_circuit = u_v1_circuit.bind_parameters({phi: phi_})
-
-        _partial_result = {
-            "u_v0": wrap_result(backend.run(bound_u_v0_circuit, shots=num_shots)),
-            "id_v0": wrap_result(backend.run(bound_id_v0_circuit, shots=num_shots)),
-            "u_v1": wrap_result(backend.run(bound_u_v1_circuit, shots=num_shots)),
-            "id_v1": wrap_result(backend.run(bound_id_v1_circuit, shots=num_shots)),
-        }
-
-        results.append({"phi": phi_, "histograms": _partial_result})
+    results = _sweep_circuits(
+        backend=backend,
+        circuits_map=circuits_map,
+        phi=phi,
+        phi_range=phi_range,
+        num_shots=num_shots,
+        wrap_result=wrap_result,
+    )
 
     return {"target": target, "ancilla": ancilla, "measurement_counts": results}
 
