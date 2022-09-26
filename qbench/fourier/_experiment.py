@@ -1,5 +1,6 @@
 from collections import Counter, defaultdict
 from logging import getLogger
+from typing import Any, List, MutableMapping, Tuple, cast
 
 import numpy as np
 from qiskit.circuit import Parameter
@@ -21,7 +22,7 @@ logger = getLogger("qbench")
 
 
 def _verify_results_are_async_or_fail(results):
-    if not isinstance(results.results, BatchResult):
+    if not all(isinstance(entry, BatchResult) for entry in results.results):
         logger.error("Specified file seems to contain results from synchronous experiment")
         exit(1)
 
@@ -64,7 +65,7 @@ def _execute_direct_sum_experiment(
     components: FourierComponents,
     backend,
 ):
-    identity_circuit, u_circuit = asemble_direct_sum_circuits(
+    circuits_map = asemble_direct_sum_circuits(
         state_preparation=components.state_preparation,
         black_box_dag=components.black_box_dag,
         v0_v1_direct_sum_dag=components.controlled_v0_v1_dag,
@@ -72,8 +73,7 @@ def _execute_direct_sum_experiment(
         ancilla=ancilla,
     )
 
-    circuits_map = {"u": u_circuit, "id": identity_circuit}
-    phi = u_circuit.parameters[0]
+    phi = components.phi
 
     results = _sweep_circuits(
         backend=backend,
@@ -94,7 +94,7 @@ def _execute_postselection_experiment(
     components: FourierComponents,
     backend,
 ):
-    id_v0_circuit, id_v1_circuit, u_v0_circuit, u_v1_circuit = asemble_postselection_circuits(
+    circuits_map = asemble_postselection_circuits(
         state_preparation=components.state_preparation,
         black_box_dag=components.black_box_dag,
         v0_dag=components.v0_dag,
@@ -103,14 +103,7 @@ def _execute_postselection_experiment(
         ancilla=ancilla,
     )
 
-    circuits_map = {
-        "id_v0": id_v0_circuit,
-        "id_v1": id_v1_circuit,
-        "u_v0": u_v0_circuit,
-        "u_v1": u_v1_circuit,
-    }
-
-    phi = id_v0_circuit.parameters[0]
+    phi = components.phi
 
     results = _sweep_circuits(
         backend=backend,
@@ -148,54 +141,40 @@ def _run_experiment_synchronously(
 
 
 def _collect_circuits_and_keys(experiment, components, phi_range):
-    keys = []
-    circuits = []
+    def _asemble_postselection(target, ancilla):
+        return asemble_postselection_circuits(
+            state_preparation=components.state_preparation,
+            black_box_dag=components.black_box_dag,
+            v0_dag=components.v0_dag,
+            v1_dag=components.v1_dag,
+            target=target,
+            ancilla=ancilla,
+        )
 
-    if experiment.method == "postselection":
-        for pair in experiment.qubits:
+    def _asemble_direct_sum(target, ancilla):
+        return asemble_direct_sum_circuits(
+            state_preparation=components.state_preparation,
+            black_box_dag=components.black_box_dag,
+            v0_v1_direct_sum_dag=components.controlled_v0_v1_dag,
+            target=target,
+            ancilla=ancilla,
+        )
+
+    _asemble = (
+        _asemble_postselection if experiment.method == "postselection" else _asemble_direct_sum
+    )
+
+    return zip(
+        *[
             (
-                id_v0_circuit,
-                id_v1_circuit,
-                u_v0_circuit,
-                u_v1_circuit,
-            ) = asemble_postselection_circuits(
-                state_preparation=components.state_preparation,
-                black_box_dag=components.black_box_dag,
-                v0_dag=components.v0_dag,
-                v1_dag=components.v1_dag,
-                target=pair.target,
-                ancilla=pair.ancilla,
+                circuit.bind_parameters({components.phi: phi}),
+                (pair.target, pair.ancilla, circuit_name, float(phi)),
             )
-
-            circuits_map = {
-                "id_v0": id_v0_circuit,
-                "id_v1": id_v1_circuit,
-                "u_v0": u_v0_circuit,
-                "u_v1": u_v1_circuit,
-            }
-            for phi in phi_range:
-                phi = float(phi)
-                for circuit_name, circuit in circuits_map.items():
-                    keys.append((pair.target, pair.ancilla, circuit_name, phi))
-                    circuits.append(circuit.bind_parameters({components.phi: phi}))
-    else:
-        for pair in experiment.qubits:
-            identity_circuit, u_circuit = asemble_direct_sum_circuits(
-                state_preparation=components.state_preparation,
-                black_box_dag=components.black_box_dag,
-                v0_v1_direct_sum_dag=components.controlled_v0_v1_dag,
-                target=pair.target,
-                ancilla=pair.ancilla,
-            )
-
-            circuits_map = {"u": u_circuit, "id": identity_circuit}
-            for phi in phi_range:
-                phi = float(phi)
-                for circuit_name, circuit in circuits_map.items():
-                    keys.append((pair.target, pair.ancilla, circuit_name, phi))
-                    circuits.append(circuit.bind_parameters({components.phi: phi}))
-
-    return circuits, keys
+            for pair in experiment.qubits
+            for phi in phi_range
+            for circuit_name, circuit in _asemble(pair.target, pair.ancilla).items()
+        ]
+    )
 
 
 def _run_experiment_asynchronously(
@@ -260,8 +239,6 @@ def fetch_statuses(async_results: FourierDiscriminationResult):
 def resolve_results(async_results: FourierDiscriminationResult):
     _verify_results_are_async_or_fail(async_results)
 
-    assert isinstance(async_results.results, BatchResult)
-
     logger.info("Enabling account and creating backend")
     backend = async_results.metadata.backend_description.create_backend()
 
@@ -275,13 +252,15 @@ def resolve_results(async_results: FourierDiscriminationResult):
 
     result_pairs = [
         (key, counts)
-        for entry in async_results.results
+        for entry in cast(List[BatchResult], async_results.results)
         for key, counts in zip(
             entry.keys, jobs_mapping[entry.job.ibmq_job_id].result().get_counts()
         )
     ]
 
-    result_dict = defaultdict(lambda: defaultdict(dict))
+    result_dict: MutableMapping[
+        Tuple[int, int], MutableMapping[float, MutableMapping[str, Any]]
+    ] = defaultdict(lambda: defaultdict(dict))
 
     for (target, ancilla, name, phi), counts in result_pairs:
         result_dict[(target, ancilla)][phi][name] = counts
