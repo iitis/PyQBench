@@ -1,4 +1,4 @@
-from typing import Dict, List, Literal, Optional, Union
+from typing import Dict, List, Literal, Optional, Tuple, Union
 
 from pydantic import validator
 
@@ -37,7 +37,7 @@ class FourierDiscriminationMetadata(BaseModel):
 
 class ResultForAngle(BaseModel):
     phi: float
-    histograms: Dict[str, Union[SynchronousHistogram, IBMQJobDescription]]
+    histograms: Dict[str, SynchronousHistogram]
 
 
 class SingleResult(BaseModel):
@@ -46,6 +46,11 @@ class SingleResult(BaseModel):
     measurement_counts: List[ResultForAngle]
 
 
+class BatchResult(BaseModel):
+    job: IBMQJobDescription
+    keys: List[Tuple[int, int, str, float]]
+
+
 class FourierDiscriminationResult(BaseModel):
     metadata: FourierDiscriminationMetadata
-    results: List[SingleResult]
+    results: Union[List[SingleResult], List[BatchResult]]

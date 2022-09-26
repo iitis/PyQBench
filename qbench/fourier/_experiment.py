@@ -1,47 +1,33 @@
-from collections import Counter
+from collections import Counter, defaultdict
 from logging import getLogger
-from typing import cast
 
 import numpy as np
 from qiskit.circuit import Parameter
 from tqdm import tqdm
 
-from ..common_models import BackendDescription, IBMQJobDescription
+from ..batching import execute_in_batches
+from ..common_models import BackendDescription
 from ..direct_sum import asemble_direct_sum_circuits
+from ..limits import get_limits
 from ..postselection import asemble_postselection_circuits
 from ._components import FourierComponents
-from ._models import FourierDiscriminationExperiment, FourierDiscriminationResult
+from ._models import (
+    BatchResult,
+    FourierDiscriminationExperiment,
+    FourierDiscriminationResult,
+)
 
 logger = getLogger("qbench")
 
 
-def _wrap_result_ibmq_job(job):
-    return IBMQJobDescription(ibmq_job_id=job.job_id())
-
-
-def _wrap_result_counts(job):
-    return job.result().get_counts()
-
-
-_EXECUTION_MODE_TO_RESULT_WRAPPER = {
-    True: _wrap_result_ibmq_job,  # async=True
-    False: _wrap_result_counts,  # async=False
-}
-
-
 def _verify_results_are_async_or_fail(results):
-    if not results.metadata.backend_description.asynchronous:
+    if not isinstance(results.results, BatchResult):
         logger.error("Specified file seems to contain results from synchronous experiment")
         exit(1)
 
 
 def _collect_jobs_from_results(async_results):
-    return [
-        cast(IBMQJobDescription, job_description).ibmq_job_id
-        for entry in async_results.results
-        for measurements in entry.measurement_counts
-        for job_description in measurements.histograms.values()
-    ]
+    return [entry.job.ibmq_job_id for entry in async_results.results]
 
 
 def _log_fourier_experiment(experiment):
@@ -53,7 +39,7 @@ def _log_fourier_experiment(experiment):
     logger.info("Gateset: %s", experiment.gateset)
 
 
-def _sweep_circuits(backend, circuits_map, phi, phi_range, num_shots, wrap_result):
+def _sweep_circuits(backend, circuits_map, phi, phi_range, num_shots):
     results = []
     for phi_ in tqdm(phi_range, leave=False, desc="phi"):
         phi_ = float(phi_)  # or else we get into yaml serialization issues
@@ -62,7 +48,7 @@ def _sweep_circuits(backend, circuits_map, phi, phi_range, num_shots, wrap_resul
         }
 
         _partial_result = {
-            key: wrap_result(backend.run(circuit, shots=num_shots))
+            key: backend.run(circuit, shots=num_shots).result().get_counts()
             for key, circuit in bound_circuits_map.items()
         }
 
@@ -77,7 +63,6 @@ def _execute_direct_sum_experiment(
     num_shots: int,
     components: FourierComponents,
     backend,
-    asynchronous: bool,
 ):
     identity_circuit, u_circuit = asemble_direct_sum_circuits(
         state_preparation=components.state_preparation,
@@ -87,10 +72,8 @@ def _execute_direct_sum_experiment(
         ancilla=ancilla,
     )
 
-    circuits_map = {"U": u_circuit, "id": identity_circuit}
+    circuits_map = {"u": u_circuit, "id": identity_circuit}
     phi = u_circuit.parameters[0]
-
-    wrap_result = _EXECUTION_MODE_TO_RESULT_WRAPPER[asynchronous]
 
     results = _sweep_circuits(
         backend=backend,
@@ -98,7 +81,6 @@ def _execute_direct_sum_experiment(
         phi=phi,
         phi_range=phi_range,
         num_shots=num_shots,
-        wrap_result=wrap_result,
     )
 
     return {"target": target, "ancilla": ancilla, "measurement_counts": results}
@@ -111,7 +93,6 @@ def _execute_postselection_experiment(
     num_shots: int,
     components: FourierComponents,
     backend,
-    asynchronous: bool,
 ):
     id_v0_circuit, id_v1_circuit, u_v0_circuit, u_v1_circuit = asemble_postselection_circuits(
         state_preparation=components.state_preparation,
@@ -125,13 +106,11 @@ def _execute_postselection_experiment(
     circuits_map = {
         "id_v0": id_v0_circuit,
         "id_v1": id_v1_circuit,
-        "u_v0_circuit": u_v0_circuit,
-        "u_v1_circuit": u_v1_circuit,
+        "u_v0": u_v0_circuit,
+        "u_v1": u_v1_circuit,
     }
 
     phi = id_v0_circuit.parameters[0]
-
-    wrap_result = _EXECUTION_MODE_TO_RESULT_WRAPPER[asynchronous]
 
     results = _sweep_circuits(
         backend=backend,
@@ -139,10 +118,99 @@ def _execute_postselection_experiment(
         phi=phi,
         phi_range=phi_range,
         num_shots=num_shots,
-        wrap_result=wrap_result,
     )
 
     return {"target": target, "ancilla": ancilla, "measurement_counts": results}
+
+
+def _run_experiment_synchronously(
+    backend,
+    experiment: FourierDiscriminationExperiment,
+    phi_range: np.ndarray,
+    components: FourierComponents,
+):
+    if experiment.method == "direct_sum":
+        _execute = _execute_direct_sum_experiment
+    else:
+        _execute = _execute_postselection_experiment
+
+    return [
+        _execute(
+            pair.target,
+            pair.ancilla,
+            phi_range,
+            experiment.num_shots,
+            components,
+            backend,
+        )
+        for pair in tqdm(experiment.qubits, leave=False, desc="Qubit pair")
+    ]
+
+
+def _collect_circuits_and_keys(experiment, components, phi_range):
+    keys = []
+    circuits = []
+
+    if experiment.method == "postselection":
+        for pair in experiment.qubits:
+            (
+                id_v0_circuit,
+                id_v1_circuit,
+                u_v0_circuit,
+                u_v1_circuit,
+            ) = asemble_postselection_circuits(
+                state_preparation=components.state_preparation,
+                black_box_dag=components.black_box_dag,
+                v0_dag=components.v0_dag,
+                v1_dag=components.v1_dag,
+                target=pair.target,
+                ancilla=pair.ancilla,
+            )
+
+            circuits_map = {
+                "id_v0": id_v0_circuit,
+                "id_v1": id_v1_circuit,
+                "u_v0": u_v0_circuit,
+                "u_v1": u_v1_circuit,
+            }
+            for phi in phi_range:
+                phi = float(phi)
+                for circuit_name, circuit in circuits_map.items():
+                    keys.append((pair.target, pair.ancilla, circuit_name, phi))
+                    circuits.append(circuit.bind_parameters({components.phi: phi}))
+    else:
+        for pair in experiment.qubits:
+            identity_circuit, u_circuit = asemble_direct_sum_circuits(
+                state_preparation=components.state_preparation,
+                black_box_dag=components.black_box_dag,
+                v0_v1_direct_sum_dag=components.controlled_v0_v1_dag,
+                target=pair.target,
+                ancilla=pair.ancilla,
+            )
+
+            circuits_map = {"u": u_circuit, "id": identity_circuit}
+            for phi in phi_range:
+                phi = float(phi)
+                for circuit_name, circuit in circuits_map.items():
+                    keys.append((pair.target, pair.ancilla, circuit_name, phi))
+                    circuits.append(circuit.bind_parameters({components.phi: phi}))
+
+    return circuits, keys
+
+
+def _run_experiment_asynchronously(
+    backend,
+    experiment: FourierDiscriminationExperiment,
+    phi_range: np.ndarray,
+    components: FourierComponents,
+):
+    circuits, keys = _collect_circuits_and_keys(experiment, components, phi_range)
+
+    batches = execute_in_batches(
+        backend, circuits, keys, experiment.num_shots, get_limits(backend).max_circuits
+    )
+
+    return [{"job": {"ibmq_job_id": batch.job.job_id()}, "keys": batch.keys} for batch in batches]
 
 
 def run_experiment(
@@ -159,23 +227,10 @@ def run_experiment(
     backend = backend_description.create_backend()
     logger.info(f"Backend type: {type(backend).__name__}, backend name: {backend.name}")
 
-    if experiment.method == "direct_sum":
-        _execute = _execute_direct_sum_experiment
+    if backend_description.asynchronous:
+        results = _run_experiment_asynchronously(backend, experiment, phi_range, components)
     else:
-        _execute = _execute_postselection_experiment
-
-    all_results = [
-        _execute(
-            pair.target,
-            pair.ancilla,
-            phi_range,
-            experiment.num_shots,
-            components,
-            backend,
-            backend_description.asynchronous,
-        )
-        for pair in tqdm(experiment.qubits, leave=False, desc="Qubit pair")
-    ]
+        results = _run_experiment_synchronously(backend, experiment, phi_range, components)
 
     logger.info("Completed successfully")
     return FourierDiscriminationResult(
@@ -183,7 +238,7 @@ def run_experiment(
             "experiment": experiment,
             "backend_description": backend_description,
         },
-        results=all_results,
+        results=results,
     )
 
 
@@ -205,6 +260,8 @@ def fetch_statuses(async_results: FourierDiscriminationResult):
 def resolve_results(async_results: FourierDiscriminationResult):
     _verify_results_are_async_or_fail(async_results)
 
+    assert isinstance(async_results.results, BatchResult)
+
     logger.info("Enabling account and creating backend")
     backend = async_results.metadata.backend_description.create_backend()
 
@@ -216,23 +273,32 @@ def resolve_results(async_results: FourierDiscriminationResult):
         job.job_id(): job for job in backend.jobs(db_filter={"id": {"inq": job_ids_to_fetch}})
     }
 
-    def _resolve_measurement_counts(counts):
-        return {
-            "phi": counts.phi,
-            "histograms": {
-                key: jobs_mapping[cast(IBMQJobDescription, value.ibmq_job_id)].result().get_counts()
-                for key, value in counts.histograms.items()
-            },
-        }
+    result_pairs = [
+        (key, counts)
+        for entry in async_results.results
+        for key, counts in zip(
+            entry.keys, jobs_mapping[entry.job.ibmq_job_id].result().get_counts()
+        )
+    ]
+
+    result_dict = defaultdict(lambda: defaultdict(dict))
+
+    for (target, ancilla, name, phi), counts in result_pairs:
+        result_dict[(target, ancilla)][phi][name] = counts
 
     resolved = [
         {
-            "target": entry.target,
-            "ancilla": entry.ancilla,
+            "target": target,
+            "ancilla": ancilla,
             "measurement_counts": [
-                _resolve_measurement_counts(counts) for counts in entry.measurement_counts
+                {
+                    "phi": phi,
+                    "histograms": {name: counts for name, counts in result_for_circ.items()},
+                }
+                for phi, result_for_circ in result_for_phi.items()
             ],
         }
-        for entry in async_results.results
+        for (target, ancilla), result_for_phi in result_dict.items()
     ]
+
     return FourierDiscriminationResult(metadata=async_results.metadata, results=resolved)
