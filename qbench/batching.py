@@ -3,10 +3,16 @@ from itertools import islice
 from typing import Any, NamedTuple, Optional, Sequence
 
 from qiskit import QuantumCircuit
+from qiskit.providers import JobV1
 
 
 class BatchWithKey(NamedTuple):
     circuits: Sequence[QuantumCircuit]
+    keys: Sequence[Any]
+
+
+class BatchJob(NamedTuple):
+    job: JobV1
     keys: Sequence[Any]
 
 
@@ -20,8 +26,23 @@ def batch_circuits_with_keys(
     keys_it = iter(keys)
     return [
         BatchWithKey(
-            tuple(islice(circuits_it, max_circuits_per_batch)),
+            list(islice(circuits_it, max_circuits_per_batch)),
             tuple(islice(keys_it, max_circuits_per_batch)),
         )
         for _ in range(num_batches)
+    ]
+
+
+def execute_in_batches(
+    backend,
+    circuits: Sequence[QuantumCircuit],
+    keys: Sequence[Any],
+    shots: int,
+    batch_size: Optional[int],
+    **kwargs
+) -> Sequence[BatchJob]:
+    batches = batch_circuits_with_keys(circuits, keys, batch_size)
+    return [
+        BatchJob(backend.run(batch.circuits, shots=shots, **kwargs), batch.keys)
+        for batch in batches
     ]
