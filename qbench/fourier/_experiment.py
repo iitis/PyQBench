@@ -254,7 +254,7 @@ def resolve_results(async_results: FourierDiscriminationResult):
         (key, counts)
         for entry in cast(List[BatchResult], async_results.results)
         for key, counts in zip(
-            entry.keys, jobs_mapping[entry.job.ibmq_job_id].result().get_counts()
+            entry.keys, jobs_mapping[entry.job.ibmq_job_id].result().get_counts()  # type: ignore
         )
     ]
 

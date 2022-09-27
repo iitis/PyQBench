@@ -1,0 +1,55 @@
+metadata:
+  experiment:
+    type: discrimination-fourier
+    qubits:
+      - target: 0
+        ancilla: 1
+      - target: 2
+        ancilla: 3
+    angles:
+      start: 0
+      stop: 2
+      num_steps: 3
+    gateset: lucy
+    method: postselection
+    num_shots: 100
+  backend_description:
+    factory: qiskit_braket_provider:BraketLocalBackend
+    args:
+      - "braket_dm"
+    run_options:
+      verbatim: true
+results:
+  - job:
+      aws_job_id: 6325bded0d41675e850873d2
+    keys:
+      - [0, 1, "id_v0", 0.0]
+      - [0, 1, "u_v0", 0.0]
+      - [0, 1, "id_v1", 0.0]
+      - [0, 1, "u_v1", 0.0]
+      - [0, 1, "id_v0", 3.14]
+      - [0, 1, "u_v0", 3.14]
+      - [0, 1, "id_v1", 3.14]
+      - [0, 1, "u_v1", 3.14]
+  - job:
+      aws_job_id: 5325bded0d41675e850873d2
+    keys:
+      - [0, 1, "id_v0", 6.28]
+      - [0, 1, "u_v0", 6.28]
+      - [0, 1, "id_v1", 6.28]
+      - [0, 1, "u_v1", 6.28]
+      - [2, 3, "id_v0", 0]
+      - [2, 3, "u_v0", 0]
+      - [2, 3, "id_v1", 0]
+      - [2, 3, "u_v1", 0]
+  - job:
+      aws_job_id: 5325bded0d41675e850873d5
+    keys:
+      - [0, 1, "id_v0", 3.14]
+      - [0, 1, "u_v0", 3.14]
+      - [0, 1, "id_v1", 3.14]
+      - [0, 1, "u_v1", 3.14]
+      - [2, 3, "id_v0", 6.28]
+      - [2, 3, "u_v0", 6.28]
+      - [2, 3, "id_v1", 6.28]
+      - [2, 3, "u_v1", 6.28]

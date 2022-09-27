@@ -4,6 +4,7 @@ from pydantic import validator
 
 from ..common_models import (
     AnglesRange,
+    AWSJobDescription,
     BackendDescription,
     BaseModel,
     IBMQJobDescription,
@@ -47,7 +48,7 @@ class SingleResult(BaseModel):
 
 
 class BatchResult(BaseModel):
-    job: IBMQJobDescription
+    job: Union[IBMQJobDescription, AWSJobDescription]
     keys: List[Tuple[int, int, str, float]]
 
 
