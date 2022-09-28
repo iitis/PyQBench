@@ -20,8 +20,7 @@ metadata:
     run_options:
       verbatim: true
 results:
-  - job:
-      ibmq_job_id: 6325bded0d41675e850873d2
+  - job_id: 6325bded0d41675e850873d2
     keys:
       - [0, 1, "id_v0", 0.0]
       - [0, 1, "u_v0", 0.0]
@@ -31,8 +30,7 @@ results:
       - [0, 1, "u_v0", 3.14]
       - [0, 1, "id_v1", 3.14]
       - [0, 1, "u_v1", 3.14]
-  - job:
-      ibmq_job_id: 5325bded0d41675e850873d2
+  - job_id: 5325bded0d41675e850873d2
     keys:
       - [0, 1, "id_v0", 6.28]
       - [0, 1, "u_v0", 6.28]
@@ -42,8 +40,7 @@ results:
       - [2, 3, "u_v0", 0]
       - [2, 3, "id_v1", 0]
       - [2, 3, "u_v1", 0]
-  - job:
-      ibmq_job_id: 5325bded0d41675e850873d5
+  - job_id: 5325bded0d41675e850873d5
     keys:
       - [0, 1, "id_v0", 3.14]
       - [0, 1, "u_v0", 3.14]

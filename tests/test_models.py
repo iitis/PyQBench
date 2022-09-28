@@ -241,15 +241,8 @@ class TestExampleYamlInputsAreMatchingModels:
             data = safe_load(f)
             FourierDiscriminationResult(**data)
 
-    @pytest.mark.parametrize(
-        "filename",
-        [
-            "fourier-discrimination-async-result-ibmq.yml",
-            "fourier-discrimination-async-result-aws.yml",
-        ],
-    )
-    def test_fourier_discrimination_async_result_matches_model(self, filename):
-        path = EXAMPLES_PATH / filename
+    def test_fourier_discrimination_async_result_matches_model(self):
+        path = EXAMPLES_PATH / "fourier-discrimination-async-result.yml"
         with open(path) as f:
             data = safe_load(f)
             FourierDiscriminationResult(**data)
