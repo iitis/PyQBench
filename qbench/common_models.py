@@ -115,12 +115,9 @@ class BackendFactoryDescription(BaseModel):
     args: List[Any] = Field(default_factory=list)
     kwargs: Dict[str, Any] = Field(default_factory=dict)  # type: ignore
     run_options: Dict[str, Any] = Field(default_factory=dict)
+    asynchronous: bool = False
 
     _verify_factory = validator("factory", allow_reuse=True)(_check_is_correct_object_path)
-
-    @property
-    def asynchronous(self):
-        return False
 
     def create_backend(self):
         factory = _import_object(self.factory)
