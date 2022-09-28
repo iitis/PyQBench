@@ -50,7 +50,7 @@ class AnglesRange(BaseModel):
     @root_validator
     def check_if_start_smaller_than_stop(cls, values):
         if values.get("start") > values.get("stop"):
-            raise ValueError("Start cannot be smallet than stop.")
+            raise ValueError("Start cannot be smaller than stop.")
         return values
 
     @root_validator
