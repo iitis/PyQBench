@@ -1,6 +1,6 @@
-from typing import Optional
+from typing import Optional, Union
 
-from qiskit.circuit import Instruction
+from qiskit.circuit import Instruction, Parameter
 
 from qbench.fourier import _generic, _ibmq, _lucy, _rigetti
 
@@ -8,12 +8,12 @@ from qbench.fourier import _generic, _ibmq, _lucy, _rigetti
 class FourierComponents:
     """Class defining components for Fourier-measurement experiment."""
 
-    def __init__(self, phi: float, gateset: Optional[str] = None):
+    def __init__(self, phi: Union[float, Parameter], gateset: Optional[str] = None):
         """Initialize new instance of FourierCircuits.
 
         :param phi: Fourier angle of measurement to discriminate.
         :param gateset: one of predefined basis gate sets to use. One of
-        ["lucy", "rigetti", "imbq"]. If not provided, high-level definitions of gates
+        ["lucy", "rigetti", "ibmq"]. If not provided, high-level definitions of gates
         will be used without restrictions.
         """
         self.phi = phi

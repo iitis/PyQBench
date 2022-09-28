@@ -27,10 +27,10 @@ def asemble_direct_sum_circuits(
     u_circuit.append(v0_v1_direct_sum_dag, [0, 1])
     u_circuit.measure_all()
 
-    return (
-        remap_qubits(id_circuit, {0: target, 1: ancilla}).decompose(),
-        remap_qubits(u_circuit, {0: target, 1: ancilla}).decompose(),
-    )
+    return {
+        "id": remap_qubits(id_circuit, {0: target, 1: ancilla}).decompose(),
+        "u": remap_qubits(u_circuit, {0: target, 1: ancilla}).decompose(),
+    }
 
 
 def interpret_direct_sum_measurements(id_counts, u_counts):
@@ -79,7 +79,7 @@ def benchmark_using_controlled_unitary(
        where M defines the measurement to be performed (M=identity or M=U†).
        Refer to the paper for details how the final measurements are interpreted.
     """
-    id_circuit, u_circuit = asemble_direct_sum_circuits(
+    circuits = asemble_direct_sum_circuits(
         state_preparation=state_preparation,
         black_box_dag=black_box_dag,
         v0_v1_direct_sum_dag=v0_v1_direct_sum_dag,
@@ -87,7 +87,7 @@ def benchmark_using_controlled_unitary(
         ancilla=ancilla,
     )
 
-    id_counts = backend.run(id_circuit, shots=num_shots_per_measurement).result().get_counts()
-    u_counts = backend.run(u_circuit, shots=num_shots_per_measurement).result().get_counts()
+    id_counts = backend.run(circuits["id"], shots=num_shots_per_measurement).result().get_counts()
+    u_counts = backend.run(circuits["u"], shots=num_shots_per_measurement).result().get_counts()
 
     return interpret_direct_sum_measurements(id_counts, u_counts)
