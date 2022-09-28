@@ -24,5 +24,5 @@ def pytest_addoption(parser):
         action="store_true",
         dest="ibmq",
         default=False,
-        help=("Enable validation tests on actual IBMQ devices. "),
+        help="Enable validation tests on actual IBMQ devices. ",
     )

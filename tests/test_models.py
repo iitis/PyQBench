@@ -14,7 +14,6 @@ from qbench.common_models import (
     SimpleBackendDescription,
 )
 from qbench.fourier import FourierDiscriminationExperiment, FourierDiscriminationResult
-from qbench.fourier._models import ResultForAngle
 
 EXAMPLES_PATH = Path(__file__).parent / "../examples"
 
@@ -209,19 +208,6 @@ class TestAnglesRange:
         assert angles_range.start == 2 * np.pi
         assert angles_range.stop == 3 * np.pi
         assert angles_range.num_steps == 10
-
-
-class TestResultForAngle:
-    @pytest.mark.parametrize(
-        "input",
-        [
-            {"phi": 0.1, "counts": {"111": 20, "01": 5}},
-            {"phi": 0.2, "counts": {"xyz": 20, "01": 5}},
-        ],
-    )
-    def test_fails_to_validate_if_counts_does_not_contain_two_qubit_bitstrings_only(self, input):
-        with pytest.raises(ValidationError):
-            ResultForAngle(**input)
 
 
 class TestExampleYamlInputsAreMatchingModels:

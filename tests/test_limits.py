@@ -64,7 +64,7 @@ def test_limits_from_ibmq_devices_are_taken_from_device_configuration(ibmq_provi
     assert limits.max_circuits == backend.configuration().max_experiments
 
 
-def test_aer_simulator_has_undefined_circuit_limits_and_shots_limit_as_in_configuratoin():
+def test_aer_simulator_has_undefined_circuit_limits_and_shots_limit_as_in_configuration():
     simulator = AerSimulator()
     limits = get_limits(simulator)
 
