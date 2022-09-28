@@ -12,7 +12,7 @@ def _run_benchmark(args):
     backend_description = BackendDescriptionRoot(__root__=safe_load(args.backend_file)).__root__
 
     result = run_experiment(experiment, backend_description)
-    safe_dump(result.dict(), args.output, sort_keys=False)
+    safe_dump(result.dict(), args.output, sort_keys=False, default_flow_style=None)
 
 
 def _status(args):

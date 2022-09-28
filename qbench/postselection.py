@@ -34,13 +34,16 @@ def asemble_postselection_circuits(
     target: int,
     ancilla: int,
 ):
-    raw_circuits = [
-        _construct_identity_circuit(state_preparation, v0_dag),
-        _construct_identity_circuit(state_preparation, v1_dag),
-        _construct_black_box_circuit(state_preparation, black_box_dag, v0_dag),
-        _construct_black_box_circuit(state_preparation, black_box_dag, v1_dag),
-    ]
-    return [remap_qubits(circuit, {0: target, 1: ancilla}).decompose() for circuit in raw_circuits]
+    raw_circuits = {
+        "id_v0": _construct_identity_circuit(state_preparation, v0_dag),
+        "id_v1": _construct_identity_circuit(state_preparation, v1_dag),
+        "u_v0": _construct_black_box_circuit(state_preparation, black_box_dag, v0_dag),
+        "u_v1": _construct_black_box_circuit(state_preparation, black_box_dag, v1_dag),
+    }
+    return {
+        key: remap_qubits(circuit, {0: target, 1: ancilla}).decompose()
+        for key, circuit in raw_circuits.items()
+    }
 
 
 def interpret_postselection_measurements(id_v0_counts, id_v1_counts, u_v0_counts, u_v1_counts):
@@ -91,7 +94,7 @@ def benchmark_using_postselection(
        for i=0,1, j=0,1 where M0 = U, M1 = identity.
        Refer to the paper for details how the terminal measurements are interpreted.
     """
-    (id_circuit_v0, id_circuit_v1, u_circuit_v0, u_circuit_v1,) = asemble_postselection_circuits(
+    circuits = asemble_postselection_circuits(
         state_preparation=state_preparation,
         black_box_dag=black_box_dag,
         v0_dag=v0_dag,
@@ -100,12 +103,11 @@ def benchmark_using_postselection(
         ancilla=ancilla,
     )
 
-    id_v0_counts = backend.run(id_circuit_v0, shots=num_shots_per_measurement).result().get_counts()
-    id_v1_counts = backend.run(id_circuit_v1, shots=num_shots_per_measurement).result().get_counts()
-
-    u_v0_counts = backend.run(u_circuit_v0, shots=num_shots_per_measurement).result().get_counts()
-    u_v1_counts = backend.run(u_circuit_v1, shots=num_shots_per_measurement).result().get_counts()
+    counts = {
+        key: backend.run(circuit, shots=num_shots_per_measurement).result().get_counts()
+        for key, circuit in circuits.items()
+    }
 
     return interpret_postselection_measurements(
-        id_v0_counts, id_v1_counts, u_v0_counts, u_v1_counts
+        counts["id_v0"], counts["id_v1"], counts["u_v0"], counts["u_v1"]
     )

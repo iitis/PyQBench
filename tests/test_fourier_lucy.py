@@ -3,7 +3,7 @@ from qiskit import QuantumCircuit
 from qiskit.circuit import Instruction
 from qiskit_braket_provider import AWSBraketProvider
 
-from qbench.fourier._components import FourierComponents
+from qbench.fourier import FourierComponents
 
 
 def _assert_can_be_run_in_verbatim_mode(backend, instruction: Instruction):

@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 from qiskit_braket_provider import BraketLocalBackend
 
-from qbench.fourier._components import FourierComponents
+from qbench.fourier import FourierComponents
 from qbench.postselection import benchmark_using_postselection
 
 

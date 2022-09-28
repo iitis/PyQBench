@@ -4,7 +4,7 @@ import pytest
 from qiskit import IBMQ, QuantumCircuit
 from qiskit.circuit import Instruction
 
-from qbench.fourier._components import FourierComponents
+from qbench.fourier import FourierComponents
 
 
 def _assert_can_be_run(backend, instruction: Instruction):
