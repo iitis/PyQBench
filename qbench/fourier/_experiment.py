@@ -9,6 +9,7 @@ from tqdm import tqdm
 from ..batching import execute_in_batches
 from ..common_models import BackendDescription
 from ..direct_sum import asemble_direct_sum_circuits
+from ..jobs import create_job_description
 from ..limits import get_limits
 from ..postselection import asemble_postselection_circuits
 from ._components import FourierComponents
@@ -189,7 +190,7 @@ def _run_experiment_asynchronously(
         backend, circuits, keys, experiment.num_shots, get_limits(backend).max_circuits
     )
 
-    return [{"job": {"ibmq_job_id": batch.job.job_id()}, "keys": batch.keys} for batch in batches]
+    return [{"job": create_job_description(batch.job), "keys": batch.keys} for batch in batches]
 
 
 def run_experiment(

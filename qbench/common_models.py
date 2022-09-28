@@ -108,12 +108,9 @@ class SimpleBackendDescription(BaseModel):
     provider: str
     name: str
     run_options: Dict[str, Any] = Field(default_factory=dict)
+    asynchronous: bool = False
 
     _verify_provider = validator("provider", allow_reuse=True)(_check_is_correct_object_path)
-
-    @property
-    def asynchronous(self) -> bool:
-        return False
 
     def create_backend(self):
         provider = _import_object(self.provider)()

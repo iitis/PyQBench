@@ -20,7 +20,8 @@ def batch_circuits_with_keys(
     circuits: Sequence[QuantumCircuit], keys: Sequence[Any], max_circuits_per_batch: Optional[int]
 ) -> Sequence[BatchWithKey]:
     if max_circuits_per_batch is None:
-        return [BatchWithKey(circuits, keys)]
+        # We wrap circuits in lists to indulge qiskit-braket-provider
+        return [BatchWithKey(list(circuits), keys)]
     num_batches = math.ceil(len(circuits) / max_circuits_per_batch)
     circuits_it = iter(circuits)
     keys_it = iter(keys)
