@@ -1,3 +1,4 @@
+"""Definition of command line parsers and handlers for qbench disc-fourier command."""
 from argparse import FileType
 
 from yaml import safe_dump, safe_load
@@ -8,6 +9,7 @@ from ._models import FourierDiscriminationExperiment, FourierDiscriminationResul
 
 
 def _run_benchmark(args):
+    """Function executed when qbench disc-fourier benchmark is invoked."""
     experiment = FourierDiscriminationExperiment(**safe_load(args.experiment_file))
     backend_description = BackendDescriptionRoot(__root__=safe_load(args.backend_file)).__root__
 
@@ -16,18 +18,32 @@ def _run_benchmark(args):
 
 
 def _status(args):
+    """Function executed when qbench disc-fourier status is invoked."""
     results = FourierDiscriminationResult(**safe_load(args.async_results))
     counts = fetch_statuses(results)
     print(counts)
 
 
 def _resolve(args):
+    """Function executed when qbench disc-fourier resolve is invoked."""
     results = FourierDiscriminationResult(**safe_load(args.async_results))
     resolved = resolve_results(results)
     safe_dump(resolved.dict(), args.output, sort_keys=False)
 
 
-def add_fourier_parser(parent_parser):
+def add_fourier_parser(parent_parser) -> None:
+    """Add disc-fourier parser to the parent parser.
+
+    The added parser will have the following subcommands:
+    - benchmark: run fourier discrimination experiment against given backend
+    - status: check status of asynchronously executed experiment
+    - resolve: retrieve results of completed asynchronous job
+
+    The exact syntax for using each command can be, as usually, obtained by running
+    qbench disc-fourier <command> -h
+
+    :param parent_parser: a parser to which disc-fourier command should be added.
+    """
     parser = parent_parser.add_parser("disc-fourier")
 
     subcommands = parser.add_subparsers()
