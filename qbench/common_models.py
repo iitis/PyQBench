@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Optional, Union
 from pydantic import BaseModel as PydanticBaseModel
 from pydantic import ConstrainedInt, Field, StrictStr, root_validator, validator
 from qiskit import IBMQ
+from qiskit.providers import BackendV1, BackendV2
 
 from ._expressions import eval_expr
 
@@ -159,3 +160,6 @@ BackendDescription = Union[
 
 class BackendDescriptionRoot(BaseModel):
     __root__: BackendDescription
+
+
+Backend = Union[BackendV1, BackendV2]

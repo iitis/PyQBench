@@ -92,21 +92,21 @@ class TestFourierCircuits:
 
         _assert_are_equivalent(black_box, expected_unitary)
 
-    @pytest.mark.parametrize("phi", np.linspace(0, 2 * np.pi, 100))
+    @pytest.mark.parametrize("phi", np.linspace(0, 2 * np.pi, 20))
     def test_decomposed_v0_dagger_is_equal_to_the_original_one(self, phi: float, gateset):
         v0_dag = FourierComponents(phi=phi, gateset=gateset).v0_dag
         expected = _v0_ref(phi).conj().T
 
         _assert_are_equivalent(v0_dag, expected)
 
-    @pytest.mark.parametrize("phi", np.linspace(0, 2 * np.pi, 100))
+    @pytest.mark.parametrize("phi", np.linspace(0, 2 * np.pi, 20))
     def test_decomposed_v1_is_equal_to_the_original_one(self, phi: float, gateset):
         v1_dag = FourierComponents(phi=phi, gateset=gateset).v1_dag
         expected = _v1_ref(phi).conj().T
 
         _assert_are_equivalent(v1_dag, expected)
 
-    @pytest.mark.parametrize("phi", np.linspace(0, 2 * np.pi, 100))
+    @pytest.mark.parametrize("phi", np.linspace(0, 2 * np.pi, 20))
     def test_decomposed_v0_v1_circuit_is_equal_to_the_original_one_up_to_phase(
         self, phi: float, gateset
     ):
