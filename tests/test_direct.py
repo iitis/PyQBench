@@ -6,7 +6,7 @@ from qbench.direct_sum import benchmark_using_controlled_unitary
 from qbench.fourier import FourierComponents
 
 
-@pytest.mark.parametrize("phi", np.linspace(0, 2 * np.pi, 100))
+@pytest.mark.parametrize("phi", np.linspace(0, 2 * np.pi, 20))
 @pytest.mark.parametrize("gateset", [None, "rigetti", "lucy"])
 def test_computed_discrimination_probability_is_feasible(phi: float, gateset):
     backend = BraketLocalBackend()
