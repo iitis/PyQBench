@@ -1,21 +1,15 @@
 from functools import singledispatch
+from typing import Sequence
 
-from qiskit.providers.ibmq import IBMQJob
-from qiskit_braket_provider import AWSBraketJob
-
-from qbench.common_models import AWSJobDescription, IBMQJobDescription
+from qiskit.providers import JobV1
+from qiskit.providers.ibmq import IBMQBackend, IBMQJob
 
 
 @singledispatch
-def create_job_description(job):
-    pass
+def retrieve_jobs(backend, job_ids: Sequence[str]) -> Sequence[JobV1]:
+    return [backend.retrieve_job(job_id) for job_id in job_ids]
 
 
-@create_job_description.register
-def create_job_description_for_ibmq(job: IBMQJob) -> IBMQJobDescription:
-    return IBMQJobDescription(ibmq_job_id=job.job_id())
-
-
-@create_job_description.register
-def create_job_description_for_aws(job: AWSBraketJob) -> AWSJobDescription:
-    return AWSJobDescription(aws_job_id=job.job_id())
+@retrieve_jobs.register
+def retrieve_jobs_from_ibmq(backend: IBMQBackend, job_ids: Sequence[str]) -> Sequence[IBMQJob]:
+    return backend.jobs(db_filter={"id": {"inq": job_ids}}, limit=len(job_ids))

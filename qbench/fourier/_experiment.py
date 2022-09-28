@@ -9,7 +9,7 @@ from tqdm import tqdm
 from ..batching import execute_in_batches
 from ..common_models import BackendDescription
 from ..direct_sum import asemble_direct_sum_circuits
-from ..jobs import create_job_description
+from ..jobs import retrieve_jobs
 from ..limits import get_limits
 from ..postselection import asemble_postselection_circuits
 from ._components import FourierComponents
@@ -26,10 +26,6 @@ def _verify_results_are_async_or_fail(results):
     if not all(isinstance(entry, BatchResult) for entry in results.results):
         logger.error("Specified file seems to contain results from synchronous experiment")
         exit(1)
-
-
-def _collect_jobs_from_results(async_results):
-    return [entry.job.ibmq_job_id for entry in async_results.results]
 
 
 def _log_fourier_experiment(experiment):
@@ -190,7 +186,7 @@ def _run_experiment_asynchronously(
         backend, circuits, keys, experiment.num_shots, get_limits(backend).max_circuits
     )
 
-    return [{"job": create_job_description(batch.job), "keys": batch.keys} for batch in batches]
+    return [{"job_id": batch.job.job_id(), "keys": batch.keys} for batch in batches]
 
 
 def run_experiment(
@@ -229,10 +225,11 @@ def fetch_statuses(async_results: FourierDiscriminationResult):
     backend = async_results.metadata.backend_description.create_backend()
 
     logger.info("Reading jobs ids from the input file")
-    job_ids_to_fetch = _collect_jobs_from_results(async_results)
+    job_ids = [entry.job_id for entry in cast(List[BatchResult], async_results.results)]
 
-    logger.info(f"Fetching total of {len(job_ids_to_fetch)} jobs")
-    jobs = backend.jobs(db_filter={"id": {"inq": job_ids_to_fetch}})
+    # logger.info(f"Fetching total of {len(job_ids_to_fetch)} jobs")
+    # jobs = backend.jobs(db_filter={"id": {"inq": job_ids_to_fetch}})
+    jobs = retrieve_jobs(backend, job_ids)
 
     return dict(Counter(job.status().name for job in jobs))
 
@@ -244,18 +241,16 @@ def resolve_results(async_results: FourierDiscriminationResult):
     backend = async_results.metadata.backend_description.create_backend()
 
     logger.info("Reading jobs ids from the input file")
-    job_ids_to_fetch = _collect_jobs_from_results(async_results)
+    job_ids = [entry.job_id for entry in cast(List[BatchResult], async_results.results)]
 
-    logger.info(f"Fetching total of {len(job_ids_to_fetch)} jobs")
-    jobs_mapping = {
-        job.job_id(): job for job in backend.jobs(db_filter={"id": {"inq": job_ids_to_fetch}})
-    }
+    logger.info(f"Fetching total of {len(job_ids)} jobs")
+    jobs_mapping = {job.job_id(): job for job in retrieve_jobs(backend, job_ids)}
 
     result_pairs = [
         (key, counts)
         for entry in cast(List[BatchResult], async_results.results)
         for key, counts in zip(
-            entry.keys, jobs_mapping[entry.job.ibmq_job_id].result().get_counts()  # type: ignore
+            entry.keys, jobs_mapping[entry.job_id].result().get_counts()  # type: ignore
         )
     ]
 

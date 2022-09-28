@@ -73,14 +73,6 @@ class QubitsPair(BaseModel):
 SynchronousHistogram = Dict[TwoQubitBitstring, StrictPositiveInt]
 
 
-class IBMQJobDescription(BaseModel):
-    ibmq_job_id: str
-
-
-class AWSJobDescription(BaseModel):
-    aws_job_id: str
-
-
 def _import_object(object_spec):
     module_path, obj_name = object_spec.split(":")
     module = import_module(module_path)
