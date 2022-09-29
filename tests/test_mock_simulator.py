@@ -1,6 +1,6 @@
 from qiskit import QuantumCircuit
 
-from qbench.mock_backend import MockProvider
+from qbench.testing import MockProvider
 
 
 def test_two_independently_obtained_mock_simulators_share_job_cache():

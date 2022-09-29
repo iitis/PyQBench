@@ -6,7 +6,7 @@ from .logging import configure_logging
 PARSERS_TO_ADD = [add_fourier_parser]
 
 
-def main():
+def main(args=None):
     configure_logging()
     parser = ArgumentParser(description="Script for running various qbench subcommands.")
 
@@ -15,6 +15,6 @@ def main():
     for add_parser in PARSERS_TO_ADD:
         add_parser(commands)
 
-    args = parser.parse_args()  # noqa
+    args = parser.parse_args(args)  # noqa
 
     args.func(args)

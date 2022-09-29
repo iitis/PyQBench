@@ -1,4 +1,3 @@
-import numpy as np
 import pytest
 
 from qbench.common_models import SimpleBackendDescription
@@ -8,19 +7,20 @@ from qbench.fourier._experiment_runner import (
     resolve_results,
     run_experiment,
 )
+from qbench.testing import assert_sync_results_contain_data_for_all_circuits
 
 
 @pytest.fixture
 def async_backend_description():
     return SimpleBackendDescription(
-        provider="qbench.mock_backend:MockProvider", name="mock-backend", asynchronous=True
+        provider="qbench.testing:MockProvider", name="mock-backend", asynchronous=True
     )
 
 
 @pytest.fixture
 def sync_backend_description():
     return SimpleBackendDescription(
-        provider="qbench.mock_backend:MockProvider", name="mock-backend", asynchronous=False
+        provider="qbench.testing:MockProvider", name="mock-backend", asynchronous=False
     )
 
 
@@ -41,32 +41,12 @@ def experiment(request):
     )
 
 
-def _assert_sync_results_contain_data_for_all_circuits(
-    experiment: FourierDiscriminationExperiment, results
-):
-    actual_qubit_pairs = [(entry.target, entry.ancilla) for entry in results.results]
-
-    expected_qubit_pairs = [(entry.target, entry.ancilla) for entry in experiment.qubits]
-
-    assert set(actual_qubit_pairs) == set(expected_qubit_pairs)
-    assert len(actual_qubit_pairs) == len(expected_qubit_pairs)
-
-    expected_angles = np.linspace(
-        experiment.angles.start, experiment.angles.stop, experiment.angles.num_steps
-    )
-
-    assert all(
-        sorted([counts.phi for counts in entry.measurement_counts]) == sorted(expected_angles)
-        for entry in results.results
-    )
-
-
 class TestSynchronousExecutionOfExperiment:
     def test_experiment_results_contain_measurements_for_each_circuit_qubit_pair_and_phi(
         self, experiment, sync_backend_description
     ):
         results = run_experiment(experiment, sync_backend_description)
-        _assert_sync_results_contain_data_for_all_circuits(experiment, results)
+        assert_sync_results_contain_data_for_all_circuits(experiment, results)
 
 
 class TestASynchronousExecutionOfExperiment:
@@ -84,7 +64,7 @@ class TestASynchronousExecutionOfExperiment:
         results = run_experiment(experiment, async_backend_description)
         resolved = resolve_results(results)
 
-        _assert_sync_results_contain_data_for_all_circuits(experiment, resolved)
+        assert_sync_results_contain_data_for_all_circuits(experiment, resolved)
 
     def test_obtaining_status_for_synchronous_experiment_terminates_program(
         self, experiment, sync_backend_description

@@ -141,12 +141,19 @@ class IBMQBackendDescription(BaseModel):
     provider: IBMQProviderDescription
 
     def create_backend(self):
-        provider = IBMQ.enable_account(
-            os.getenv("IBMQ_TOKEN"),
-            hub=self.provider.hub,
-            group=self.provider.group,
-            project=self.provider.project,
-        )
+        if IBMQ.active_account():
+            provider = IBMQ.get_provider(
+                hub=self.provider.hub,
+                group=self.provider.group,
+                project=self.provider.project,
+            )
+        else:
+            provider = IBMQ.enable_account(
+                os.getenv("IBMQ_TOKEN"),
+                hub=self.provider.hub,
+                group=self.provider.group,
+                project=self.provider.project,
+            )
         return provider.get_backend(self.name)
 
 
