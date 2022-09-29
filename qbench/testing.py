@@ -11,7 +11,7 @@ from qbench.fourier._models import FourierDiscriminationResult, SingleResult
 
 
 class MockSimulator(AerSimulator):
-    """A local mock simulator adhering to the BakckendV2 interface, but caching all jobs it executes.
+    """Local mock simulator adhering to the BakckendV2 interface, but caching all jobs it executes.
 
     This class is a wrapper around AerSimulator, so in particular all the initializer arguments
     are the same as for AerSimulator.
