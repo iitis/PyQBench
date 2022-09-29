@@ -6,8 +6,8 @@ from qbench.fourier import FourierComponents
 from qbench.postselection import benchmark_using_postselection
 
 
-@pytest.mark.parametrize("phi", np.linspace(0, 2 * np.pi, 100))
-@pytest.mark.parametrize("gateset", [None, "rigetti", "lucy"])
+@pytest.mark.parametrize("phi", np.linspace(0, 2 * np.pi, 20))
+@pytest.mark.parametrize("gateset", [None, "rigetti", "lucy", "ibmq"])
 def test_computed_discrimination_probability_is_feasible(phi: float, gateset):
     backend = BraketLocalBackend()
     circuits = FourierComponents(phi=phi, gateset=gateset)
@@ -17,7 +17,7 @@ def test_computed_discrimination_probability_is_feasible(phi: float, gateset):
         target=0,
         ancilla=1,
         state_preparation=circuits.state_preparation,
-        black_box_dag=circuits.black_box_dag,
+        u_dag=circuits.u_dag,
         v0_dag=circuits.v0_dag,
         v1_dag=circuits.v1_dag,
         num_shots_per_measurement=20,

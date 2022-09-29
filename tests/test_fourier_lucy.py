@@ -30,8 +30,8 @@ def circuits():
 
 @pytest.mark.skipif("not config.getoption('lucy')")
 class TestLucyDeviceCanRunDecomposedCircuitsInVerbatimMode:
-    def test_black_box_can_be_run(self, lucy, circuits):
-        _assert_can_be_run_in_verbatim_mode(lucy, circuits.black_box_dag)
+    def test_u_dag_can_be_run(self, lucy, circuits):
+        _assert_can_be_run_in_verbatim_mode(lucy, circuits.u_dag)
 
     def test_v0_dag_can_be_run(self, lucy, circuits):
         _assert_can_be_run_in_verbatim_mode(lucy, circuits.v0_dag)

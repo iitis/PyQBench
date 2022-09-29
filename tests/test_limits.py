@@ -12,7 +12,7 @@ IBMQ_TOKEN = os.getenv("IBMQ_TOKEN")
 
 @pytest.fixture(scope="module")
 def ibmq_provider():
-    return IBMQ.enable_account(IBMQ_TOKEN)
+    return IBMQ.get_provider() if IBMQ.active_account() else IBMQ.enable_account(IBMQ_TOKEN)
 
 
 @pytest.fixture(scope="module")

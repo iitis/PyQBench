@@ -204,10 +204,24 @@ class TestAnglesRange:
             AnglesRange(start=10, stop=10, num_steps=2)
 
     def test_start_and_stop_can_contain_arithmetic_expression_with_pi(self):
-        angles_range = AnglesRange(start="2 * pi", stop="3 * pi", num_steps=10)
-        assert angles_range.start == 2 * np.pi
+        angles_range = AnglesRange(start="-2 * pi", stop="3 * pi", num_steps=10)
+        assert angles_range.start == -2 * np.pi
         assert angles_range.stop == 3 * np.pi
         assert angles_range.num_steps == 10
+
+    def test_pi_is_the_only_non_numeric_literal_recognized_in_start_or_stop(self):
+        with pytest.raises(ValidationError):
+            AnglesRange(start="2 * x", stop=4, num_steps=5)
+
+        with pytest.raises(ValidationError):
+            AnglesRange(start=2, stop="4 * test", num_steps=5)
+
+        with pytest.raises(ValidationError):
+            AnglesRange(start=2, stop="4 * [1, 2, 3]", num_steps=5)
+
+    def test_raises_validation_error_if_start_gt_stop(self):
+        with pytest.raises(ValidationError):
+            AnglesRange(start=2, stop=1, num_steps=3)
 
 
 class TestExampleYamlInputsAreMatchingModels:

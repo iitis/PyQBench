@@ -13,7 +13,7 @@ def state_preparation():
     return circuit.to_instruction()
 
 
-def black_box_dag(phi):
+def u_dag(phi):
     circuit = QuantumCircuit(1, name="U-dag")
     circuit.h(0)
     circuit.p(-phi, 0)

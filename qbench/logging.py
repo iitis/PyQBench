@@ -25,6 +25,14 @@ def _logrecord_factory(*args, **kwargs):
 
 
 def configure_logging():
+    """Configure logger for use in qbench package.
+
+    This function applies the following configuration:
+    - configures format using basic logging
+    - turns on colored logging (only name of loglevel is colored)
+    - sets level of qbench logger to INFO
+    - lowers level of websocket logger to ERROR to prevent it from spamming when using Qiskit.
+    """
     logging.basicConfig(format=FORMAT)
     logging.setLogRecordFactory(_logrecord_factory)
     logging.getLogger("qbench").setLevel("INFO")
