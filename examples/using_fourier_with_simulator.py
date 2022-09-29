@@ -24,7 +24,7 @@ def main():
             target=TARGET,
             ancilla=ANCILLA,
             state_preparation=circuits.state_preparation,
-            black_box_dag=circuits.black_box_dag,
+            u_dag=circuits.u_dag,
             v0_v1_direct_sum_dag=circuits.controlled_v0_v1_dag,
             num_shots_per_measurement=NUM_SHOTS_PER_MEASUREMENT,
         )

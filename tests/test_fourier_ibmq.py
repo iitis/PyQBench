@@ -34,8 +34,8 @@ def circuits():
 
 @pytest.mark.skipif("not config.getoption('ibmq')")
 class TestIBMQDeviceCanRunDecomposedCircuitsInVerbatimMode:
-    def test_black_box_can_be_run(self, ibmq, circuits):
-        _assert_can_be_run(ibmq, circuits.black_box_dag)
+    def test_u_dag_can_be_run(self, ibmq, circuits):
+        _assert_can_be_run(ibmq, circuits.u_dag)
 
     def test_v0_dag_can_be_run(self, ibmq, circuits):
         _assert_can_be_run(ibmq, circuits.v0_dag)

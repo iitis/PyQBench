@@ -167,3 +167,4 @@ class BackendDescriptionRoot(BaseModel):
 
 
 Backend = Union[BackendV1, BackendV2]
+MeasurementsDict = Dict[str, int]

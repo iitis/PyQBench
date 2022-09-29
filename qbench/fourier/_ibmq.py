@@ -2,7 +2,7 @@
 import numpy as np
 from qiskit.circuit import QuantumCircuit
 
-from ._lucy_and_ibmq_common import black_box_dag, v0_dag, v1_dag
+from ._lucy_and_ibmq_common import u_dag, v0_dag, v1_dag
 
 
 def _decompose(circuit):
@@ -26,4 +26,4 @@ def v0_v1_direct_sum(phi):
     return _decompose(circuit).to_instruction()
 
 
-__all__ = ["state_preparation", "black_box_dag", "v0_dag", "v1_dag", "v0_v1_direct_sum"]
+__all__ = ["state_preparation", "u_dag", "v0_dag", "v1_dag", "v0_v1_direct_sum"]

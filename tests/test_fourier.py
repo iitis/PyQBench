@@ -86,11 +86,11 @@ class TestFourierCircuits:
         np.testing.assert_allclose(actual_proj, expected_proj, atol=1e-10)
 
     @pytest.mark.parametrize("phi", [np.pi, np.pi / 4, np.pi / 5, np.sqrt(2), 0])
-    def test_black_box_has_correct_unitary(self, phi, gateset):
-        black_box = FourierComponents(phi=phi, gateset=gateset).black_box_dag
+    def test_u_dag_has_correct_unitary(self, phi, gateset):
+        u_dag = FourierComponents(phi=phi, gateset=gateset).u_dag
         expected_unitary = linalg.dft(2) @ np.diag([1, np.exp(-1j * phi)]) @ linalg.dft(2) / 2
 
-        _assert_are_equivalent(black_box, expected_unitary)
+        _assert_are_equivalent(u_dag, expected_unitary)
 
     @pytest.mark.parametrize("phi", np.linspace(0, 2 * np.pi, 20))
     def test_decomposed_v0_dagger_is_equal_to_the_original_one(self, phi: float, gateset):

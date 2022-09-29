@@ -12,7 +12,7 @@ from ..common_models import Backend, BackendDescription
 from ..direct_sum import asemble_direct_sum_circuits
 from ..jobs import retrieve_jobs
 from ..limits import get_limits
-from ..postselection import asemble_postselection_circuits
+from ..postselection import assemble_postselection_circuits
 from ._components import FourierComponents
 from ._models import (
     BatchResult,
@@ -109,7 +109,7 @@ def _execute_direct_sum_experiment(
     """
     circuits_map = asemble_direct_sum_circuits(
         state_preparation=components.state_preparation,
-        black_box_dag=components.black_box_dag,
+        u_dag=components.u_dag,
         v0_v1_direct_sum_dag=components.controlled_v0_v1_dag,
         target=target,
         ancilla=ancilla,
@@ -154,9 +154,9 @@ def _execute_postselection_experiment(
     :param components: building blocks for the experiment.
     :return dictionary with keys "target", "ancilla" and "measurement_counts."
     """
-    circuits_map = asemble_postselection_circuits(
+    circuits_map = assemble_postselection_circuits(
         state_preparation=components.state_preparation,
-        black_box_dag=components.black_box_dag,
+        u_dag=components.u_dag,
         v0_dag=components.v0_dag,
         v1_dag=components.v1_dag,
         target=target,
@@ -224,9 +224,9 @@ def _collect_circuits_and_keys(
     """Construct all circuits needed for the experiment and assign them unique keys."""
 
     def _asemble_postselection(target: int, ancilla: int) -> Dict[str, QuantumCircuit]:
-        return asemble_postselection_circuits(
+        return assemble_postselection_circuits(
             state_preparation=components.state_preparation,
-            black_box_dag=components.black_box_dag,
+            u_dag=components.u_dag,
             v0_dag=components.v0_dag,
             v1_dag=components.v1_dag,
             target=target,
@@ -236,7 +236,7 @@ def _collect_circuits_and_keys(
     def _asemble_direct_sum(target: int, ancilla: int) -> Dict[str, QuantumCircuit]:
         return asemble_direct_sum_circuits(
             state_preparation=components.state_preparation,
-            black_box_dag=components.black_box_dag,
+            u_dag=components.u_dag,
             v0_v1_direct_sum_dag=components.controlled_v0_v1_dag,
             target=target,
             ancilla=ancilla,

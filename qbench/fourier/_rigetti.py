@@ -44,7 +44,7 @@ def state_preparation():
     return _decompose(circuit).to_instruction()
 
 
-def black_box_dag(phi):
+def u_dag(phi):
     circuit = QuantumCircuit(1, name="U-dag")
     circuit.rz(np.pi / 2, 0)
     circuit.rx(np.pi / 2, 0)

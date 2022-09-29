@@ -1,3 +1,4 @@
+"""Command line interface for qbench package."""
 from argparse import ArgumentParser
 
 from .fourier import add_fourier_parser
@@ -7,6 +8,7 @@ PARSERS_TO_ADD = [add_fourier_parser]
 
 
 def main(args=None):
+    """Entry point of the CLI."""
     configure_logging()
     parser = ArgumentParser(description="Script for running various qbench subcommands.")
 
