@@ -1,0 +1,94 @@
+metadata:
+  experiment:
+    type: discrimination-fourier
+    qubits:
+      - target: 0
+        ancilla: 1
+      - target: 2
+        ancilla: 3
+    angles:
+      start: 0
+      stop: 2
+      num_steps: 3
+    gateset: lucy
+    method: postselection
+    num_shots: 100
+  backend_description:
+    factory: qiskit_braket_provider:BraketLocalBackend
+    args:
+      - "braket_dm"
+    run_options:
+      verbatim: true
+results:
+  - target: 0
+    ancilla: 1
+    measurement_counts:
+      - phi: 0
+        histograms:
+          u: {"00": 20, "01": 80}
+          id: {"00": 10, "01": 90}
+        mitigation_info:
+          target:
+            prob_meas0_prep1: 0.01
+            prob_meas1_prep0: 0.01
+          ancilla:
+            prob_meas0_prep1: 0.01
+            prob_meas1_prep0: 0.01
+      - phi: 1
+        histograms:
+          u: {"00": 15, "11": 85}
+          id: {"00": 25, "11": 75}
+          mitigation_info:
+          target:
+            prob_meas0_prep1: 0.02
+            prob_meas1_prep0: 0.02
+          ancilla:
+            prob_meas0_prep1: 0.03
+            prob_meas1_prep0: 0.03
+      - phi: 2
+        histograms:
+          u: {"10": 40, "11": 40, "01": 20}
+          id: {"10": 30, "11": 50, "01": 20}
+          mitigation_info:
+          target:
+            prob_meas0_prep1: 0.04
+            prob_meas1_prep0: 0.04
+          ancilla:
+            prob_meas0_prep1: 0.05
+            prob_meas1_prep0: 0.05
+  - target: 1
+    ancilla: 2
+    measurement_counts:
+      - phi: 0
+        histograms:
+          u: {"00": 25, "01": 75}
+          id: {"00": 35, "01": 65}
+          mitigation_info:
+          target:
+            prob_meas0_prep1: 0.06
+            prob_meas1_prep0: 0.06
+          ancilla:
+            prob_meas0_prep1: 0.07
+            prob_meas1_prep0: 0.07
+      - phi: 1
+        histograms:
+          u: {"00": 15, "11": 85}
+          id: {"00": 35, "11": 65}
+          mitigation_info:
+          target:
+            prob_meas0_prep1: 0.08
+            prob_meas1_prep0: 0.08
+          ancilla:
+            prob_meas0_prep1: 0.09
+            prob_meas1_prep0: 0.09
+      - phi: 2
+        histograms:
+          u: {"10": 40, "11": 40, "01": 20}
+          id: {"10": 60, "11": 40}
+          mitigation_info:
+          target:
+            prob_meas0_prep1: 0.1
+            prob_meas1_prep0: 0.1
+          ancilla:
+            prob_meas0_prep1: 0.2
+            prob_meas1_prep0: 0.2
