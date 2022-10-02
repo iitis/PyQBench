@@ -34,9 +34,20 @@ class FourierDiscriminationMetadata(BaseModel):
     backend_description: BackendDescription
 
 
+class QubitMitigationInfo(BaseModel):
+    prob_meas0_prep1: float
+    prob_meas1_prep0: float
+
+
+class MitigationInfo(BaseModel):
+    target: QubitMitigationInfo
+    ancilla: QubitMitigationInfo
+
+
 class ResultForAngle(BaseModel):
     phi: float
     histograms: Dict[str, SynchronousHistogram]
+    mitigation_info: Optional[MitigationInfo] = None
 
 
 class SingleResult(BaseModel):
