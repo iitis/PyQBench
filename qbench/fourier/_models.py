@@ -44,10 +44,14 @@ class MitigationInfo(BaseModel):
     ancilla: QubitMitigationInfo
 
 
+class ResultForCircuit(BaseModel):
+    histogram: SynchronousHistogram
+    mitigation_info: Optional[MitigationInfo] = None
+
+
 class ResultForAngle(BaseModel):
     phi: float
-    histograms: Dict[str, SynchronousHistogram]
-    mitigation_info: Optional[MitigationInfo] = None
+    circuits_for_angle: Dict[str, ResultForCircuit]
 
 
 class SingleResult(BaseModel):

@@ -24,29 +24,41 @@ results:
     ancilla: 1
     measurement_counts:
       - phi: 0
-        histograms:
-          u: {"00": 20, "01": 80}
-          id: {"00": 10, "01": 90}
+        circuits_for_angle:
+          u:
+              histogram: {"00": 20, "01": 80}
+          id:
+              histogram: {"00": 10, "01": 90}
       - phi: 1
-        histograms:
-          u: {"00": 15, "11": 85}
-          id: {"00": 25, "11": 75}
+        circuits_for_angle:
+            u:
+                histogram:  {"00": 15, "11": 85}
+            id:
+                histogram:  {"00": 25, "11": 75}
       - phi: 2
-        histograms:
-          u: {"10": 40, "11": 40, "01": 20}
-          id: {"10": 30, "11": 50, "01": 20}
+        circuits_for_angle:
+            u:
+                histogram: {"10": 40, "11": 40, "01": 20}
+            id:
+                histogram: {"10": 30, "11": 50, "01": 20}
   - target: 1
     ancilla: 2
     measurement_counts:
       - phi: 0
-        histograms:
-          u: {"00": 25, "01": 75}
-          id: {"00": 35, "01": 65}
+        circuits_for_angle:
+          u:
+              histogram: {"00": 25, "01": 75}
+          id:
+              histogram: {"00": 35, "01": 65}
       - phi: 1
-        histograms:
-          u: {"00": 15, "11": 85}
-          id: {"00": 35, "11": 65}
+        circuits_for_angle:
+          u:
+              histogram: {"00": 15, "11": 85}
+          id:
+              histogram: {"00": 35, "11": 65}
       - phi: 2
-        histograms:
-          u: {"10": 40, "11": 40, "01": 20}
-          id: {"10": 60, "11": 40}
+        circuits_for_angle:
+          u:
+              histogram: {"10": 40, "11": 40, "01": 20}
+          id:
+              histogram: {"10": 60, "11": 40}
