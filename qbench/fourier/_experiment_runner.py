@@ -15,13 +15,9 @@ from ..jobs import retrieve_jobs
 from ..limits import get_limits
 from ..postselection import assemble_postselection_circuits
 from ._components import FourierComponents
-from ._models import (
-    BatchResult,
-    FourierDiscriminationExperiment,
-    FourierDiscriminationResult,
-    ResultForAngle,
-    SingleResult,
-)
+from ._models import (BatchResult, FourierDiscriminationExperiment,
+                      FourierDiscriminationResult, ResultForAngle,
+                      SingleResult)
 
 logger = getLogger("qbench")
 
@@ -369,7 +365,7 @@ def resolve_results(async_results: FourierDiscriminationResult) -> FourierDiscri
 
     def _extract_result_from_job(job, i):
         try:
-            result =  job.result().get_counts()[i]
+            result = job.result().get_counts()[i]
         except IBMQJobFailureError:
             result = None
             logger.warning(f"IBMQJobFailureError for job {job.job_id()}")
@@ -379,7 +375,7 @@ def resolve_results(async_results: FourierDiscriminationResult) -> FourierDiscri
         (key, result)
         for entry in cast(List[BatchResult], async_results.results)
         for i, key in enumerate(entry.keys)  # type: ignore
-        if (result := _extract_result_from_job(jobs_mapping[entry.job_id],i)) is not None
+        if (result := _extract_result_from_job(jobs_mapping[entry.job_id], i)) is not None
     ]
 
     result_dict: MutableMapping[

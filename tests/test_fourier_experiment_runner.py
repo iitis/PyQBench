@@ -2,11 +2,8 @@ import pytest
 
 from qbench.common_models import SimpleBackendDescription
 from qbench.fourier import FourierDiscriminationExperiment
-from qbench.fourier._experiment_runner import (
-    fetch_statuses,
-    resolve_results,
-    run_experiment,
-)
+from qbench.fourier._experiment_runner import (fetch_statuses, resolve_results,
+                                               run_experiment)
 from qbench.testing import assert_sync_results_contain_data_for_all_circuits
 
 

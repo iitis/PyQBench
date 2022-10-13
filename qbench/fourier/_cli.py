@@ -5,7 +5,8 @@ from yaml import safe_dump, safe_load
 
 from ..common_models import BackendDescriptionRoot
 from ._experiment_runner import fetch_statuses, resolve_results, run_experiment
-from ._models import FourierDiscriminationExperiment, FourierDiscriminationResult
+from ._models import (FourierDiscriminationExperiment,
+                      FourierDiscriminationResult)
 
 
 def _run_benchmark(args):
