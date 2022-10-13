@@ -367,18 +367,19 @@ def resolve_results(async_results: FourierDiscriminationResult) -> FourierDiscri
     logger.info(f"Fetching total of {len(job_ids)} jobs")
     jobs_mapping = {job.job_id(): job for job in retrieve_jobs(backend, job_ids)}
 
-    def _extract_result_from_job(job):
+    def _extract_result_from_job(job, i):
         try:
-            result = {"histogram": job.result().get_counts()}
+            result =  job.result().get_counts()[i]
         except IBMQJobFailureError:
-            result = {"histogram": f"Failed IBMQJobFailureError for job {job.job_id()}"}
+            result = None
             logger.warning(f"IBMQJobFailureError for job {job.job_id()}")
         return result
 
     result_pairs = [
-        (key, _extract_result_from_job(jobs_mapping[entry.job_id]))
+        (key, result)
         for entry in cast(List[BatchResult], async_results.results)
-        for key in entry.keys  # type: ignore
+        for i, key in enumerate(entry.keys)  # type: ignore
+        if (result := _extract_result_from_job(jobs_mapping[entry.job_id],i)) is not None
     ]
 
     result_dict: MutableMapping[
@@ -402,5 +403,5 @@ def resolve_results(async_results: FourierDiscriminationResult) -> FourierDiscri
         }
         for (target, ancilla), result_for_phi in result_dict.items()
     ]
-
+    # import pdb; pdb.set_trace()
     return FourierDiscriminationResult(metadata=async_results.metadata, results=resolved)
