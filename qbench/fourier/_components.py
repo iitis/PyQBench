@@ -35,8 +35,8 @@ class FourierComponents:
         return self._module.state_preparation()
 
     @property
-    def black_box_dag(self) -> Instruction:
-        """Black box to be discriminated from Z-basis measurement.
+    def u_dag(self) -> Instruction:
+        """Matrix changing basis to the one in which alternative measurement is to be performed.
 
         .. note::
            This instruction is needed because on actual devices we can only measure in Z-basis.
@@ -49,7 +49,7 @@ class FourierComponents:
               └───┘└─────────────┘└───┘
         """
 
-        return self._module.black_box_dag(self.phi)
+        return self._module.u_dag(self.phi)
 
     @property
     def v0_dag(self) -> Instruction:

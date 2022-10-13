@@ -15,7 +15,14 @@ operator_map: Dict[Any, Callable] = {
 }
 
 
-def eval_expr(expr):
+def eval_expr(expr: str) -> float:
+    """Evaluate given arithmetic expression.
+
+    :param expr: arithmetic expression to parse. The expression can contain parentheses,
+     numbers, binary operators - + * /, unary minus and an identifier "pi". The "pi"
+     identifier will resolve into numpy.py.
+    :return: value of the evaluated expression.
+    """
     return _eval_node(ast.parse(expr, mode="eval").body)
 
 

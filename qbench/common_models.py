@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Optional, Union
 from pydantic import BaseModel as PydanticBaseModel
 from pydantic import ConstrainedInt, Field, StrictStr, root_validator, validator
 from qiskit import IBMQ
+from qiskit.providers import BackendV1, BackendV2
 
 from ._expressions import eval_expr
 
@@ -49,7 +50,7 @@ class AnglesRange(BaseModel):
     @root_validator
     def check_if_start_smaller_than_stop(cls, values):
         if values.get("start") > values.get("stop"):
-            raise ValueError("Start cannot be smallet than stop.")
+            raise ValueError("Start cannot be smaller than stop.")
         return values
 
     @root_validator
@@ -114,12 +115,9 @@ class BackendFactoryDescription(BaseModel):
     args: List[Any] = Field(default_factory=list)
     kwargs: Dict[str, Any] = Field(default_factory=dict)  # type: ignore
     run_options: Dict[str, Any] = Field(default_factory=dict)
+    asynchronous: bool = False
 
     _verify_factory = validator("factory", allow_reuse=True)(_check_is_correct_object_path)
-
-    @property
-    def asynchronous(self):
-        return False
 
     def create_backend(self):
         factory = _import_object(self.factory)
@@ -143,12 +141,19 @@ class IBMQBackendDescription(BaseModel):
     provider: IBMQProviderDescription
 
     def create_backend(self):
-        provider = IBMQ.enable_account(
-            os.getenv("IBMQ_TOKEN"),
-            hub=self.provider.hub,
-            group=self.provider.group,
-            project=self.provider.project,
-        )
+        if IBMQ.active_account():
+            provider = IBMQ.get_provider(
+                hub=self.provider.hub,
+                group=self.provider.group,
+                project=self.provider.project,
+            )
+        else:
+            provider = IBMQ.enable_account(
+                os.getenv("IBMQ_TOKEN"),
+                hub=self.provider.hub,
+                group=self.provider.group,
+                project=self.provider.project,
+            )
         return provider.get_backend(self.name)
 
 
@@ -159,3 +164,7 @@ BackendDescription = Union[
 
 class BackendDescriptionRoot(BaseModel):
     __root__: BackendDescription
+
+
+Backend = Union[BackendV1, BackendV2]
+MeasurementsDict = Dict[str, int]

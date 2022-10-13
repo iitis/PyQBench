@@ -2,7 +2,7 @@ import numpy as np
 from qiskit import QuantumCircuit
 
 
-def black_box_dag(phi):
+def u_dag(phi):
     circuit = QuantumCircuit(1, name="U-dag")
     circuit.sx(0)
     circuit.rz(np.pi / 2, 0)
