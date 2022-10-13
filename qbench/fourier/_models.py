@@ -2,15 +2,9 @@ from typing import Dict, List, Literal, Optional, Tuple, Union
 
 from pydantic import validator
 
-from ..common_models import (
-    AnglesRange,
-    BackendDescription,
-    BaseModel,
-    Qubit,
-    QubitsPair,
-    StrictPositiveInt,
-    SynchronousHistogram,
-)
+from ..common_models import (AnglesRange, BackendDescription, BaseModel, Qubit,
+                             QubitsPair, StrictPositiveInt,
+                             SynchronousHistogram)
 
 
 class FourierDiscriminationExperiment(BaseModel):

@@ -4,7 +4,8 @@ from importlib import import_module
 from typing import Any, Dict, List, Optional, Union
 
 from pydantic import BaseModel as PydanticBaseModel
-from pydantic import ConstrainedInt, Field, StrictStr, root_validator, validator
+from pydantic import (ConstrainedInt, Field, StrictStr, root_validator,
+                      validator)
 from qiskit import IBMQ
 from qiskit.providers import BackendV1, BackendV2
 

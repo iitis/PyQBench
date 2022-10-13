@@ -1,0 +1,29 @@
+metadata:
+  experiment:
+    type: discrimination-fourier
+    qubits:
+    - {target: 0, ancilla: 1}
+    - {target: 0, ancilla: 2}
+    angles: {start: 0.0, stop: 6.283185307179586, num_steps: 3}
+    gateset: ibmq
+    method: direct_sum
+    num_shots: 10
+  backend_description:
+    name: ibmq_quito
+    asynchronous: true
+    provider: {group: open, hub: ibm-q, project: main}
+results:
+- job_id: 63481a0bd851873314fb5603
+  keys:
+  - [0, 1, id, 0.0]
+  - [0, 1, u, 0.0]
+  - [0, 1, id, 3.141592653589793]
+  - [0, 1, u, 3.141592653589793]
+  - [0, 1, id, 6.283185307179586]
+  - [0, 1, u, 6.283185307179586]
+  - [0, 2, id, 0.0]
+  - [0, 2, u, 0.0]
+  - [0, 2, id, 3.141592653589793]
+  - [0, 2, u, 3.141592653589793]
+  - [0, 2, id, 6.283185307179586]
+  - [0, 2, u, 6.283185307179586]

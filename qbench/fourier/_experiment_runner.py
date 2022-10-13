@@ -5,6 +5,7 @@ from typing import Any, Dict, Iterable, List, MutableMapping, Tuple, cast
 import numpy as np
 from qiskit import QuantumCircuit
 from qiskit.circuit import Parameter
+from qiskit.providers.ibmq.job.exceptions import IBMQJobFailureError
 from tqdm import tqdm
 
 from ..batching import execute_in_batches
@@ -14,13 +15,9 @@ from ..jobs import retrieve_jobs
 from ..limits import get_limits
 from ..postselection import assemble_postselection_circuits
 from ._components import FourierComponents
-from ._models import (
-    BatchResult,
-    FourierDiscriminationExperiment,
-    FourierDiscriminationResult,
-    ResultForAngle,
-    SingleResult,
-)
+from ._models import (BatchResult, FourierDiscriminationExperiment,
+                      FourierDiscriminationResult, ResultForAngle,
+                      SingleResult)
 
 logger = getLogger("qbench")
 
@@ -366,12 +363,19 @@ def resolve_results(async_results: FourierDiscriminationResult) -> FourierDiscri
     logger.info(f"Fetching total of {len(job_ids)} jobs")
     jobs_mapping = {job.job_id(): job for job in retrieve_jobs(backend, job_ids)}
 
+    def _extract_result_from_job(job, i):
+        try:
+            result = job.result().get_counts()[i]
+        except IBMQJobFailureError:
+            result = None
+            logger.warning(f"IBMQJobFailureError for job {job.job_id()}")
+        return result
+
     result_pairs = [
-        (key, counts)
+        (key, result)
         for entry in cast(List[BatchResult], async_results.results)
-        for key, counts in zip(
-            entry.keys, jobs_mapping[entry.job_id].result().get_counts()  # type: ignore
-        )
+        for i, key in enumerate(entry.keys)  # type: ignore
+        if (result := _extract_result_from_job(jobs_mapping[entry.job_id], i)) is not None
     ]
 
     result_dict: MutableMapping[
@@ -395,5 +399,5 @@ def resolve_results(async_results: FourierDiscriminationResult) -> FourierDiscri
         }
         for (target, ancilla), result_for_phi in result_dict.items()
     ]
-
+    # import pdb; pdb.set_trace()
     return FourierDiscriminationResult(metadata=async_results.metadata, results=resolved)

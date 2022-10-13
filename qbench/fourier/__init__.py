@@ -5,7 +5,8 @@ import numpy as np
 
 from ._cli import add_fourier_parser
 from ._components import FourierComponents
-from ._models import FourierDiscriminationExperiment, FourierDiscriminationResult
+from ._models import (FourierDiscriminationExperiment,
+                      FourierDiscriminationResult)
 
 
 def discrimination_probability_upper_bound(
