@@ -5,6 +5,7 @@ from typing import Any, Dict, Iterable, List, MutableMapping, Tuple, cast
 import numpy as np
 from qiskit import QuantumCircuit
 from qiskit.circuit import Parameter
+from qiskit.providers.ibmq.job.exceptions import IBMQJobFailureError
 from tqdm import tqdm
 
 from ..batching import execute_in_batches
@@ -385,7 +386,12 @@ def resolve_results(async_results: FourierDiscriminationResult) -> FourierDiscri
         )
 
     def _extract_result_from_job(job, target, ancilla, i):
-        result = {"histogram": job.result().get_counts()[i]}
+        try:
+            result = {"histogram": job.result().get_counts()[i]}
+        except IBMQJobFailureError:
+            result = {"histogram": "Failed IBMQJobFailureError for job {job.job_id()}"}
+            logger.warning(f"IBMQJobFailureError for job {job.job_id()}")
+
         try:
             props = job.properties()
             result["mitigation_info"] = {
@@ -408,9 +414,7 @@ def resolve_results(async_results: FourierDiscriminationResult) -> FourierDiscri
             _extract_result_from_job(jobs_mapping[entry.job_id], target, ancilla, i),
         )
         for entry in cast(List[BatchResult], async_results.results)
-        for i, ((target, ancilla, name, phi), counts) in enumerate(
-            zip(entry.keys, jobs_mapping[entry.job_id].result().get_counts())  # type: ignore
-        )
+        for i, (target, ancilla, name, phi) in enumerate(entry.keys)  # type: ignore
     ]
 
     result_dict: MutableMapping[
