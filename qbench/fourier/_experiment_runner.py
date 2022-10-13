@@ -391,7 +391,8 @@ def resolve_results(async_results: FourierDiscriminationResult) -> FourierDiscri
             result = {"histogram": job.result().get_counts()[i]}
         except IBMQJobFailureError:
             result = {"histogram": f"Failed IBMQJobFailureError for job {job.job_id()}"}
-            logger.warning(f"IBMQJobFailureError for job {job.job_id()}")
+            logger.warning(f"IBMQJobFailureError for {i}-th job {job.job_id()}")
+            
 
 
         try:
