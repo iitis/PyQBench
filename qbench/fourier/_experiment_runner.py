@@ -368,6 +368,7 @@ def resolve_results(async_results: FourierDiscriminationResult) -> FourierDiscri
     logger.info(f"Fetching total of {len(job_ids)} jobs")
     jobs_mapping = {job.job_id(): job for job in retrieve_jobs(backend, job_ids)}
 
+
     def mitigation_error_for_qubit(job, qubit) -> QubitMitigationInfo:
         prob_meas0_prep1 = job.properties().qubit_property(qubit)["prob_meas0_prep1"][0]
         prob_meas1_prep0 = job.properties().qubit_property(qubit)["prob_meas1_prep0"][0]
@@ -389,8 +390,9 @@ def resolve_results(async_results: FourierDiscriminationResult) -> FourierDiscri
         try:
             result = {"histogram": job.result().get_counts()[i]}
         except IBMQJobFailureError:
-            result = {"histogram": "Failed IBMQJobFailureError for job {job.job_id()}"}
+            result = {"histogram": f"Failed IBMQJobFailureError for job {job.job_id()}"}
             logger.warning(f"IBMQJobFailureError for job {job.job_id()}")
+
 
         try:
             props = job.properties()
