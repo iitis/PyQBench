@@ -37,7 +37,7 @@ def _get_limits_for_aws_backend(backend: AWSBraketBackend):
     elif "simulator" in _aws_device_summary(backend):
         return Limits(max_shots=100000)
     else:
-        raise NotImplementedError("Don't know how to obtain limits for device {backend.name}")
+        raise NotImplementedError(f"Don't know how to obtain limits for device {backend.name}")
 
 
 @get_limits.register
