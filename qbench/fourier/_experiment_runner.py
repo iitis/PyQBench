@@ -82,6 +82,25 @@ def _sweep_circuits(
     return results
 
 
+def _extract_result_from_job(job, target, ancilla, i):
+    result = {"histogram": job.result().get_counts()[i]}
+    try:
+        props = job.properties()
+        result["mitigation_info"] = {
+            "target": {
+                "prob_meas0_prep1": props.qubit_property(target)["prob_meas0_prep1"][0],
+                "prob_meas1_prep0": props.qubit_property(target)["prob_meas1_prep0"][0],
+            },
+            "ancilla": {
+                "prob_meas0_prep1": props.qubit_property(ancilla)["prob_meas0_prep1"][0],
+                "prob_meas1_prep0": props.qubit_property(ancilla)["prob_meas1_prep0"][0],
+            },
+        }
+    except AttributeError:
+        pass
+    return result
+
+
 def _execute_direct_sum_experiment(
     backend: Backend,
     target: int,
@@ -373,34 +392,6 @@ def resolve_results(async_results: FourierDiscriminationResult) -> FourierDiscri
         return QubitMitigationInfo(
             prob_meas0_prep1=prob_meas0_prep1, prob_meas1_prep0=prob_meas1_prep0
         )
-
-    def mitigation_info(job, target, ancilla):
-        return (
-            {
-                "target": mitigation_error_for_qubit(job, target),
-                "ancilla": mitigation_error_for_qubit(job, ancilla),
-            }
-            if "properties" in dir(job)
-            else None
-        )
-
-    def _extract_result_from_job(job, target, ancilla, i):
-        result = {"histogram": job.result().get_counts()[i]}
-        try:
-            props = job.properties()
-            result["mitigation_info"] = {
-                "target": {
-                    "prob_meas0_prep1": props.qubit_property(target)["prob_meas0_prep1"][0],
-                    "prob_meas1_prep0": props.qubit_property(target)["prob_meas1_prep0"][0],
-                },
-                "ancilla": {
-                    "prob_meas0_prep1": props.qubit_property(ancilla)["prob_meas0_prep1"][0],
-                    "prob_meas1_prep0": props.qubit_property(ancilla)["prob_meas1_prep0"][0],
-                },
-            }
-        except AttributeError:
-            pass
-        return result
 
     result_tuples = [
         (
