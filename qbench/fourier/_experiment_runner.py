@@ -398,11 +398,20 @@ def resolve_results(async_results: FourierDiscriminationResult) -> FourierDiscri
         Tuple[int, int], MutableMapping[float, MutableMapping[str, Any]]
     ] = defaultdict(lambda: defaultdict(dict))
 
+    all_jobs_succeeded = True
+
     for entry in cast(List[BatchResult], async_results.results):
         for i, (target, ancilla, name, phi) in enumerate(entry.keys):
             result = _extract_result_from_job(jobs_mapping[entry.job_id], target, ancilla, i)
             if result is not None:
                 result_dict[(target, ancilla)][phi][name] = result
+            else:
+                all_jobs_succeeded = False
+
+    if not all_jobs_succeeded:
+        logger.warning(
+            "Some jobs have failed. Examine the output file to determine which results are missing."
+        )
 
     resolved = [
         {
