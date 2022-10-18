@@ -76,3 +76,12 @@ class MockProvider(ProviderV1):
             if name is None
             else [backend for backend in all_backends if backend.name() == name]
         )
+
+    @staticmethod
+    def reset_caches():
+        """Reset caches thus allowing for construction of new Mock simulators.
+
+        This is stateful and ugly, but mock simulators need to be stateful so that
+        we can simulate retrieval"""
+        _create_failing_mock_simulator.cache_clear()
+        _create_mock_simulator.cache_clear()

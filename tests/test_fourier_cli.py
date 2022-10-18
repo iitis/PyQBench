@@ -8,6 +8,7 @@ from qbench.cli import main
 from qbench.common_models import SimpleBackendDescription
 from qbench.fourier import FourierDiscriminationExperiment, FourierDiscriminationResult
 from qbench.fourier.testing import assert_sync_results_contain_data_for_all_circuits
+from qbench.testing import MockProvider
 
 
 @pytest.fixture
@@ -91,6 +92,8 @@ def test_main_entrypoint_with_disc_fourier_command(tmp_path, capsys):
 
 @pytest.mark.usefixtures("create_experiment_file", "create_failing_backend_description")
 def test_main_entrypoint_with_disc_fourier_command_and_failing_backend(tmp_path, capsys, caplog):
+    MockProvider().reset_caches()
+
     experiment_path = tmp_path / "experiment.yml"
     backend_path = tmp_path / "failing-backend.yml"
     async_output_path = tmp_path / "async_output.yml"

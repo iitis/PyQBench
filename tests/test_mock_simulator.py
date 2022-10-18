@@ -26,6 +26,8 @@ def test_mock_simulator_properly_fails_selected_jobs():
     circuit.measure_all()
 
     provider = MockProvider()
+    provider.reset_caches()
+
     backend = provider.get_backend("failing-mock-backend")
 
     jobs = [backend.run(circuit, shots=10) for _ in range(4)]
