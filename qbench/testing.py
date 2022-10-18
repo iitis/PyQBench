@@ -2,8 +2,21 @@
 from functools import lru_cache
 from typing import List
 
-from qiskit.providers import BackendV1, JobV1, ProviderV1
+from qiskit import QiskitError
+from qiskit.providers import BackendV1, JobStatus, JobV1, ProviderV1
 from qiskit.providers.aer import AerSimulator
+
+
+def _make_job_fail(job):
+    def _status():
+        return JobStatus.ERROR
+
+    def _result():
+        raise QiskitError("Job failed intentionally")
+
+    job.status = _status
+    job.result = _result
+    return job
 
 
 class MockSimulator(AerSimulator):
@@ -13,9 +26,11 @@ class MockSimulator(AerSimulator):
     are the same as for AerSimulator.
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, fail_job_indices=None, *args, **kwargs):
+        self._fail_job_indices = [] if fail_job_indices is None else fail_job_indices
         super().__init__(*args, **kwargs)
         self._job_dict = {}
+        self._job_count = 0
 
     def name(self):
         """Return name of this backend."""
@@ -28,13 +43,16 @@ class MockSimulator(AerSimulator):
     def run(self, *args, **kwargs):
         """Run given circuit and return corresponding job."""
         job = super().run(*args, **kwargs)
+        if self._job_count in self._fail_job_indices:
+            job = _make_job_fail(job)
+        self._job_count += 1
         self._job_dict[job.job_id()] = job
         return job
 
 
 @lru_cache()
-def _create_mock_simulator():
-    return MockSimulator()
+def _create_mock_simulator(**kwargs):
+    return MockSimulator(**kwargs)
 
 
 class MockProvider(ProviderV1):
@@ -46,4 +64,4 @@ class MockProvider(ProviderV1):
         Unsurprisingly, the list comprises only and instance of MockSimulator. However, it is
         always the same instance. That way, we are able to retrieve the cached jobs.
         """
-        return [_create_mock_simulator()]
+        return [_create_mock_simulator(**kwargs)]
