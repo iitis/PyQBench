@@ -9,7 +9,7 @@ from tqdm import tqdm
 
 from ..batching import execute_in_batches
 from ..common_models import Backend, BackendDescription
-from ..direct_sum import asemble_direct_sum_circuits
+from ..direct_sum import assemble_direct_sum_circuits
 from ..jobs import retrieve_jobs
 from ..limits import get_limits
 from ..postselection import assemble_postselection_circuits
@@ -108,7 +108,7 @@ def _execute_direct_sum_experiment(
     :param components: building blocks for the experiment.
     :return dictionary with keys "target", "ancilla" and "measurement_counts."
     """
-    circuits_map = asemble_direct_sum_circuits(
+    circuits_map = assemble_direct_sum_circuits(
         state_preparation=components.state_preparation,
         u_dag=components.u_dag,
         v0_v1_direct_sum_dag=components.controlled_v0_v1_dag,
@@ -235,7 +235,7 @@ def _collect_circuits_and_keys(
         )
 
     def _asemble_direct_sum(target: int, ancilla: int) -> Dict[str, QuantumCircuit]:
-        return asemble_direct_sum_circuits(
+        return assemble_direct_sum_circuits(
             state_preparation=components.state_preparation,
             u_dag=components.u_dag,
             v0_v1_direct_sum_dag=components.controlled_v0_v1_dag,
