@@ -3,7 +3,7 @@ from logging import getLogger
 from typing import Any, Dict, Iterable, List, MutableMapping, Tuple, cast
 
 import numpy as np
-from qiskit import QuantumCircuit
+from qiskit import QiskitError, QuantumCircuit
 from qiskit.circuit import Parameter
 from tqdm import tqdm
 
@@ -83,7 +83,10 @@ def _sweep_circuits(
 
 
 def _extract_result_from_job(job, target, ancilla, i):
-    result = {"histogram": job.result().get_counts()[i]}
+    try:
+        result = {"histogram": job.result().get_counts()[i]}
+    except QiskitError:
+        return None
     try:
 
         props = job.properties()
@@ -391,21 +394,15 @@ def resolve_results(async_results: FourierDiscriminationResult) -> FourierDiscri
     logger.info(f"Fetching total of {len(job_ids)} jobs")
     jobs_mapping = {job.job_id(): job for job in retrieve_jobs(backend, job_ids)}
 
-    result_tuples = [
-        (
-            (target, ancilla, name, phi),
-            _extract_result_from_job(jobs_mapping[entry.job_id], target, ancilla, i),
-        )
-        for entry in cast(List[BatchResult], async_results.results)
-        for i, (target, ancilla, name, phi) in enumerate(entry.keys)
-    ]
-
     result_dict: MutableMapping[
         Tuple[int, int], MutableMapping[float, MutableMapping[str, Any]]
     ] = defaultdict(lambda: defaultdict(dict))
 
-    for (target, ancilla, name, phi), counts in result_tuples:
-        result_dict[(target, ancilla)][phi][name] = counts
+    for entry in cast(List[BatchResult], async_results.results):
+        for i, (target, ancilla, name, phi) in enumerate(entry.keys):
+            result = _extract_result_from_job(jobs_mapping[entry.job_id], target, ancilla, i)
+            if result is not None:
+                result_dict[(target, ancilla)][phi][name] = result
 
     resolved = [
         {
