@@ -6,7 +6,7 @@ from yaml import safe_dump, safe_load
 from qbench.cli import main
 from qbench.common_models import SimpleBackendDescription
 from qbench.fourier import FourierDiscriminationExperiment, FourierDiscriminationResult
-from qbench.testing import assert_sync_results_contain_data_for_all_circuits
+from qbench.fourier.testing import assert_sync_results_contain_data_for_all_circuits
 
 
 @pytest.fixture

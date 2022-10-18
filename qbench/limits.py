@@ -6,6 +6,8 @@ from qiskit.providers.aer import AerSimulator
 from qiskit.providers.ibmq import IBMQBackend
 from qiskit_braket_provider import AWSBraketBackend
 
+from .testing import MockSimulator
+
 
 class Limits(NamedTuple):
     max_circuits: Optional[int] = None
@@ -51,3 +53,8 @@ def _get_limits_for_ibmq_backend(backend: IBMQBackend):
 @get_limits.register
 def _get_limits_for_aer_simulator(backend: AerSimulator):
     return Limits(max_shots=backend.configuration().max_shots)
+
+
+@get_limits.register
+def _get_limits_for_mock_backend(backend: MockSimulator):
+    return Limits(max_shots=backend.configuration().max_shots, max_circuits=2)
