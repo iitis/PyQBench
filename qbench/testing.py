@@ -26,15 +26,16 @@ class MockSimulator(AerSimulator):
     are the same as for AerSimulator.
     """
 
-    def __init__(self, fail_job_indices=None, *args, **kwargs):
+    def __init__(self, fail_job_indices=None, name="mock-backend", *args, **kwargs):
         self._fail_job_indices = [] if fail_job_indices is None else fail_job_indices
         super().__init__(*args, **kwargs)
         self._job_dict = {}
         self._job_count = 0
+        self._name = name
 
     def name(self):
         """Return name of this backend."""
-        return "mock-backend"
+        return self._name
 
     def retrieve_job(self, job_id: str) -> JobV1:
         """Retrieve job of given ID."""
@@ -51,8 +52,13 @@ class MockSimulator(AerSimulator):
 
 
 @lru_cache()
-def _create_mock_simulator(**kwargs):
-    return MockSimulator(**kwargs)
+def _create_mock_simulator():
+    return MockSimulator()
+
+
+@lru_cache()
+def _create_failing_mock_simulator():
+    return MockSimulator(name="failing-mock-backend", fail_job_indices=(1, 2))
 
 
 class MockProvider(ProviderV1):
@@ -64,4 +70,9 @@ class MockProvider(ProviderV1):
         Unsurprisingly, the list comprises only and instance of MockSimulator. However, it is
         always the same instance. That way, we are able to retrieve the cached jobs.
         """
-        return [_create_mock_simulator(**kwargs)]
+        all_backends = [_create_mock_simulator(), _create_failing_mock_simulator()]
+        return (
+            all_backends
+            if name is None
+            else [backend for backend in all_backends if backend.name() == name]
+        )
