@@ -31,6 +31,10 @@ def _resolve(args):
     safe_dump(resolved.dict(), args.output, sort_keys=False)
 
 
+def _tabulate(args):
+    print("Tabulating")
+
+
 def add_fourier_parser(parent_parser) -> None:
     """Add disc-fourier parser to the parent parser.
 
@@ -137,3 +141,32 @@ def add_fourier_parser(parent_parser) -> None:
     )
 
     status.set_defaults(func=_status)
+
+    tabulate = subcommands.add_parser(
+        "tabulate",
+        description=(
+            "Compute and tabulate probabilities from measurements obtained from the experiment."
+        ),
+    )
+
+    tabulate.add_argument(
+        "sync_results",
+        help=(
+            "path to the file with results of discrimination experiment. If the experiment was "
+            "conducted using asynchronous backend, they need to be manually resolved."
+        ),
+        type=FileType("r"),
+    )
+
+    tabulate.add_argument(
+        "output",
+        help=(
+            "path to the resulting CSV file. This file will contain columns 'target', 'ancilla' "
+            "'phi' and 'disc_prob' with obvious meanings. If, in addition, experiment contained "
+            "mitigation data, the 'mitigated_disc_prob` containing discrimination probabilities "
+            "computed using mitigated bitstrings will also be added."
+        ),
+        type=FileType("w"),
+    )
+
+    tabulate.set_defaults(func=_tabulate)
