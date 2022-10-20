@@ -6,6 +6,7 @@ from qiskit.providers.aer import AerSimulator
 from qiskit_braket_provider import AWSBraketProvider, BraketLocalBackend
 
 from qbench.limits import get_limits
+from qbench.testing import MockSimulator
 
 IBMQ_TOKEN = os.getenv("IBMQ_TOKEN")
 
@@ -69,4 +70,12 @@ def test_aer_simulator_has_undefined_circuit_limits_and_shots_limit_as_in_config
     limits = get_limits(simulator)
 
     assert limits.max_circuits is None
+    assert limits.max_shots == simulator.configuration().max_shots
+
+
+def test_mock_simulator_has_circuit_limit_of_2_and_shots_limit_as_in_configuration():
+    simulator = MockSimulator()
+    limits = get_limits(simulator)
+
+    assert limits.max_circuits == 2
     assert limits.max_shots == simulator.configuration().max_shots

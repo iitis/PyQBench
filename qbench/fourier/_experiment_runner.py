@@ -3,13 +3,13 @@ from logging import getLogger
 from typing import Any, Dict, Iterable, List, MutableMapping, Tuple, cast
 
 import numpy as np
-from qiskit import QuantumCircuit
+from qiskit import QiskitError, QuantumCircuit
 from qiskit.circuit import Parameter
 from tqdm import tqdm
 
 from ..batching import execute_in_batches
 from ..common_models import Backend, BackendDescription
-from ..direct_sum import asemble_direct_sum_circuits
+from ..direct_sum import assemble_direct_sum_circuits
 from ..jobs import retrieve_jobs
 from ..limits import get_limits
 from ..postselection import assemble_postselection_circuits
@@ -18,6 +18,7 @@ from ._models import (
     BatchResult,
     FourierDiscriminationExperiment,
     FourierDiscriminationResult,
+    QubitMitigationInfo,
     ResultForAngle,
     SingleResult,
 )
@@ -73,12 +74,39 @@ def _sweep_circuits(
         }
 
         _partial_result = {
-            key: backend.run(circuit, shots=num_shots).result().get_counts()
+            key: {"histogram": backend.run(circuit, shots=num_shots).result().get_counts()}
             for key, circuit in bound_circuits_map.items()
         }
 
-        results.append(ResultForAngle(phi=phi_, histograms=_partial_result))
+        results.append(ResultForAngle(phi=phi_, circuits_for_angle=_partial_result))
     return results
+
+
+def _extract_result_from_job(job, target, ancilla, i):
+    try:
+        result = {"histogram": job.result().get_counts()[i]}
+    except QiskitError:
+        return None
+    try:
+
+        props = job.properties()
+        result["mitigation_info"] = {
+            "target": QubitMitigationInfo.parse_obj(
+                {
+                    "prob_meas0_prep1": props.qubit_property(target)["prob_meas0_prep1"][0],
+                    "prob_meas1_prep0": props.qubit_property(target)["prob_meas1_prep0"][0],
+                }
+            ),
+            "ancilla": QubitMitigationInfo.parse_obj(
+                {
+                    "prob_meas0_prep1": props.qubit_property(ancilla)["prob_meas0_prep1"][0],
+                    "prob_meas1_prep0": props.qubit_property(ancilla)["prob_meas1_prep0"][0],
+                }
+            ),
+        }
+    except AttributeError:
+        pass
+    return result
 
 
 def _execute_direct_sum_experiment(
@@ -107,7 +135,7 @@ def _execute_direct_sum_experiment(
     :param components: building blocks for the experiment.
     :return dictionary with keys "target", "ancilla" and "measurement_counts."
     """
-    circuits_map = asemble_direct_sum_circuits(
+    circuits_map = assemble_direct_sum_circuits(
         state_preparation=components.state_preparation,
         u_dag=components.u_dag,
         v0_v1_direct_sum_dag=components.controlled_v0_v1_dag,
@@ -234,7 +262,7 @@ def _collect_circuits_and_keys(
         )
 
     def _asemble_direct_sum(target: int, ancilla: int) -> Dict[str, QuantumCircuit]:
-        return asemble_direct_sum_circuits(
+        return assemble_direct_sum_circuits(
             state_preparation=components.state_preparation,
             u_dag=components.u_dag,
             v0_v1_direct_sum_dag=components.controlled_v0_v1_dag,
@@ -366,20 +394,24 @@ def resolve_results(async_results: FourierDiscriminationResult) -> FourierDiscri
     logger.info(f"Fetching total of {len(job_ids)} jobs")
     jobs_mapping = {job.job_id(): job for job in retrieve_jobs(backend, job_ids)}
 
-    result_pairs = [
-        (key, counts)
-        for entry in cast(List[BatchResult], async_results.results)
-        for key, counts in zip(
-            entry.keys, jobs_mapping[entry.job_id].result().get_counts()  # type: ignore
-        )
-    ]
-
     result_dict: MutableMapping[
         Tuple[int, int], MutableMapping[float, MutableMapping[str, Any]]
     ] = defaultdict(lambda: defaultdict(dict))
 
-    for (target, ancilla, name, phi), counts in result_pairs:
-        result_dict[(target, ancilla)][phi][name] = counts
+    all_jobs_succeeded = True
+
+    for entry in cast(List[BatchResult], async_results.results):
+        for i, (target, ancilla, name, phi) in enumerate(entry.keys):
+            result = _extract_result_from_job(jobs_mapping[entry.job_id], target, ancilla, i)
+            if result is not None:
+                result_dict[(target, ancilla)][phi][name] = result
+            else:
+                all_jobs_succeeded = False
+
+    if not all_jobs_succeeded:
+        logger.warning(
+            "Some jobs have failed. Examine the output file to determine which results are missing."
+        )
 
     resolved = [
         {
@@ -388,7 +420,10 @@ def resolve_results(async_results: FourierDiscriminationResult) -> FourierDiscri
             "measurement_counts": [
                 {
                     "phi": phi,
-                    "histograms": {name: counts for name, counts in result_for_circ.items()},
+                    "circuits_for_angle": {
+                        name: result_for_circuit
+                        for name, result_for_circuit in result_for_circ.items()
+                    },
                 }
                 for phi, result_for_circ in result_for_phi.items()
             ],

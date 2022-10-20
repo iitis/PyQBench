@@ -10,7 +10,7 @@ from qbench.common_models import MeasurementsDict
 from qbench.utils import remap_qubits
 
 
-def asemble_direct_sum_circuits(
+def assemble_direct_sum_circuits(
     target: int,
     ancilla: int,
     state_preparation: Instruction,
@@ -102,7 +102,7 @@ def benchmark_using_controlled_unitary(
        where M defines the measurement to be performed (M=identity or M=U†).
        Refer to the paper for details how the final measurements are interpreted.
     """
-    circuits = asemble_direct_sum_circuits(
+    circuits = assemble_direct_sum_circuits(
         state_preparation=state_preparation,
         u_dag=u_dag,
         v0_v1_direct_sum_dag=v0_v1_direct_sum_dag,

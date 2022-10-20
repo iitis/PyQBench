@@ -249,8 +249,12 @@ class TestExampleYamlInputsAreMatchingModels:
             data = safe_load(f)
             BackendFactoryDescription(**data)
 
-    def test_fourier_discrimination_result_matches_model(self):
-        path = EXAMPLES_PATH / "fourier-discrimination-result.yml"
+    @pytest.mark.parametrize(
+        "filename",
+        ["fourier-discrimination-result.yml", "fourier-discrimination-result-with-mitigation.yml"],
+    )
+    def test_fourier_discrimination_result_matches_model(self, filename):
+        path = EXAMPLES_PATH / filename
         with open(path) as f:
             data = safe_load(f)
             FourierDiscriminationResult(**data)

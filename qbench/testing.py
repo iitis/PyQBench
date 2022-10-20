@@ -1,13 +1,22 @@
 """Module implementing several test utilities and mocks."""
 from functools import lru_cache
-from typing import List, cast
+from typing import List
 
-import numpy as np
-from qiskit.providers import BackendV1, JobV1, ProviderV1
+from qiskit import QiskitError
+from qiskit.providers import BackendV1, JobStatus, JobV1, ProviderV1
 from qiskit.providers.aer import AerSimulator
 
-from qbench.fourier import FourierDiscriminationExperiment
-from qbench.fourier._models import FourierDiscriminationResult, SingleResult
+
+def _make_job_fail(job):
+    def _status():
+        return JobStatus.ERROR
+
+    def _result():
+        raise QiskitError("Job failed intentionally")
+
+    job.status = _status
+    job.result = _result
+    return job
 
 
 class MockSimulator(AerSimulator):
@@ -17,13 +26,16 @@ class MockSimulator(AerSimulator):
     are the same as for AerSimulator.
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, fail_job_indices=None, name="mock-backend", *args, **kwargs):
+        self._fail_job_indices = [] if fail_job_indices is None else fail_job_indices
         super().__init__(*args, **kwargs)
         self._job_dict = {}
+        self._job_count = 0
+        self._name = name
 
     def name(self):
         """Return name of this backend."""
-        return "mock-backend"
+        return self._name
 
     def retrieve_job(self, job_id: str) -> JobV1:
         """Retrieve job of given ID."""
@@ -32,6 +44,9 @@ class MockSimulator(AerSimulator):
     def run(self, *args, **kwargs):
         """Run given circuit and return corresponding job."""
         job = super().run(*args, **kwargs)
+        if self._job_count in self._fail_job_indices:
+            job = _make_job_fail(job)
+        self._job_count += 1
         self._job_dict[job.job_id()] = job
         return job
 
@@ -39,6 +54,11 @@ class MockSimulator(AerSimulator):
 @lru_cache()
 def _create_mock_simulator():
     return MockSimulator()
+
+
+@lru_cache()
+def _create_failing_mock_simulator():
+    return MockSimulator(name="failing-mock-backend", fail_job_indices=(1, 2))
 
 
 class MockProvider(ProviderV1):
@@ -50,35 +70,18 @@ class MockProvider(ProviderV1):
         Unsurprisingly, the list comprises only and instance of MockSimulator. However, it is
         always the same instance. That way, we are able to retrieve the cached jobs.
         """
-        return [_create_mock_simulator()]
+        all_backends = [_create_mock_simulator(), _create_failing_mock_simulator()]
+        return (
+            all_backends
+            if name is None
+            else [backend for backend in all_backends if backend.name() == name]
+        )
 
+    @staticmethod
+    def reset_caches():
+        """Reset caches thus allowing for construction of new Mock simulators.
 
-def assert_sync_results_contain_data_for_all_circuits(
-    experiment: FourierDiscriminationExperiment, results: FourierDiscriminationResult
-) -> None:
-    """Verify synchronous result of computation has measurements for each qubits pair and phi.
-
-    :param experiment: Fourier discrimination experiment. Note that this function does not take
-     into account the method used in experiment, and only checks (target, ancilla) pairs ond
-     values of phi parameter.
-    :param results: results of execution of synchronous experiment.
-    :raise: AssertionError if measurements for some combination of (target, ancilla, phi) are
-     missing.
-    """
-    actual_qubit_pairs = [
-        (entry.target, entry.ancilla) for entry in cast(List[SingleResult], results.results)
-    ]
-
-    expected_qubit_pairs = [(entry.target, entry.ancilla) for entry in experiment.qubits]
-
-    assert set(actual_qubit_pairs) == set(expected_qubit_pairs)
-    assert len(actual_qubit_pairs) == len(expected_qubit_pairs)
-
-    expected_angles = np.linspace(
-        experiment.angles.start, experiment.angles.stop, experiment.angles.num_steps
-    )
-
-    assert all(
-        sorted([counts.phi for counts in entry.measurement_counts]) == sorted(expected_angles)
-        for entry in cast(List[SingleResult], results.results)
-    )
+        This is stateful and ugly, but mock simulators need to be stateful so that
+        we can simulate retrieval"""
+        _create_failing_mock_simulator.cache_clear()
+        _create_mock_simulator.cache_clear()
