@@ -3,16 +3,23 @@ from logging import getLogger
 from typing import Any, Dict, Iterable, List, MutableMapping, Tuple, cast
 
 import numpy as np
+import pandas as pd
 from qiskit import QiskitError, QuantumCircuit
 from qiskit.circuit import Parameter
 from tqdm import tqdm
 
 from ..batching import execute_in_batches
 from ..common_models import Backend, BackendDescription
-from ..direct_sum import assemble_direct_sum_circuits
+from ..direct_sum import (
+    assemble_direct_sum_circuits,
+    compute_probabilities_from_direct_sum_measurements,
+)
 from ..jobs import retrieve_jobs
 from ..limits import get_limits
-from ..postselection import assemble_postselection_circuits
+from ..postselection import (
+    assemble_postselection_circuits,
+    compute_probabilities_from_postselection_measurements,
+)
 from ._components import FourierComponents
 from ._models import (
     BatchResult,
@@ -432,3 +439,31 @@ def resolve_results(async_results: FourierDiscriminationResult) -> FourierDiscri
     ]
 
     return FourierDiscriminationResult(metadata=async_results.metadata, results=resolved)
+
+
+def tabulate_results(sync_results: FourierDiscriminationResult) -> pd.DataFrame:
+    compute_probabilities = (
+        compute_probabilities_from_postselection_measurements
+        if sync_results.metadata.experiment.method.lower() == "postselection"
+        else compute_probabilities_from_direct_sum_measurements
+    )
+
+    rows = [
+        (
+            res_for_qubits.target,
+            res_for_qubits.ancilla,
+            entry.phi,
+            compute_probabilities(
+                **{
+                    f"{name}_counts": info.histogram
+                    for name, info in entry.circuits_for_angle.items()
+                }
+            ),  # type: ignore
+        )
+        for res_for_qubits in cast(List[SingleResult], sync_results.results)
+        for entry in res_for_qubits.measurement_counts
+    ]
+
+    columns = ["target", "ancilla", "phi", "disc_prob"]
+
+    return pd.DataFrame(data=rows, columns=columns)

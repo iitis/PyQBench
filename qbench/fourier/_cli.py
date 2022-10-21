@@ -4,7 +4,12 @@ from argparse import FileType
 from yaml import safe_dump, safe_load
 
 from ..common_models import BackendDescriptionRoot
-from ._experiment_runner import fetch_statuses, resolve_results, run_experiment
+from ._experiment_runner import (
+    fetch_statuses,
+    resolve_results,
+    run_experiment,
+    tabulate_results,
+)
 from ._models import FourierDiscriminationExperiment, FourierDiscriminationResult
 
 
@@ -32,7 +37,10 @@ def _resolve(args):
 
 
 def _tabulate(args):
-    print("Tabulating")
+    """Function executed when qbench disc-fourier tabulate is invoked."""
+    results = FourierDiscriminationResult(**safe_load(args.sync_results))
+    table = tabulate_results(results)
+    table.to_csv(args.output, index=False)
 
 
 def add_fourier_parser(parent_parser) -> None:
