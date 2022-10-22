@@ -1,6 +1,6 @@
 from collections import Counter, defaultdict
 from logging import getLogger
-from typing import Any, Dict, Iterable, List, MutableMapping, Tuple, Type, Union, cast
+from typing import Dict, Iterable, List, MutableMapping, Tuple, Type, Union, cast
 
 import numpy as np
 import pandas as pd
@@ -27,7 +27,6 @@ from ._models import (
     FourierDiscriminationExperiment,
     FourierDiscriminationSyncResult,
     QubitMitigationInfo,
-    ResultForAngle,
     SingleResult,
 )
 
@@ -55,7 +54,7 @@ def _sweep_circuits(
     phi: Parameter,
     phi_range: np.ndarray,
     num_shots: int,
-) -> List[ResultForAngle]:
+) -> List[dict]:
     """Run each circuit in the mapping with different value bound to phi and return measurements.
 
     Suppose circuits_map is of the form {key1: circuit1, key2: circuit2} and there are three
@@ -81,12 +80,12 @@ def _sweep_circuits(
             key: circuit.bind_parameters({phi: phi_}) for key, circuit in circuits_map.items()
         }
 
-        _partial_result = {
-            key: {"histogram": backend.run(circuit, shots=num_shots).result().get_counts()}
+        _partial_result = [
+            {"name": key, "histogram": backend.run(circuit, shots=num_shots).result().get_counts()}
             for key, circuit in bound_circuits_map.items()
-        }
+        ]
 
-        results.append(ResultForAngle(phi=phi_, circuits_for_angle=_partial_result))
+        results.append({"phi": phi_, "results_per_circuit": _partial_result})
     return results
 
 
@@ -96,7 +95,6 @@ def _extract_result_from_job(job, target, ancilla, i):
     except QiskitError:
         return None
     try:
-
         props = job.properties()
         result["mitigation_info"] = {
             "target": QubitMitigationInfo.parse_obj(
@@ -124,7 +122,7 @@ def _execute_direct_sum_experiment(
     phi_range: np.ndarray,
     num_shots: int,
     components: FourierComponents,
-) -> SingleResult:
+) -> List[SingleResult]:
     """Execute Fourier discrimination experiment using direct sum method.
 
     .. note::
@@ -161,9 +159,10 @@ def _execute_direct_sum_experiment(
         num_shots=num_shots,
     )
 
-    return SingleResult.parse_obj(
-        {"target": target, "ancilla": ancilla, "measurement_counts": results}
-    )
+    return [
+        SingleResult.parse_obj({"target": target, "ancilla": ancilla, **result_for_angle})
+        for result_for_angle in results
+    ]
 
 
 def _execute_postselection_experiment(
@@ -173,7 +172,7 @@ def _execute_postselection_experiment(
     phi_range: np.ndarray,
     num_shots: int,
     components: FourierComponents,
-) -> SingleResult:
+) -> List[SingleResult]:
     """Execute Fourier discrimination experiment using postselection method.
 
     .. note::
@@ -211,9 +210,10 @@ def _execute_postselection_experiment(
         num_shots=num_shots,
     )
 
-    return SingleResult.parse_obj(
-        {"target": target, "ancilla": ancilla, "measurement_counts": results}
-    )
+    return [
+        SingleResult.parse_obj({"target": target, "ancilla": ancilla, **result_for_angle})
+        for result_for_angle in results
+    ]
 
 
 def _run_experiment_synchronously(
@@ -241,7 +241,9 @@ def _run_experiment_synchronously(
         _execute = _execute_postselection_experiment
 
     return [
-        _execute(
+        entry
+        for pair in tqdm(experiment.qubits, leave=False, desc="Qubit pair")
+        for entry in _execute(
             backend,
             pair.target,
             pair.ancilla,
@@ -249,7 +251,6 @@ def _run_experiment_synchronously(
             experiment.num_shots,
             components,
         )
-        for pair in tqdm(experiment.qubits, leave=False, desc="Qubit pair")
     ]
 
 
@@ -413,9 +414,7 @@ def resolve_results(
     logger.info(f"Fetching total of {len(job_ids)} jobs")
     jobs_mapping = {job.job_id(): job for job in retrieve_jobs(backend, job_ids)}
 
-    result_dict: MutableMapping[
-        Tuple[int, int], MutableMapping[float, MutableMapping[str, Any]]
-    ] = defaultdict(lambda: defaultdict(dict))
+    result_dict: MutableMapping[Tuple[int, int, float], List[dict]] = defaultdict(lambda: list())
 
     all_jobs_succeeded = True
 
@@ -423,7 +422,7 @@ def resolve_results(
         for i, (target, ancilla, name, phi) in enumerate(entry.keys):
             result = _extract_result_from_job(jobs_mapping[entry.job_id], target, ancilla, i)
             if result is not None:
-                result_dict[(target, ancilla)][phi][name] = result
+                result_dict[(target, ancilla, phi)].append({"name": name, **result})
             else:
                 all_jobs_succeeded = False
 
@@ -433,21 +432,8 @@ def resolve_results(
         )
 
     resolved = [
-        {
-            "target": target,
-            "ancilla": ancilla,
-            "measurement_counts": [
-                {
-                    "phi": phi,
-                    "circuits_for_angle": {
-                        name: result_for_circuit
-                        for name, result_for_circuit in result_for_circ.items()
-                    },
-                }
-                for phi, result_for_circ in result_for_phi.items()
-            ],
-        }
-        for (target, ancilla), result_for_phi in result_dict.items()
+        {"target": target, "ancilla": ancilla, "phi": phi, "results_per_circuit": results}
+        for (target, ancilla, phi), results in result_dict.items()
     ]
 
     return FourierDiscriminationSyncResult.parse_obj(
@@ -464,18 +450,14 @@ def tabulate_results(sync_results: FourierDiscriminationSyncResult) -> pd.DataFr
 
     rows = [
         (
-            res_for_qubits.target,
-            res_for_qubits.ancilla,
+            entry.target,
+            entry.ancilla,
             entry.phi,
             compute_probabilities(
-                **{
-                    f"{name}_counts": info.histogram
-                    for name, info in entry.circuits_for_angle.items()
-                }
+                **{f"{info.name}_counts": info.histogram for info in entry.results_per_circuit}
             ),  # type: ignore
         )
-        for res_for_qubits in sync_results.results
-        for entry in res_for_qubits.measurement_counts
+        for entry in sync_results.results
     ]
 
     columns = ["target", "ancilla", "phi", "disc_prob"]

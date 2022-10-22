@@ -1,13 +1,10 @@
 """Testing utilities related qbench.fourier packager."""
-from typing import List, cast
-
 import numpy as np
 
 from qbench.fourier import (
     FourierDiscriminationExperiment,
     FourierDiscriminationSyncResult,
 )
-from qbench.fourier._models import SingleResult
 
 
 def assert_sync_results_contain_data_for_all_circuits(
@@ -22,20 +19,19 @@ def assert_sync_results_contain_data_for_all_circuits(
     :raise: AssertionError if measurements for some combination of (target, ancilla, phi) are
      missing.
     """
-    actual_qubit_pairs = [
-        (entry.target, entry.ancilla) for entry in cast(List[SingleResult], results.results)
+    expected_keys = [
+        (pair.target, pair.ancilla, phi)
+        for pair in experiment.qubits
+        for phi in np.linspace(
+            experiment.angles.start, experiment.angles.stop, experiment.angles.num_steps
+        )
     ]
 
-    expected_qubit_pairs = [(entry.target, entry.ancilla) for entry in experiment.qubits]
+    actual_keys = [(entry.target, entry.ancilla, entry.phi) for entry in results.results]
 
-    assert set(actual_qubit_pairs) == set(expected_qubit_pairs)
-    assert len(actual_qubit_pairs) == len(expected_qubit_pairs)
+    def _are_equal(actual, expected):
+        return actual[0:2] == expected[0:2] and abs(actual[2] - expected[2]) < 1e-6
 
-    expected_angles = np.linspace(
-        experiment.angles.start, experiment.angles.stop, experiment.angles.num_steps
-    )
-
-    assert all(
-        sorted([counts.phi for counts in entry.measurement_counts]) == sorted(expected_angles)
-        for entry in cast(List[SingleResult], results.results)
+    assert len(actual_keys) == len(expected_keys) and all(
+        _are_equal(actual, expected) for actual, expected in zip(expected_keys, actual_keys)
     )

@@ -22,43 +22,49 @@ metadata:
 results:
   - target: 0
     ancilla: 1
-    measurement_counts:
-      - phi: 0
-        circuits_for_angle:
-          u:
-              histogram: {"00": 20, "01": 80}
-          id:
-              histogram: {"00": 10, "01": 90}
-      - phi: 1
-        circuits_for_angle:
-            u:
-                histogram:  {"00": 15, "11": 85}
-            id:
-                histogram:  {"00": 25, "11": 75}
-      - phi: 2
-        circuits_for_angle:
-            u:
-                histogram: {"10": 40, "11": 40, "01": 20}
-            id:
-                histogram: {"10": 30, "11": 50, "01": 20}
+    phi: 0
+    results_per_circuit:
+      - name: u
+        histogram: {"00": 20, "01": 80}
+      - name: id
+        histogram: {"00": 10, "01": 90}
+  - target: 0
+    ancilla: 1
+    phi: 1
+    results_per_circuit:
+      - name: u
+        histogram:  {"00": 15, "11": 85}
+      - name: id
+        histogram:  {"00": 25, "11": 75}
+  - target: 0
+    ancilla: 1
+    phi: 2
+    results_per_circuit:
+      - name: u
+        histogram: {"10": 40, "11": 40, "01": 20}
+      - name: id
+        histogram: {"10": 30, "11": 50, "01": 20}
   - target: 1
     ancilla: 2
-    measurement_counts:
-      - phi: 0
-        circuits_for_angle:
-          u:
-              histogram: {"00": 25, "01": 75}
-          id:
-              histogram: {"00": 35, "01": 65}
-      - phi: 1
-        circuits_for_angle:
-          u:
-              histogram: {"00": 15, "11": 85}
-          id:
-              histogram: {"00": 35, "11": 65}
-      - phi: 2
-        circuits_for_angle:
-          u:
-              histogram: {"10": 40, "11": 40, "01": 20}
-          id:
-              histogram: {"10": 60, "11": 40}
+    phi: 0
+    results_per_circuit:
+      - name: u
+        histogram: {"00": 25, "01": 75}
+      - name: id
+        histogram: {"00": 35, "01": 65}
+  - target: 1
+    ancilla: 2
+    phi: 1
+    results_per_circuit:
+      - name: u
+        histogram: {"00": 15, "11": 85}
+      - name: id
+        histogram: {"00": 35, "11": 65}
+  - target: 1
+    ancilla: 2
+    phi: 2
+    results_per_circuit:
+      - name: u
+        histogram: {"10": 40, "11": 40, "01": 20}
+      - name: id
+        histogram: {"10": 60, "11": 40}

@@ -131,15 +131,13 @@ def test_main_entrypoint_with_disc_fourier_command_and_failing_backend(tmp_path,
     # We have total of 3 * 3 * 2 = 18 circuits to run. Mock backend has limit of 2 circuits per
     # job, so we expect 14 circuits to be present in results
 
-    assert (
-        sum(
-            1
-            for entry in results.results
-            for counts in entry.measurement_counts
-            for _ in counts.circuits_for_angle
-        )
-        == 14
-    )
+    all_keys = [
+        (entry.target, entry.ancilla, entry.phi, sub_entry.name)
+        for entry in results.results
+        for sub_entry in entry.results_per_circuit
+    ]
+
+    assert len(all_keys) == 14
 
     captured = capsys.readouterr()
     status_output = ast.literal_eval(captured.out)

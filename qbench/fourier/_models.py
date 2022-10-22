@@ -1,4 +1,4 @@
-from typing import Dict, List, Literal, Optional, Tuple
+from typing import List, Literal, Optional, Tuple
 
 from pydantic import validator
 
@@ -45,19 +45,16 @@ class MitigationInfo(BaseModel):
 
 
 class ResultForCircuit(BaseModel):
+    name: str
     histogram: SynchronousHistogram
-    mitigation_info: Optional[MitigationInfo] = None
-
-
-class ResultForAngle(BaseModel):
-    phi: float
-    circuits_for_angle: Dict[str, ResultForCircuit]
+    mitigation_info: Optional[MitigationInfo]
 
 
 class SingleResult(BaseModel):
     target: Qubit
     ancilla: Qubit
-    measurement_counts: List[ResultForAngle]
+    phi: float
+    results_per_circuit: List[ResultForCircuit]
 
 
 class BatchResult(BaseModel):
