@@ -13,7 +13,11 @@ from qbench.common_models import (
     IBMQBackendDescription,
     SimpleBackendDescription,
 )
-from qbench.fourier import FourierDiscriminationExperiment, FourierDiscriminationResult
+from qbench.fourier import (
+    FourierDiscriminationExperiment,
+    FourierDiscriminationSyncResult,
+)
+from qbench.fourier._models import FourierDiscriminationAsyncResult
 
 EXAMPLES_PATH = Path(__file__).parent / "../examples"
 
@@ -257,13 +261,13 @@ class TestExampleYamlInputsAreMatchingModels:
         path = EXAMPLES_PATH / filename
         with open(path) as f:
             data = safe_load(f)
-            FourierDiscriminationResult(**data)
+            FourierDiscriminationSyncResult(**data)
 
     def test_fourier_discrimination_async_result_matches_model(self):
         path = EXAMPLES_PATH / "fourier-discrimination-async-result.yml"
         with open(path) as f:
             data = safe_load(f)
-            FourierDiscriminationResult(**data)
+            FourierDiscriminationAsyncResult(**data)
 
     def tests_ibmq_backend_input_matches_model(self):
         path = EXAMPLES_PATH / "ibmq-backend.yml"

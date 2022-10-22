@@ -10,7 +10,11 @@ from ._experiment_runner import (
     run_experiment,
     tabulate_results,
 )
-from ._models import FourierDiscriminationExperiment, FourierDiscriminationResult
+from ._models import (
+    FourierDiscriminationAsyncResult,
+    FourierDiscriminationExperiment,
+    FourierDiscriminationSyncResult,
+)
 
 
 def _run_benchmark(args):
@@ -24,21 +28,21 @@ def _run_benchmark(args):
 
 def _status(args):
     """Function executed when qbench disc-fourier status is invoked."""
-    results = FourierDiscriminationResult(**safe_load(args.async_results))
+    results = FourierDiscriminationAsyncResult(**safe_load(args.async_results))
     counts = fetch_statuses(results)
     print(counts)
 
 
 def _resolve(args):
     """Function executed when qbench disc-fourier resolve is invoked."""
-    results = FourierDiscriminationResult(**safe_load(args.async_results))
+    results = FourierDiscriminationAsyncResult(**safe_load(args.async_results))
     resolved = resolve_results(results)
     safe_dump(resolved.dict(), args.output, sort_keys=False)
 
 
 def _tabulate(args):
     """Function executed when qbench disc-fourier tabulate is invoked."""
-    results = FourierDiscriminationResult(**safe_load(args.sync_results))
+    results = FourierDiscriminationSyncResult(**safe_load(args.sync_results))
     table = tabulate_results(results)
     table.to_csv(args.output, index=False)
 

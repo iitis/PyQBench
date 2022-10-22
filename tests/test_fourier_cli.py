@@ -6,7 +6,11 @@ from yaml import safe_dump, safe_load
 
 from qbench.cli import main
 from qbench.common_models import SimpleBackendDescription
-from qbench.fourier import FourierDiscriminationExperiment, FourierDiscriminationResult
+from qbench.fourier import (
+    FourierDiscriminationExperiment,
+    FourierDiscriminationSyncResult,
+)
+from qbench.fourier._models import FourierDiscriminationAsyncResult
 from qbench.fourier.testing import assert_sync_results_contain_data_for_all_circuits
 from qbench.testing import MockProvider
 
@@ -77,10 +81,10 @@ def test_main_entrypoint_with_disc_fourier_command(tmp_path, capsys):
         experiment = FourierDiscriminationExperiment.parse_obj(safe_load(stream))
 
     with open(resolved_output_path) as stream:
-        results = FourierDiscriminationResult.parse_obj(safe_load(stream))
+        results = FourierDiscriminationSyncResult.parse_obj(safe_load(stream))
 
     with open(async_output_path) as stream:
-        async_output = FourierDiscriminationResult.parse_obj(safe_load(stream))
+        async_output = FourierDiscriminationAsyncResult.parse_obj(safe_load(stream))
 
     assert_sync_results_contain_data_for_all_circuits(experiment, results)
 
@@ -116,10 +120,10 @@ def test_main_entrypoint_with_disc_fourier_command_and_failing_backend(tmp_path,
         main(["disc-fourier", "resolve", str(async_output_path), str(resolved_output_path)])
 
     with open(resolved_output_path) as stream:
-        results = FourierDiscriminationResult.parse_obj(safe_load(stream))
+        results = FourierDiscriminationSyncResult.parse_obj(safe_load(stream))
 
     with open(async_output_path) as stream:
-        async_output = FourierDiscriminationResult.parse_obj(safe_load(stream))
+        async_output = FourierDiscriminationAsyncResult.parse_obj(safe_load(stream))
 
     # The only difference compared to the previous test is that now we know that some jobs failed
     # Order of circuits run is subject to change but we know (because of how mock backend works)

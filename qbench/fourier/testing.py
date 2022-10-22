@@ -3,12 +3,15 @@ from typing import List, cast
 
 import numpy as np
 
-from qbench.fourier import FourierDiscriminationExperiment, FourierDiscriminationResult
+from qbench.fourier import (
+    FourierDiscriminationExperiment,
+    FourierDiscriminationSyncResult,
+)
 from qbench.fourier._models import SingleResult
 
 
 def assert_sync_results_contain_data_for_all_circuits(
-    experiment: FourierDiscriminationExperiment, results: FourierDiscriminationResult
+    experiment: FourierDiscriminationExperiment, results: FourierDiscriminationSyncResult
 ) -> None:
     """Verify synchronous result of computation has measurements for each qubits pair and phi.
 

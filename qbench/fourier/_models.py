@@ -1,4 +1,4 @@
-from typing import Dict, List, Literal, Optional, Tuple, Union
+from typing import Dict, List, Literal, Optional, Tuple
 
 from pydantic import validator
 
@@ -65,6 +65,11 @@ class BatchResult(BaseModel):
     keys: List[Tuple[int, int, str, float]]
 
 
-class FourierDiscriminationResult(BaseModel):
+class FourierDiscriminationSyncResult(BaseModel):
     metadata: FourierDiscriminationMetadata
-    results: Union[List[SingleResult], List[BatchResult]]
+    results: List[SingleResult]
+
+
+class FourierDiscriminationAsyncResult(BaseModel):
+    metadata: FourierDiscriminationMetadata
+    results: List[BatchResult]

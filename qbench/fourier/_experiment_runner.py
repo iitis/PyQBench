@@ -1,6 +1,6 @@
 from collections import Counter, defaultdict
 from logging import getLogger
-from typing import Any, Dict, Iterable, List, MutableMapping, Tuple, cast
+from typing import Any, Dict, Iterable, List, MutableMapping, Tuple, Type, Union, cast
 
 import numpy as np
 import pandas as pd
@@ -23,8 +23,9 @@ from ..postselection import (
 from ._components import FourierComponents
 from ._models import (
     BatchResult,
+    FourierDiscriminationAsyncResult,
     FourierDiscriminationExperiment,
-    FourierDiscriminationResult,
+    FourierDiscriminationSyncResult,
     QubitMitigationInfo,
     ResultForAngle,
     SingleResult,
@@ -33,7 +34,7 @@ from ._models import (
 logger = getLogger("qbench")
 
 
-def _verify_results_are_async_or_fail(results: FourierDiscriminationResult) -> None:
+def _verify_results_are_async_or_fail(results: FourierDiscriminationSyncResult) -> None:
     if not all(isinstance(entry, BatchResult) for entry in results.results):
         logger.error("Specified file seems to contain results from synchronous experiment")
         exit(1)
@@ -160,7 +161,9 @@ def _execute_direct_sum_experiment(
         num_shots=num_shots,
     )
 
-    return SingleResult(target=target, ancilla=ancilla, measurement_counts=results)
+    return SingleResult.parse_obj(
+        {"target": target, "ancilla": ancilla, "measurement_counts": results}
+    )
 
 
 def _execute_postselection_experiment(
@@ -208,7 +211,9 @@ def _execute_postselection_experiment(
         num_shots=num_shots,
     )
 
-    return SingleResult(target=target, ancilla=ancilla, measurement_counts=results)
+    return SingleResult.parse_obj(
+        {"target": target, "ancilla": ancilla, "measurement_counts": results}
+    )
 
 
 def _run_experiment_synchronously(
@@ -322,7 +327,7 @@ def _run_experiment_asynchronously(
 
 def run_experiment(
     experiment: FourierDiscriminationExperiment, backend_description: BackendDescription
-) -> FourierDiscriminationResult:
+) -> Union[FourierDiscriminationSyncResult, FourierDiscriminationAsyncResult]:
     """Run experiment on given backend.
 
     :param experiment: experiment to be run.
@@ -350,7 +355,16 @@ def run_experiment(
     )
 
     logger.info("Completed successfully")
-    return FourierDiscriminationResult(
+
+    result_cls: Union[
+        Type[FourierDiscriminationAsyncResult], Type[FourierDiscriminationSyncResult]
+    ] = (
+        FourierDiscriminationAsyncResult
+        if backend_description.asynchronous
+        else FourierDiscriminationSyncResult
+    )
+
+    return result_cls(
         metadata={
             "experiment": experiment,
             "backend_description": backend_description,
@@ -359,20 +373,18 @@ def run_experiment(
     )
 
 
-def fetch_statuses(async_results: FourierDiscriminationResult) -> Dict[str, int]:
+def fetch_statuses(async_results: FourierDiscriminationAsyncResult) -> Dict[str, int]:
     """Fetch statuses of all jobs submitted for asynchronous execution of the experiment.
 
     :param async_results: object describing results of asynchronous execution.
      If the result object already contains histograms, an error will be raised.
     :return: dictionary mapping status name to number of its occurrences.
     """
-    _verify_results_are_async_or_fail(async_results)
-
     logger.info("Enabling account and creating backend")
     backend = async_results.metadata.backend_description.create_backend()
 
     logger.info("Reading jobs ids from the input file")
-    job_ids = [entry.job_id for entry in cast(List[BatchResult], async_results.results)]
+    job_ids = [entry.job_id for entry in async_results.results]
 
     # logger.info(f"Fetching total of {len(job_ids_to_fetch)} jobs")
     # jobs = backend.jobs(db_filter={"id": {"inq": job_ids_to_fetch}})
@@ -381,7 +393,9 @@ def fetch_statuses(async_results: FourierDiscriminationResult) -> Dict[str, int]
     return dict(Counter(job.status().name for job in jobs))
 
 
-def resolve_results(async_results: FourierDiscriminationResult) -> FourierDiscriminationResult:
+def resolve_results(
+    async_results: FourierDiscriminationAsyncResult,
+) -> FourierDiscriminationSyncResult:
     """Resolve results of asynchronous execution.
 
     :param async_results: object describing results of asynchronous execution.
@@ -390,8 +404,6 @@ def resolve_results(async_results: FourierDiscriminationResult) -> FourierDiscri
      returned directly from a synchronous execution of FourierDiscrimination experiment. In
      particular, it contains histograms of btstrings for each circuit run durign the experiment.
     """
-    _verify_results_are_async_or_fail(async_results)
-
     logger.info("Enabling account and creating backend")
     backend = async_results.metadata.backend_description.create_backend()
 
@@ -407,7 +419,7 @@ def resolve_results(async_results: FourierDiscriminationResult) -> FourierDiscri
 
     all_jobs_succeeded = True
 
-    for entry in cast(List[BatchResult], async_results.results):
+    for entry in async_results.results:
         for i, (target, ancilla, name, phi) in enumerate(entry.keys):
             result = _extract_result_from_job(jobs_mapping[entry.job_id], target, ancilla, i)
             if result is not None:
@@ -438,10 +450,12 @@ def resolve_results(async_results: FourierDiscriminationResult) -> FourierDiscri
         for (target, ancilla), result_for_phi in result_dict.items()
     ]
 
-    return FourierDiscriminationResult(metadata=async_results.metadata, results=resolved)
+    return FourierDiscriminationSyncResult.parse_obj(
+        {"metadata": async_results.metadata, "results": resolved}
+    )
 
 
-def tabulate_results(sync_results: FourierDiscriminationResult) -> pd.DataFrame:
+def tabulate_results(sync_results: FourierDiscriminationSyncResult) -> pd.DataFrame:
     compute_probabilities = (
         compute_probabilities_from_postselection_measurements
         if sync_results.metadata.experiment.method.lower() == "postselection"
@@ -460,7 +474,7 @@ def tabulate_results(sync_results: FourierDiscriminationResult) -> pd.DataFrame:
                 }
             ),  # type: ignore
         )
-        for res_for_qubits in cast(List[SingleResult], sync_results.results)
+        for res_for_qubits in sync_results.results
         for entry in res_for_qubits.measurement_counts
     ]
 

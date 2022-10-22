@@ -65,19 +65,3 @@ class TestASynchronousExecutionOfExperiment:
         resolved = resolve_results(results)
 
         assert_sync_results_contain_data_for_all_circuits(experiment, resolved)
-
-    def test_obtaining_status_for_synchronous_experiment_terminates_program(
-        self, experiment, sync_backend_description
-    ):
-        results = run_experiment(experiment, sync_backend_description)
-
-        with pytest.raises(SystemExit):
-            fetch_statuses(results)
-
-    def test_resolving_result_of_synchronous_experiment_terminates_program(
-        self, experiment, sync_backend_description
-    ):
-        results = run_experiment(experiment, sync_backend_description)
-
-        with pytest.raises(SystemExit):
-            resolve_results(results)
