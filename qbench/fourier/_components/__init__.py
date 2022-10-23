@@ -2,7 +2,7 @@ from typing import Optional, Union
 
 from qiskit.circuit import Instruction, Parameter
 
-from qbench.fourier import _generic, _ibmq, _lucy, _rigetti
+from . import _generic, _ibmq, _lucy, _rigetti
 
 
 class FourierComponents:
