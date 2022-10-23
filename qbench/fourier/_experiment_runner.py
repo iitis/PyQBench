@@ -4,6 +4,7 @@ from typing import Dict, Iterable, List, Optional, Tuple, Union, cast
 
 import numpy as np
 import pandas as pd
+from mthree import M3Mitigation
 from qiskit import QiskitError, QuantumCircuit
 from qiskit.circuit import Parameter
 from qiskit.providers import JobV1
@@ -43,6 +44,25 @@ def _log_fourier_experiment(experiment: FourierDiscriminationExperiment) -> None
     logger.info("Gateset: %s", experiment.gateset)
 
 
+def _matrix_from_mitigation_info(info: QubitMitigationInfo) -> np.ndarray:
+    return np.array(
+        [
+            [1 - info.prob_meas1_prep0, info.prob_meas0_prep1],
+            [info.prob_meas1_prep0, 1 - info.prob_meas0_prep1],
+        ]
+    )
+
+
+def _mitigate(counts, target, ancilla, backend, mitigation_info):
+    mitigator = M3Mitigation(backend)
+    matrices = [None for _ in range(backend.configuration().num_qubits)]
+    matrices[target] = _matrix_from_mitigation_info(mitigation_info["target"])
+    matrices[ancilla] = _matrix_from_mitigation_info(mitigation_info["ancilla"])
+    mitigator.cals_from_matrices(matrices)
+    result = mitigator.apply_correction(counts, [target, ancilla])
+    return {key: float(value) for key, value in result.items()}
+
+
 def _extract_result_from_job(
     job: JobV1, target: int, ancilla: int, i: int, name: str
 ) -> Optional[ResultForCircuit]:
@@ -56,6 +76,9 @@ def _extract_result_from_job(
             "target": QubitMitigationInfo.from_job_properties(props, target),
             "ancilla": QubitMitigationInfo.from_job_properties(props, ancilla),
         }
+        result["mitigated_histogram"] = _mitigate(
+            result["histogram"], target, ancilla, job.backend(), result["mitigation_info"]
+        )
     except AttributeError:
         pass
     return ResultForCircuit.parse_obj(result)
@@ -241,18 +264,35 @@ def tabulate_results(sync_results: FourierDiscriminationSyncResult) -> pd.DataFr
         else compute_probabilities_from_direct_sum_measurements
     )
 
-    rows = [
-        (
+    def _make_row(entry):
+        data = [
             entry.target,
             entry.ancilla,
             entry.phi,
             compute_probabilities(
                 **{f"{info.name}_counts": info.histogram for info in entry.results_per_circuit}
             ),  # type: ignore
-        )
-        for entry in sync_results.data
-    ]
+        ]
+        try:
+            data.append(
+                compute_probabilities(
+                    **{
+                        f"{info.name}_counts": info.mitigated_histogram
+                        for info in entry.results_per_circuit
+                    }
+                ),  # type: ignore
+            )
+        except AttributeError:
+            pass  # totally acceptable, not all results have mitigation info
+        return data
 
-    columns = ["target", "ancilla", "phi", "disc_prob"]
+    rows = [_make_row(entry) for entry in sync_results.data]
+
+    # We assume that either all circuits have mitigation info, or none of th em has
+    columns = (
+        ["target", "ancilla", "phi", "disc_prob"]
+        if len(rows[0]) == 4
+        else ["target", "ancilla", "phi", "disc_prob", "mit_disc_prob"]
+    )
 
     return pd.DataFrame(data=rows, columns=columns)

@@ -1,4 +1,4 @@
-from typing import List, Literal, Optional, Tuple, Type, TypeVar
+from typing import Any, List, Literal, Optional, Tuple, Type, TypeVar
 
 from pydantic import validator
 
@@ -60,6 +60,7 @@ class ResultForCircuit(BaseModel):
     name: str
     histogram: SynchronousHistogram
     mitigation_info: Optional[MitigationInfo]
+    mitigated_histogram: Optional[Any]
 
 
 class SingleResult(BaseModel):
