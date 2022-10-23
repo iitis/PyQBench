@@ -15,7 +15,7 @@ def assert_sync_results_contain_data_for_all_circuits(
     :param experiment: Fourier discrimination experiment. Note that this function does not take
      into account the method used in experiment, and only checks (target, ancilla) pairs ond
      values of phi parameter.
-    :param results: results of execution of synchronous experiment.
+    :param results: data of execution of synchronous experiment.
     :raise: AssertionError if measurements for some combination of (target, ancilla, phi) are
      missing.
     """
@@ -27,7 +27,7 @@ def assert_sync_results_contain_data_for_all_circuits(
         )
     ]
 
-    actual_keys = [(entry.target, entry.ancilla, entry.phi) for entry in results.results]
+    actual_keys = [(entry.target, entry.ancilla, entry.phi) for entry in results.data]
 
     def _are_equal(actual, expected):
         return actual[0:2] == expected[0:2] and abs(actual[2] - expected[2]) < 1e-6

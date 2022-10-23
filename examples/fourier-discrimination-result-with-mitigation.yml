@@ -19,7 +19,7 @@ metadata:
       - "braket_dm"
     run_options:
       verbatim: true
-results:
+data:
   - target: 0
     ancilla: 1
     phi: 0

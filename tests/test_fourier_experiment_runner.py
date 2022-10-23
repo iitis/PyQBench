@@ -56,7 +56,7 @@ class TestASynchronousExecutionOfExperiment:
         result = run_experiment(experiment, async_backend_description)
         statuses = fetch_statuses(result)
 
-        assert len(result.results) == sum(statuses.values())
+        assert len(result.data) == sum(statuses.values())
 
     def test_resolving_results_gives_object_with_histograms_for_all_circuits(
         self, experiment, async_backend_description

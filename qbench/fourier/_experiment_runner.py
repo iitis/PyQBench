@@ -125,7 +125,7 @@ def _resolve_batches(batches: Iterable[BatchJob]) -> List[SingleResult]:
 
     if num_failed:
         logger.warning(
-            "Some jobs have failed. Examine the output file to determine which results are missing."
+            "Some jobs have failed. Examine the output file to determine which data are missing."
         )
 
     return [
@@ -144,7 +144,7 @@ def run_experiment(
     :param experiment: experiment to be run.
     :param backend_description: object describing backend and possibly options that should
      be used when executing circuits.
-    :return: Object describing the experiment results. For synchronous execution, this object
+    :return: Object describing the experiment data. For synchronous execution, this object
      contains histogram of measurements for all the circuits. For asynchronous execution,
      this object contains mapping between job ids and the sequence of circuits run in a given job.
     """
@@ -174,21 +174,21 @@ def run_experiment(
         return FourierDiscriminationAsyncResult.parse_obj(
             {
                 "metadata": metadata,
-                "results": [
+                "data": [
                     BatchResult(job_id=batch.job.job_id(), keys=batch.keys) for batch in batches
                 ],
             }
         )
     else:
         return FourierDiscriminationSyncResult.parse_obj(
-            {"metadata": metadata, "results": _resolve_batches(batches)}
+            {"metadata": metadata, "data": _resolve_batches(batches)}
         )
 
 
 def fetch_statuses(async_results: FourierDiscriminationAsyncResult) -> Dict[str, int]:
     """Fetch statuses of all jobs submitted for asynchronous execution of the experiment.
 
-    :param async_results: object describing results of asynchronous execution.
+    :param async_results: object describing data of asynchronous execution.
      If the result object already contains histograms, an error will be raised.
     :return: dictionary mapping status name to number of its occurrences.
     """
@@ -196,7 +196,7 @@ def fetch_statuses(async_results: FourierDiscriminationAsyncResult) -> Dict[str,
     backend = async_results.metadata.backend_description.create_backend()
 
     logger.info("Reading jobs ids from the input file")
-    job_ids = [entry.job_id for entry in async_results.results]
+    job_ids = [entry.job_id for entry in async_results.data]
 
     # logger.info(f"Fetching total of {len(job_ids_to_fetch)} jobs")
     # jobs = backend.jobs(db_filter={"id": {"inq": job_ids_to_fetch}})
@@ -208,11 +208,11 @@ def fetch_statuses(async_results: FourierDiscriminationAsyncResult) -> Dict[str,
 def resolve_results(
     async_results: FourierDiscriminationAsyncResult,
 ) -> FourierDiscriminationSyncResult:
-    """Resolve results of asynchronous execution.
+    """Resolve data of asynchronous execution.
 
-    :param async_results: object describing results of asynchronous execution.
+    :param async_results: object describing data of asynchronous execution.
      If the result object already contains histograms, an error will be raised.
-    :return: Object containing resolved results. Format of this object is the same as the one
+    :return: Object containing resolved data. Format of this object is the same as the one
      returned directly from a synchronous execution of FourierDiscrimination experiment. In
      particular, it contains histograms of btstrings for each circuit run durign the experiment.
     """
@@ -220,17 +220,17 @@ def resolve_results(
     backend = async_results.metadata.backend_description.create_backend()
 
     logger.info("Reading jobs ids from the input file")
-    job_ids = [entry.job_id for entry in cast(List[BatchResult], async_results.results)]
+    job_ids = [entry.job_id for entry in cast(List[BatchResult], async_results.data)]
 
     logger.info(f"Fetching total of {len(job_ids)} jobs")
     jobs_mapping = {job.job_id(): job for job in retrieve_jobs(backend, job_ids)}
 
-    batches = [BatchJob(jobs_mapping[entry.job_id], entry.keys) for entry in async_results.results]
+    batches = [BatchJob(jobs_mapping[entry.job_id], entry.keys) for entry in async_results.data]
 
     resolved = _resolve_batches(batches)
 
     return FourierDiscriminationSyncResult.parse_obj(
-        {"metadata": async_results.metadata, "results": resolved}
+        {"metadata": async_results.metadata, "data": resolved}
     )
 
 
@@ -250,7 +250,7 @@ def tabulate_results(sync_results: FourierDiscriminationSyncResult) -> pd.DataFr
                 **{f"{info.name}_counts": info.histogram for info in entry.results_per_circuit}
             ),  # type: ignore
         )
-        for entry in sync_results.results
+        for entry in sync_results.data
     ]
 
     columns = ["target", "ancilla", "phi", "disc_prob"]

@@ -33,7 +33,7 @@ def main():
 
     fig, ax = plt.subplots()
     ax.plot(phis, theoretical_probs, color="red", label="theoretical_predictions")
-    ax.plot(phis, actual_probs, color="blue", label="actual results")
+    ax.plot(phis, actual_probs, color="blue", label="actual data")
     ax.legend()
 
     plt.show()

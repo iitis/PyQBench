@@ -91,7 +91,7 @@ def test_main_entrypoint_with_disc_fourier_command(tmp_path, capsys):
     captured = capsys.readouterr()
     status_output = ast.literal_eval(captured.out)
     assert isinstance(status_output, dict)
-    assert sum(status_output.values()) == len(async_output.results)
+    assert sum(status_output.values()) == len(async_output.data)
 
 
 @pytest.mark.usefixtures("create_experiment_file", "create_failing_backend_description")
@@ -129,11 +129,11 @@ def test_main_entrypoint_with_disc_fourier_command_and_failing_backend(tmp_path,
     # Order of circuits run is subject to change but we know (because of how mock backend works)
     # that two jobs failed.
     # We have total of 3 * 3 * 2 = 18 circuits to run. Mock backend has limit of 2 circuits per
-    # job, so we expect 14 circuits to be present in results
+    # job, so we expect 14 circuits to be present in data
 
     all_keys = [
         (entry.target, entry.ancilla, entry.phi, sub_entry.name)
-        for entry in results.results
+        for entry in results.data
         for sub_entry in entry.results_per_circuit
     ]
 
@@ -142,9 +142,9 @@ def test_main_entrypoint_with_disc_fourier_command_and_failing_backend(tmp_path,
     captured = capsys.readouterr()
     status_output = ast.literal_eval(captured.out)
     assert isinstance(status_output, dict)
-    assert sum(status_output.values()) == len(async_output.results)
+    assert sum(status_output.values()) == len(async_output.data)
 
     assert (
-        "Some jobs have failed. Examine the output file to determine which results are missing."
+        "Some jobs have failed. Examine the output file to determine which data are missing."
         in caplog.text
     )

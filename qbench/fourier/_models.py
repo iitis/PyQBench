@@ -76,9 +76,9 @@ class BatchResult(BaseModel):
 
 class FourierDiscriminationSyncResult(BaseModel):
     metadata: FourierDiscriminationMetadata
-    results: List[SingleResult]
+    data: List[SingleResult]
 
 
 class FourierDiscriminationAsyncResult(BaseModel):
     metadata: FourierDiscriminationMetadata
-    results: List[BatchResult]
+    data: List[BatchResult]

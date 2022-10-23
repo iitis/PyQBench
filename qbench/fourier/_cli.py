@@ -53,7 +53,7 @@ def add_fourier_parser(parent_parser) -> None:
     The added parser will have the following subcommands:
     - benchmark: run fourier discrimination experiment against given backend
     - status: check status of asynchronously executed experiment
-    - resolve: retrieve results of completed asynchronous job
+    - resolve: retrieve data of completed asynchronous job
 
     The exact syntax for using each command can be, as usually, obtained by running
     qbench disc-fourier <command> -h
@@ -114,15 +114,15 @@ def add_fourier_parser(parent_parser) -> None:
     resolve = subcommands.add_parser(
         "resolve",
         description=(
-            "Resolve asynchronous results into final histograms by querying remote jobs "
-            "specified in the results file."
+            "Resolve asynchronous data into final histograms by querying remote jobs "
+            "specified in the data file."
         ),
     )
 
     resolve.add_argument(
         "async_results",
         help=(
-            "path to the file with results of discrimination experiment which can be obtained by "
+            "path to the file with data of discrimination experiment which can be obtained by "
             "running qbench benchmark using backend with asynchronous flag equal to True."
         ),
         type=FileType("r"),
@@ -131,7 +131,7 @@ def add_fourier_parser(parent_parser) -> None:
     resolve.add_argument(
         "output",
         help=(
-            "path to the file where synchronous results resolved from the asynchronous one should "
+            "path to the file where synchronous data resolved from the asynchronous one should "
             "be saved."
         ),
         type=FileType("w"),
@@ -140,13 +140,13 @@ def add_fourier_parser(parent_parser) -> None:
     resolve.set_defaults(func=_resolve)
 
     status = subcommands.add_parser(
-        "status", description="Query the status of an asynchronous jobs from the results file."
+        "status", description="Query the status of an asynchronous jobs from the data file."
     )
 
     status.add_argument(
         "async_results",
         help=(
-            "path to the file with results of discrimination experiment which can be obtained by "
+            "path to the file with data of discrimination experiment which can be obtained by "
             "running qbench benchmark using backend with asynchronous flag equal to True."
         ),
         type=FileType("r"),
@@ -164,7 +164,7 @@ def add_fourier_parser(parent_parser) -> None:
     tabulate.add_argument(
         "sync_results",
         help=(
-            "path to the file with results of discrimination experiment. If the experiment was "
+            "path to the file with data of discrimination experiment. If the experiment was "
             "conducted using asynchronous backend, they need to be manually resolved."
         ),
         type=FileType("r"),
