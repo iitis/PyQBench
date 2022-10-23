@@ -1,6 +1,7 @@
 import ast
 import logging
 
+import pandas as pd
 import pytest
 from yaml import safe_dump, safe_load
 
@@ -11,8 +12,30 @@ from qbench.fourier import (
     FourierDiscriminationSyncResult,
 )
 from qbench.fourier._models import FourierDiscriminationAsyncResult
-from qbench.fourier.testing import assert_sync_results_contain_data_for_all_circuits
+from qbench.fourier.testing import (
+    assert_sync_results_contain_data_for_all_circuits,
+    assert_tabulated_results_contain_data_for_all_circuits,
+)
 from qbench.testing import MockProvider
+
+
+# Wrappers around main, so that we don't repeat 'main' over and over again
+def _benchmark(experiment_path, backend_path, output_path):
+    main(
+        [
+            "disc-fourier",
+            "benchmark",
+            str(experiment_path),
+            str(backend_path),
+            "--output",
+            str(output_path),
+        ]
+    )
+
+
+def _read(model_cls, path):
+    with open(path) as stream:
+        return model_cls.parse_obj(safe_load(stream))
 
 
 @pytest.fixture
@@ -57,34 +80,27 @@ def create_failing_backend_description(tmp_path):
 
 @pytest.mark.usefixtures("create_experiment_file", "create_backend_description")
 def test_main_entrypoint_with_disc_fourier_command(tmp_path, capsys):
+    MockProvider().reset_caches()
+
     experiment_path = tmp_path / "experiment.yml"
     backend_path = tmp_path / "backend.yml"
     async_output_path = tmp_path / "async_output.yml"
     resolved_output_path = tmp_path / "result.yml"
+    tabulated_output_path = tmp_path / "result.csv"
 
-    main(
-        [
-            "disc-fourier",
-            "benchmark",
-            str(experiment_path),
-            str(backend_path),
-            "--output",
-            str(async_output_path),
-        ]
-    )
+    _benchmark(experiment_path, backend_path, async_output_path)
 
     main(["disc-fourier", "status", str(async_output_path)])
 
     main(["disc-fourier", "resolve", str(async_output_path), str(resolved_output_path)])
 
-    with open(experiment_path) as stream:
-        experiment = FourierDiscriminationExperiment.parse_obj(safe_load(stream))
+    main(["disc-fourier", "tabulate", str(resolved_output_path), str(tabulated_output_path)])
 
-    with open(resolved_output_path) as stream:
-        results = FourierDiscriminationSyncResult.parse_obj(safe_load(stream))
+    experiment = _read(FourierDiscriminationExperiment, experiment_path)
+    results = _read(FourierDiscriminationSyncResult, resolved_output_path)
+    async_output = _read(FourierDiscriminationAsyncResult, async_output_path)
 
-    with open(async_output_path) as stream:
-        async_output = FourierDiscriminationAsyncResult.parse_obj(safe_load(stream))
+    result_df = pd.read_csv(tabulated_output_path)
 
     assert_sync_results_contain_data_for_all_circuits(experiment, results)
 
@@ -93,43 +109,38 @@ def test_main_entrypoint_with_disc_fourier_command(tmp_path, capsys):
     assert isinstance(status_output, dict)
     assert sum(status_output.values()) == len(async_output.data)
 
+    assert list(result_df.columns) == ["target", "ancilla", "phi", "disc_prob"]
+    assert_tabulated_results_contain_data_for_all_circuits(experiment, result_df)
+
 
 @pytest.mark.usefixtures("create_experiment_file", "create_failing_backend_description")
 def test_main_entrypoint_with_disc_fourier_command_and_failing_backend(tmp_path, capsys, caplog):
+    # The only difference compared to the previous test is that now we know that some jobs failed
+    # Order of circuits run is subject to change but we know (because of how mock backend works)
+    # that two jobs failed.
+    # We have total of 3 * 3 * 2 = 18 circuits to run. Mock backend has limit of 2 circuits per
+    # job, so we expect 14 circuits to be present in data
     MockProvider().reset_caches()
 
     experiment_path = tmp_path / "experiment.yml"
     backend_path = tmp_path / "failing-backend.yml"
     async_output_path = tmp_path / "async_output.yml"
     resolved_output_path = tmp_path / "result.yml"
+    tabulated_output_path = tmp_path / "result.csv"
 
-    main(
-        [
-            "disc-fourier",
-            "benchmark",
-            str(experiment_path),
-            str(backend_path),
-            "--output",
-            str(async_output_path),
-        ]
-    )
+    _benchmark(experiment_path, backend_path, async_output_path)
 
     main(["disc-fourier", "status", str(async_output_path)])
 
     with caplog.at_level(logging.WARNING):
         main(["disc-fourier", "resolve", str(async_output_path), str(resolved_output_path)])
 
-    with open(resolved_output_path) as stream:
-        results = FourierDiscriminationSyncResult.parse_obj(safe_load(stream))
+    main(["disc-fourier", "tabulate", str(resolved_output_path), str(tabulated_output_path)])
 
-    with open(async_output_path) as stream:
-        async_output = FourierDiscriminationAsyncResult.parse_obj(safe_load(stream))
+    results = _read(FourierDiscriminationSyncResult, resolved_output_path)
+    async_output = _read(FourierDiscriminationAsyncResult, async_output_path)
 
-    # The only difference compared to the previous test is that now we know that some jobs failed
-    # Order of circuits run is subject to change but we know (because of how mock backend works)
-    # that two jobs failed.
-    # We have total of 3 * 3 * 2 = 18 circuits to run. Mock backend has limit of 2 circuits per
-    # job, so we expect 14 circuits to be present in data
+    result_df = pd.read_csv(tabulated_output_path)
 
     all_keys = [
         (entry.target, entry.ancilla, entry.phi, sub_entry.name)
@@ -148,3 +159,9 @@ def test_main_entrypoint_with_disc_fourier_command_and_failing_backend(tmp_path,
         "Some jobs have failed. Examine the output file to determine which data are missing."
         in caplog.text
     )
+
+    # Note that generally one cannot expect to reconstruct N/2 probabilities from N circuits in
+    # the direct sum experiment. However, this test case is designed so that failing jobs
+    # constitute single computation of probability, and hence the succeeding ones are pairs
+    # needed for computing probabilities.
+    assert result_df.shape[0] == 7

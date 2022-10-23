@@ -1,8 +1,17 @@
 """Testing utilities related qbench.fourier packager."""
+import pandas as pd
+
 from qbench.fourier import (
     FourierDiscriminationExperiment,
     FourierDiscriminationSyncResult,
 )
+
+
+def _circuit_keys_equal(actual, expected):
+    return len(actual) == len(expected) and all(
+        key1[0:2] == key2[0:2] and abs(key1[2] - key2[2]) < 1e-7
+        for key1, key2 in zip(sorted(actual), sorted(expected))
+    )
 
 
 def assert_sync_results_contain_data_for_all_circuits(
@@ -20,9 +29,13 @@ def assert_sync_results_contain_data_for_all_circuits(
     expected_keys = list(experiment.enumerate_circuit_keys())
     actual_keys = [(entry.target, entry.ancilla, entry.phi) for entry in results.data]
 
-    def _are_equal(actual, expected):
-        return actual[0:2] == expected[0:2] and abs(actual[2] - expected[2]) < 1e-6
+    assert _circuit_keys_equal(actual_keys, expected_keys)
 
-    assert len(actual_keys) == len(expected_keys) and all(
-        _are_equal(actual, expected) for actual, expected in zip(expected_keys, actual_keys)
-    )
+
+def assert_tabulated_results_contain_data_for_all_circuits(
+    experiment: FourierDiscriminationExperiment, dataframe: pd.DataFrame
+):
+    expected_keys = list(experiment.enumerate_circuit_keys())
+    actual_keys = [(row[0], row[1], row[2]) for row in dataframe.itertuples(index=False)]
+
+    assert _circuit_keys_equal(actual_keys, expected_keys)

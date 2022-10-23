@@ -25,6 +25,15 @@ def sync_backend_description():
     )
 
 
+@pytest.fixture
+def backend_with_mitigation_info_description():
+    return SimpleBackendDescription(
+        provider="qbench.testing:MockProvider",
+        name="mock-backend-with-mitigation",
+        asynchronous=False,
+    )
+
+
 @pytest.fixture(params=["direct_sum", "postselection"])
 def experiment(request):
     return FourierDiscriminationExperiment.parse_obj(
@@ -78,3 +87,12 @@ class TestASynchronousExecutionOfExperiment:
         assert list(tab.columns) == ["target", "ancilla", "phi", "disc_prob"]
         actual_keys = [(row[0], row[1], row[2]) for row in tab.itertuples(index=False)]
         assert sorted(actual_keys) == sorted(expected_keys)
+
+    def test_tabulating_results_gives_frame_with_mitigated_histogram_if_such_info_is_available(
+        self, experiment, backend_with_mitigation_info_description
+    ):
+        result = run_experiment(experiment, backend_with_mitigation_info_description)
+
+        tab = tabulate_results(result)
+
+        assert list(tab.columns) == ["target", "ancilla", "phi", "disc_prob", "mit_disc_prob"]
