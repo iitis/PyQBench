@@ -46,6 +46,14 @@ def test_aspen_has_no_circuit_limit_and_100k_limit_of_shots(aws_provider):
     assert limits.max_circuits is None
 
 
+def test_obtaining_limits_of_unknown_aws_device_raises_an_error(aws_provider):
+    backend = aws_provider.get_backend("Aspen-M-2")
+    backend.name = "unknown_backend"
+
+    with pytest.raises(NotImplementedError):
+        get_limits(backend)
+
+
 @pytest.mark.parametrize("name", ["SV1", "dm1", "TN1"])
 def test_aws_simulators_have_no_circuit_limit_and_100k_limit_of_shots(aws_provider, name):
     simulator = aws_provider.get_backend(name)
