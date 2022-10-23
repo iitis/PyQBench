@@ -1,4 +1,4 @@
-from typing import List, Literal, Optional, Tuple
+from typing import List, Literal, Optional, Tuple, Type, TypeVar
 
 from pydantic import validator
 
@@ -34,9 +34,21 @@ class FourierDiscriminationMetadata(BaseModel):
     backend_description: BackendDescription
 
 
+T = TypeVar("T", bound="QubitMitigationInfo")
+
+
 class QubitMitigationInfo(BaseModel):
     prob_meas0_prep1: float
     prob_meas1_prep0: float
+
+    @classmethod
+    def from_job_properties(cls: Type[T], properties, qubit) -> T:
+        return cls.parse_obj(
+            {
+                "prob_meas0_prep1": properties.qubit_property(qubit)["prob_meas0_prep1"][0],
+                "prob_meas1_prep0": properties.qubit_property(qubit)["prob_meas1_prep0"][0],
+            }
+        )
 
 
 class MitigationInfo(BaseModel):

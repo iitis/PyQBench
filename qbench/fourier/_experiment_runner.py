@@ -1,11 +1,12 @@
 from collections import Counter, defaultdict
 from logging import getLogger
-from typing import Dict, Iterable, List, Tuple, Union, cast
+from typing import Dict, Iterable, List, Optional, Tuple, Union, cast
 
 import numpy as np
 import pandas as pd
 from qiskit import QiskitError, QuantumCircuit
 from qiskit.circuit import Parameter
+from qiskit.providers import JobV1
 
 from ..batching import BatchJob, execute_in_batches
 from ..common_models import BackendDescription
@@ -26,6 +27,7 @@ from ._models import (
     FourierDiscriminationExperiment,
     FourierDiscriminationSyncResult,
     QubitMitigationInfo,
+    ResultForCircuit,
     SingleResult,
 )
 
@@ -41,30 +43,22 @@ def _log_fourier_experiment(experiment: FourierDiscriminationExperiment) -> None
     logger.info("Gateset: %s", experiment.gateset)
 
 
-def _extract_result_from_job(job, target, ancilla, i):
+def _extract_result_from_job(
+    job: JobV1, target: int, ancilla: int, i: int, name: str
+) -> Optional[ResultForCircuit]:
     try:
-        result = {"histogram": job.result().get_counts()[i]}
+        result = {"name": name, "histogram": job.result().get_counts()[i]}
     except QiskitError:
         return None
     try:
         props = job.properties()
         result["mitigation_info"] = {
-            "target": QubitMitigationInfo.parse_obj(
-                {
-                    "prob_meas0_prep1": props.qubit_property(target)["prob_meas0_prep1"][0],
-                    "prob_meas1_prep0": props.qubit_property(target)["prob_meas1_prep0"][0],
-                }
-            ),
-            "ancilla": QubitMitigationInfo.parse_obj(
-                {
-                    "prob_meas0_prep1": props.qubit_property(ancilla)["prob_meas0_prep1"][0],
-                    "prob_meas1_prep0": props.qubit_property(ancilla)["prob_meas1_prep0"][0],
-                }
-            ),
+            "target": QubitMitigationInfo.from_job_properties(props, target),
+            "ancilla": QubitMitigationInfo.from_job_properties(props, ancilla),
         }
     except AttributeError:
         pass
-    return result
+    return ResultForCircuit.parse_obj(result)
 
 
 CircuitKey = Tuple[int, int, str, float]
@@ -100,7 +94,7 @@ def _collect_circuits_and_keys(
         _asemble_postselection if experiment.method == "postselection" else _asemble_direct_sum
     )
 
-    circuit_key_pairs: Iterable[Tuple[QuantumCircuit, CircuitKey]] = [
+    circuit_key_pairs = [
         (
             circuit.bind_parameters({components.phi: phi}),
             (pair.target, pair.ancilla, circuit_name, float(phi)),
@@ -116,18 +110,18 @@ def _collect_circuits_and_keys(
     )
 
 
-def _resolve_batches(batches: Iterable[BatchJob]):
+def _resolve_batches(batches: Iterable[BatchJob]) -> List[SingleResult]:
     resolved = defaultdict(list)
 
     num_failed = 0
     for batch in batches:
         for i, key in enumerate(batch.keys):
             target, ancilla, name, phi = key
-            result = _extract_result_from_job(batch.job, target, ancilla, i)
+            result = _extract_result_from_job(batch.job, target, ancilla, i, name)
             if result is None:
                 num_failed += 1
             else:
-                resolved[target, ancilla, phi].append({"name": name, **result})
+                resolved[target, ancilla, phi].append(result)
 
     if num_failed:
         logger.warning(
