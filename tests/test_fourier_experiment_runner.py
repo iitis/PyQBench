@@ -46,7 +46,7 @@ def experiment(request):
             ],
             "angles": {"start": 0, "stop": 2, "num_steps": 3},
             "method": request.param,
-            "num_shots": 10,
+            "num_shots": 100,
         }
     )
 

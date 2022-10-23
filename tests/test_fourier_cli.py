@@ -50,7 +50,7 @@ def create_experiment_file(tmp_path):
             ],
             "angles": {"start": 0, "stop": 2, "num_steps": 3},
             "method": "direct_sum",
-            "num_shots": 10,
+            "num_shots": 100,
         }
     )
 
