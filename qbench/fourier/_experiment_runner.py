@@ -1,15 +1,14 @@
 from collections import Counter, defaultdict
 from logging import getLogger
-from typing import Dict, Iterable, List, MutableMapping, Tuple, Type, Union, cast
+from typing import Dict, Iterable, List, Tuple, Union, cast
 
 import numpy as np
 import pandas as pd
 from qiskit import QiskitError, QuantumCircuit
 from qiskit.circuit import Parameter
-from tqdm import tqdm
 
-from ..batching import execute_in_batches
-from ..common_models import Backend, BackendDescription
+from ..batching import BatchJob, execute_in_batches
+from ..common_models import BackendDescription
 from ..direct_sum import (
     assemble_direct_sum_circuits,
     compute_probabilities_from_direct_sum_measurements,
@@ -33,12 +32,6 @@ from ._models import (
 logger = getLogger("qbench")
 
 
-def _verify_results_are_async_or_fail(results: FourierDiscriminationSyncResult) -> None:
-    if not all(isinstance(entry, BatchResult) for entry in results.results):
-        logger.error("Specified file seems to contain results from synchronous experiment")
-        exit(1)
-
-
 def _log_fourier_experiment(experiment: FourierDiscriminationExperiment) -> None:
     logger.info("Running Fourier-discrimination experiment")
     logger.info("Number of qubit-pairs: %d", len(experiment.qubits))
@@ -46,47 +39,6 @@ def _log_fourier_experiment(experiment: FourierDiscriminationExperiment) -> None
     logger.info("Number of shots per circuit: %d", experiment.num_shots)
     logger.info("Probability estimation method: %s", experiment.method)
     logger.info("Gateset: %s", experiment.gateset)
-
-
-def _sweep_circuits(
-    backend: Backend,
-    circuits_map: Dict[str, QuantumCircuit],
-    phi: Parameter,
-    phi_range: np.ndarray,
-    num_shots: int,
-) -> List[dict]:
-    """Run each circuit in the mapping with different value bound to phi and return measurements.
-
-    Suppose circuits_map is of the form {key1: circuit1, key2: circuit2} and there are three
-    different values pf phi in phi_range (say phi1, phi2, phi3). This function will:
-    - bind phi=phi1 to both circuits and run them through the backend
-    - bind phi=phi2 to both circuits and run them through the backend
-    - bind phi=phi3 to both circuits and run them through the backend
-    As the result, the list of the following form will be returned:
-
-    [
-        ResultForAngle(phi=phi1, histograms={key1: ..., key2: ...})
-        ResultForAngle(phi=phi2, histograms={key1: ..., key2: ...})
-        ResultForAngle(phi=phi3, histograms={key1: ..., key2: ...})
-    ]
-
-    where ... represent dictionary of measurement counts (bitstring -> count) for corresponding
-    key.
-    """
-    results = []
-    for phi_ in tqdm(phi_range, leave=False, desc="phi"):
-        phi_ = float(phi_)  # or else we get into yaml serialization issues
-        bound_circuits_map = {
-            key: circuit.bind_parameters({phi: phi_}) for key, circuit in circuits_map.items()
-        }
-
-        _partial_result = [
-            {"name": key, "histogram": backend.run(circuit, shots=num_shots).result().get_counts()}
-            for key, circuit in bound_circuits_map.items()
-        ]
-
-        results.append({"phi": phi_, "results_per_circuit": _partial_result})
-    return results
 
 
 def _extract_result_from_job(job, target, ancilla, i):
@@ -113,145 +65,6 @@ def _extract_result_from_job(job, target, ancilla, i):
     except AttributeError:
         pass
     return result
-
-
-def _execute_direct_sum_experiment(
-    backend: Backend,
-    target: int,
-    ancilla: int,
-    phi_range: np.ndarray,
-    num_shots: int,
-    components: FourierComponents,
-) -> List[SingleResult]:
-    """Execute Fourier discrimination experiment using direct sum method.
-
-    .. note::
-       The components are provided to this function as parameter, because instances
-       of FourierComponents can differ in the used gateset. For more information
-       see FourierComponents class.
-
-    :param backend: backend on which to run the experiment.
-    :param target: the index of qubit to which measurement to be distinguished is applied.
-    :param ancilla: the index of the ancilla qubit.
-    :param phi_range: values of phi parameter in Fourier parametrized family to be used
-     in the experiment.
-    :param num_shots: number of shots for each circuit. Please be aware that the total
-     number of shots for given phi is equal to 2 * num_shots, because two circuits are
-     run for each angle.
-    :param components: building blocks for the experiment.
-    :return dictionary with keys "target", "ancilla" and "measurement_counts."
-    """
-    circuits_map = assemble_direct_sum_circuits(
-        state_preparation=components.state_preparation,
-        u_dag=components.u_dag,
-        v0_v1_direct_sum_dag=components.controlled_v0_v1_dag,
-        target=target,
-        ancilla=ancilla,
-    )
-
-    phi = components.phi
-
-    results = _sweep_circuits(
-        backend=backend,
-        circuits_map=circuits_map,
-        phi=phi,
-        phi_range=phi_range,
-        num_shots=num_shots,
-    )
-
-    return [
-        SingleResult.parse_obj({"target": target, "ancilla": ancilla, **result_for_angle})
-        for result_for_angle in results
-    ]
-
-
-def _execute_postselection_experiment(
-    backend: Backend,
-    target: int,
-    ancilla: int,
-    phi_range: np.ndarray,
-    num_shots: int,
-    components: FourierComponents,
-) -> List[SingleResult]:
-    """Execute Fourier discrimination experiment using postselection method.
-
-    .. note::
-       The components are provided to this function as parameter, because instances
-       of FourierComponents can differ in the used gateset. For more information
-       see FourierComponents class.
-
-    :param backend: backend on which to run the experiment.
-    :param target: the index of qubit to which measurement to be distinguished is applied.
-    :param ancilla: the index of the ancilla qubit.
-    :param phi_range: values of phi parameter in Fourier parametrized family to be used
-     in the experiment.
-    :param num_shots: number of shots for each circuit. Please be aware that the total
-     number of shots for given phi is equal to 4 * num_shots, because four circuits are
-     run for each angle.
-    :param components: building blocks for the experiment.
-    :return dictionary with keys "target", "ancilla" and "measurement_counts."
-    """
-    circuits_map = assemble_postselection_circuits(
-        state_preparation=components.state_preparation,
-        u_dag=components.u_dag,
-        v0_dag=components.v0_dag,
-        v1_dag=components.v1_dag,
-        target=target,
-        ancilla=ancilla,
-    )
-
-    phi = components.phi
-
-    results = _sweep_circuits(
-        backend=backend,
-        circuits_map=circuits_map,
-        phi=phi,
-        phi_range=phi_range,
-        num_shots=num_shots,
-    )
-
-    return [
-        SingleResult.parse_obj({"target": target, "ancilla": ancilla, **result_for_angle})
-        for result_for_angle in results
-    ]
-
-
-def _run_experiment_synchronously(
-    backend: Backend,
-    experiment: FourierDiscriminationExperiment,
-    phi_range: np.ndarray,
-    components: FourierComponents,
-) -> List[SingleResult]:
-    """Run given experiment synchronously (i.e. eagerly collect the results of each job).
-
-    .. note:
-       To learn more about inputs and outputs to this function, examine the
-       FourierDiscriminationExperiment and
-
-
-    :param backend: backend on which the experiment will be executed.
-    :param experiment: experiment description.
-    :param phi_range: values of phi to be substituted into Fourier parametrizd family circuits.\
-    :param components: building blocks for the experiment.
-    :return: List with result of the experiment for each pair of qubits and values of phi.
-    """
-    if experiment.method == "direct_sum":
-        _execute = _execute_direct_sum_experiment
-    else:
-        _execute = _execute_postselection_experiment
-
-    return [
-        entry
-        for pair in tqdm(experiment.qubits, leave=False, desc="Qubit pair")
-        for entry in _execute(
-            backend,
-            pair.target,
-            pair.ancilla,
-            phi_range,
-            experiment.num_shots,
-            components,
-        )
-    ]
 
 
 CircuitKey = Tuple[int, int, str, float]
@@ -303,27 +116,30 @@ def _collect_circuits_and_keys(
     )
 
 
-def _run_experiment_asynchronously(
-    backend: Backend,
-    experiment: FourierDiscriminationExperiment,
-    phi_range: np.ndarray,
-    components: FourierComponents,
-) -> List[BatchResult]:
-    """Run Fourier-discrimination experiment asynchronously, producing sequence of batch jobs.
+def _resolve_batches(batches: Iterable[BatchJob]):
+    resolved = defaultdict(list)
 
-    :param backend: backend on which to run the experiment.
-    :param experiment: experiment to be executed.
-    :param phi_range: values of phi to be used in Fourier components.
-    :param components: building blocks for the experiment.
-    :return: list of objects tying job id to the specific circuit that the job comprises.
-    """
-    circuits, keys = _collect_circuits_and_keys(experiment, components, phi_range)
+    num_failed = 0
+    for batch in batches:
+        for i, key in enumerate(batch.keys):
+            target, ancilla, name, phi = key
+            result = _extract_result_from_job(batch.job, target, ancilla, i)
+            if result is None:
+                num_failed += 1
+            else:
+                resolved[target, ancilla, phi].append({"name": name, **result})
 
-    batches = execute_in_batches(
-        backend, circuits, keys, experiment.num_shots, get_limits(backend).max_circuits
-    )
+    if num_failed:
+        logger.warning(
+            "Some jobs have failed. Examine the output file to determine which results are missing."
+        )
 
-    return [BatchResult(job_id=batch.job.job_id(), keys=batch.keys) for batch in batches]
+    return [
+        SingleResult.parse_obj(
+            {"target": target, "ancilla": ancilla, "phi": phi, "results_per_circuit": results}
+        )
+        for (target, ancilla, phi), results in resolved.items()
+    ]
 
 
 def run_experiment(
@@ -349,29 +165,30 @@ def run_experiment(
     backend = backend_description.create_backend()
     logger.info(f"Backend type: {type(backend).__name__}, backend name: {backend.name}")
 
-    results = (
-        _run_experiment_asynchronously(backend, experiment, phi_range, components)
-        if backend_description.asynchronous
-        else _run_experiment_synchronously(backend, experiment, phi_range, components)
+    circuits, keys = _collect_circuits_and_keys(experiment, components, phi_range)
+
+    batches = execute_in_batches(
+        backend, circuits, keys, experiment.num_shots, get_limits(backend).max_circuits
     )
 
-    logger.info("Completed successfully")
+    metadata = {
+        "experiment": experiment,
+        "backend_description": backend_description,
+    }
 
-    result_cls: Union[
-        Type[FourierDiscriminationAsyncResult], Type[FourierDiscriminationSyncResult]
-    ] = (
-        FourierDiscriminationAsyncResult
-        if backend_description.asynchronous
-        else FourierDiscriminationSyncResult
-    )
-
-    return result_cls(
-        metadata={
-            "experiment": experiment,
-            "backend_description": backend_description,
-        },
-        results=results,
-    )
+    if backend_description.asynchronous:
+        return FourierDiscriminationAsyncResult.parse_obj(
+            {
+                "metadata": metadata,
+                "results": [
+                    BatchResult(job_id=batch.job.job_id(), keys=batch.keys) for batch in batches
+                ],
+            }
+        )
+    else:
+        return FourierDiscriminationSyncResult.parse_obj(
+            {"metadata": metadata, "results": _resolve_batches(batches)}
+        )
 
 
 def fetch_statuses(async_results: FourierDiscriminationAsyncResult) -> Dict[str, int]:
@@ -414,27 +231,9 @@ def resolve_results(
     logger.info(f"Fetching total of {len(job_ids)} jobs")
     jobs_mapping = {job.job_id(): job for job in retrieve_jobs(backend, job_ids)}
 
-    result_dict: MutableMapping[Tuple[int, int, float], List[dict]] = defaultdict(lambda: list())
+    batches = [BatchJob(jobs_mapping[entry.job_id], entry.keys) for entry in async_results.results]
 
-    all_jobs_succeeded = True
-
-    for entry in async_results.results:
-        for i, (target, ancilla, name, phi) in enumerate(entry.keys):
-            result = _extract_result_from_job(jobs_mapping[entry.job_id], target, ancilla, i)
-            if result is not None:
-                result_dict[(target, ancilla, phi)].append({"name": name, **result})
-            else:
-                all_jobs_succeeded = False
-
-    if not all_jobs_succeeded:
-        logger.warning(
-            "Some jobs have failed. Examine the output file to determine which results are missing."
-        )
-
-    resolved = [
-        {"target": target, "ancilla": ancilla, "phi": phi, "results_per_circuit": results}
-        for (target, ancilla, phi), results in result_dict.items()
-    ]
+    resolved = _resolve_batches(batches)
 
     return FourierDiscriminationSyncResult.parse_obj(
         {"metadata": async_results.metadata, "results": resolved}
