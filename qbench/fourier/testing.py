@@ -1,6 +1,4 @@
 """Testing utilities related qbench.fourier packager."""
-import numpy as np
-
 from qbench.fourier import (
     FourierDiscriminationExperiment,
     FourierDiscriminationSyncResult,
@@ -19,14 +17,7 @@ def assert_sync_results_contain_data_for_all_circuits(
     :raise: AssertionError if measurements for some combination of (target, ancilla, phi) are
      missing.
     """
-    expected_keys = [
-        (pair.target, pair.ancilla, phi)
-        for pair in experiment.qubits
-        for phi in np.linspace(
-            experiment.angles.start, experiment.angles.stop, experiment.angles.num_steps
-        )
-    ]
-
+    expected_keys = list(experiment.enumerate_circuit_keys())
     actual_keys = [(entry.target, entry.ancilla, entry.phi) for entry in results.data]
 
     def _are_equal(actual, expected):

@@ -1,5 +1,6 @@
-from typing import Any, List, Literal, Optional, Tuple, Type, TypeVar
+from typing import Any, Iterable, List, Literal, Optional, Tuple, Type, TypeVar
 
+import numpy as np
 from pydantic import validator
 
 from ..common_models import (
@@ -27,6 +28,13 @@ class FourierDiscriminationExperiment(BaseModel):
         if len(set(list_of_qubits)) != len(list_of_qubits):
             raise ValueError("All pairs of qubits should be distinct.")
         return qubits
+
+    def enumerate_circuit_keys(self) -> Iterable[Tuple[int, int, float]]:
+        return (
+            (pair.target, pair.ancilla, phi)
+            for pair in self.qubits
+            for phi in np.linspace(self.angles.start, self.angles.stop, self.angles.num_steps)
+        )
 
 
 class FourierDiscriminationMetadata(BaseModel):

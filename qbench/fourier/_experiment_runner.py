@@ -120,11 +120,10 @@ def _collect_circuits_and_keys(
     circuit_key_pairs = [
         (
             circuit.bind_parameters({components.phi: phi}),
-            (pair.target, pair.ancilla, circuit_name, float(phi)),
+            (target, ancilla, circuit_name, float(phi)),
         )
-        for pair in experiment.qubits
-        for phi in phi_range
-        for circuit_name, circuit in _asemble(pair.target, pair.ancilla).items()
+        for (target, ancilla, phi) in experiment.enumerate_circuit_keys()
+        for circuit_name, circuit in _asemble(target, ancilla).items()
     ]
 
     # Cast is needed, because mypy cannot correctly infer types in zip

@@ -1,4 +1,3 @@
-import numpy as np
 import pytest
 
 from qbench.common_models import SimpleBackendDescription
@@ -72,13 +71,7 @@ class TestASynchronousExecutionOfExperiment:
         self, experiment, sync_backend_description
     ):
         result = run_experiment(experiment, sync_backend_description)
-        expected_keys = [
-            (pair.target, pair.ancilla, phi)
-            for pair in experiment.qubits
-            for phi in np.linspace(
-                experiment.angles.start, experiment.angles.stop, experiment.angles.num_steps
-            )
-        ]
+        expected_keys = experiment.enumerate_circuit_keys()
 
         tab = tabulate_results(result)
 
