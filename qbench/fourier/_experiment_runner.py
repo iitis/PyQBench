@@ -9,18 +9,19 @@ from qiskit import QiskitError, QuantumCircuit
 from qiskit.circuit import Parameter
 from qiskit.providers import JobV1
 
-from ..batching import BatchJob, execute_in_batches
-from ..common_models import BackendDescription
-from ..direct_sum import (
+from qbench.schemes.direct_sum import (
     assemble_direct_sum_circuits,
     compute_probabilities_from_direct_sum_measurements,
 )
-from ..jobs import retrieve_jobs
-from ..limits import get_limits
-from ..postselection import (
+from qbench.schemes.postselection import (
     assemble_postselection_circuits,
     compute_probabilities_from_postselection_measurements,
 )
+
+from ..batching import BatchJob, execute_in_batches
+from ..common_models import BackendDescription
+from ..jobs import retrieve_jobs
+from ..limits import get_limits
 from ._components import FourierComponents
 from ._models import (
     BatchResult,

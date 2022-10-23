@@ -4,7 +4,7 @@ from qiskit_braket_provider import BraketLocalBackend
 
 from qbench.fourier import discrimination_probability_upper_bound
 from qbench.fourier._components import FourierComponents
-from qbench.postselection import benchmark_using_postselection
+from qbench.schemes.postselection import benchmark_using_postselection
 
 NUM_SHOTS_PER_MEASUREMENT = 1000
 TARGET = 0

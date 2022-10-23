@@ -7,7 +7,7 @@ from qiskit.providers import BackendV1, BackendV2
 from qiskit.result import marginal_counts
 
 from qbench.common_models import MeasurementsDict
-from qbench.utils import remap_qubits
+from qbench.schemes._utils import remap_qubits
 
 
 def assemble_direct_sum_circuits(
