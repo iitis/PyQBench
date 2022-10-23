@@ -1,3 +1,4 @@
+import numpy as np
 import pytest
 
 from qbench.common_models import SimpleBackendDescription
@@ -6,6 +7,7 @@ from qbench.fourier._experiment_runner import (
     fetch_statuses,
     resolve_results,
     run_experiment,
+    tabulate_results,
 )
 from qbench.fourier.testing import assert_sync_results_contain_data_for_all_circuits
 
@@ -65,3 +67,21 @@ class TestASynchronousExecutionOfExperiment:
         resolved = resolve_results(results)
 
         assert_sync_results_contain_data_for_all_circuits(experiment, resolved)
+
+    def test_tabulating_results_gives_dataframe_with_probabilities_for_all_circuits(
+        self, experiment, sync_backend_description
+    ):
+        result = run_experiment(experiment, sync_backend_description)
+        expected_keys = [
+            (pair.target, pair.ancilla, phi)
+            for pair in experiment.qubits
+            for phi in np.linspace(
+                experiment.angles.start, experiment.angles.stop, experiment.angles.num_steps
+            )
+        ]
+
+        tab = tabulate_results(result)
+
+        assert list(tab.columns) == ["target", "ancilla", "phi", "disc_prob"]
+        actual_keys = [(row[0], row[1], row[2]) for row in tab.itertuples(index=False)]
+        assert sorted(actual_keys) == sorted(expected_keys)
