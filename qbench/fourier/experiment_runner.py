@@ -9,6 +9,7 @@ from mthree import M3Mitigation
 from qiskit import QiskitError, QuantumCircuit
 from qiskit.circuit import Parameter
 from qiskit.providers import JobV1
+from tqdm import tqdm
 
 from ..batching import BatchJob, execute_in_batches
 from ..common_models import Backend, BackendDescription
@@ -34,6 +35,18 @@ from ._models import (
 )
 
 logger = getLogger("qbench")
+
+
+def _backend_name(backend) -> str:
+    """Return backend name.
+
+    This is needed because backend.name is sometimes a function (IBMQ) and sometimes a string
+    (Braket).
+    """
+    try:
+        return backend.name()
+    except TypeError:
+        return backend.name
 
 
 def _log_fourier_experiment(experiment: FourierDiscriminationExperiment) -> None:
@@ -157,12 +170,13 @@ def _collect_circuits_and_keys(
         _asemble_postselection if experiment.method == "postselection" else _asemble_direct_sum
     )
 
+    logger.info("Assembling experiments...")
     circuit_key_pairs = [
         (
             circuit.bind_parameters({components.phi: phi}),
             (target, ancilla, circuit_name, float(phi)),
         )
-        for (target, ancilla, phi) in experiment.enumerate_circuit_keys()
+        for (target, ancilla, phi) in tqdm(list(experiment.enumerate_circuit_keys()))
         for circuit_name, circuit in _asemble(target, ancilla).items()
     ]
 
@@ -179,7 +193,11 @@ def _iter_batches(batches: Iterable[BatchJob]) -> Iterable[Tuple[int, CircuitKey
     - i is its index in the corresponding batch
     - job is a job comprising this batch
     """
-    return ((i, key, batch.job) for batch in batches for i, key in enumerate(batch.keys))
+    return (
+        (i, key, batch.job)
+        for batch in tqdm(batches, desc="Batch")
+        for i, key in enumerate(tqdm(batch.keys, desc="Circuit", leave=False))
+    )
 
 
 def _resolve_batches(batches: Iterable[BatchJob]) -> List[SingleResult]:
@@ -233,12 +251,18 @@ def run_experiment(
     components = FourierComponents(phi, gateset=experiment.gateset)
 
     backend = backend_description.create_backend()
-    logger.info(f"Backend type: {type(backend).__name__}, backend name: {backend.name}")
+    logger.info(f"Backend type: {type(backend).__name__}, backend name: {_backend_name(backend)}")
 
     circuits, keys = _collect_circuits_and_keys(experiment, components)
 
+    logger.info("Submitting jobs...")
     batches = execute_in_batches(
-        backend, circuits, keys, experiment.num_shots, get_limits(backend).max_circuits
+        backend,
+        circuits,
+        keys,
+        experiment.num_shots,
+        get_limits(backend).max_circuits,
+        show_progress=True,
     )
 
     metadata = {
@@ -247,7 +271,7 @@ def run_experiment(
     }
 
     if backend_description.asynchronous:
-        return FourierDiscriminationAsyncResult.parse_obj(
+        async_result = FourierDiscriminationAsyncResult.parse_obj(
             {
                 "metadata": metadata,
                 "data": [
@@ -255,10 +279,15 @@ def run_experiment(
                 ],
             }
         )
+        logger.info("Done")
+        return async_result
     else:
-        return FourierDiscriminationSyncResult.parse_obj(
+        logger.info("Executing jobs...")
+        sync_result = FourierDiscriminationSyncResult.parse_obj(
             {"metadata": metadata, "data": _resolve_batches(batches)}
         )
+        logger.info("Done")
+        return sync_result
 
 
 def fetch_statuses(async_results: FourierDiscriminationAsyncResult) -> Dict[str, int]:
@@ -274,9 +303,9 @@ def fetch_statuses(async_results: FourierDiscriminationAsyncResult) -> Dict[str,
     logger.info("Reading jobs ids from the input file")
     job_ids = [entry.job_id for entry in async_results.data]
 
-    # logger.info(f"Fetching total of {len(job_ids_to_fetch)} jobs")
-    # jobs = backend.jobs(db_filter={"id": {"inq": job_ids_to_fetch}})
+    logger.info("Retrieving jobs, this might take a while...")
     jobs = retrieve_jobs(backend, job_ids)
+    logger.info("Done")
 
     return dict(Counter(job.status().name for job in jobs))
 
@@ -303,11 +332,15 @@ def resolve_results(
 
     batches = [BatchJob(jobs_mapping[entry.job_id], entry.keys) for entry in async_results.data]
 
+    logger.info("Resolving results. This might take a while if mitigation info is included...")
     resolved = _resolve_batches(batches)
 
-    return FourierDiscriminationSyncResult.parse_obj(
+    result = FourierDiscriminationSyncResult.parse_obj(
         {"metadata": async_results.metadata, "data": resolved}
     )
+
+    logger.info("Done")
+    return result
 
 
 def tabulate_results(sync_results: FourierDiscriminationSyncResult) -> pd.DataFrame:
@@ -339,7 +372,8 @@ def tabulate_results(sync_results: FourierDiscriminationSyncResult) -> pd.DataFr
             pass  # totally acceptable, not all results have mitigation info
         return data
 
-    rows = [_make_row(entry) for entry in sync_results.data]
+    logger.info("Tabulating results...")
+    rows = [_make_row(entry) for entry in tqdm(sync_results.data)]
 
     # We assume that either all circuits have mitigation info, or none of them has
     columns = (
@@ -348,4 +382,6 @@ def tabulate_results(sync_results: FourierDiscriminationSyncResult) -> pd.DataFr
         else ["target", "ancilla", "phi", "disc_prob", "mit_disc_prob"]
     )
 
-    return pd.DataFrame(data=rows, columns=columns)
+    result = pd.DataFrame(data=rows, columns=columns)
+    logger.info("Done")
+    return result
