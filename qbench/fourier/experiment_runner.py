@@ -324,7 +324,7 @@ def tabulate_results(sync_results: FourierDiscriminationSyncResult) -> pd.DataFr
             entry.phi,
             compute_probabilities(
                 **{f"{info.name}_counts": info.histogram for info in entry.results_per_circuit}
-            ),  # type: ignore
+            ),
         ]
         try:
             data.append(
@@ -333,7 +333,7 @@ def tabulate_results(sync_results: FourierDiscriminationSyncResult) -> pd.DataFr
                         f"{info.name}_counts": info.mitigated_histogram
                         for info in entry.results_per_circuit
                     }
-                ),  # type: ignore
+                ),
             )
         except AttributeError:
             pass  # totally acceptable, not all results have mitigation info
