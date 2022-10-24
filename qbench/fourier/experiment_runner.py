@@ -27,8 +27,8 @@ from ._components import FourierComponents
 from ._models import (
     BatchResult,
     FourierDiscriminationAsyncResult,
-    FourierDiscriminationExperiment,
     FourierDiscriminationSyncResult,
+    FourierExperimentSet,
     QubitMitigationInfo,
     ResultForCircuit,
     SingleResult,
@@ -49,7 +49,7 @@ def _backend_name(backend) -> str:
         return backend.name
 
 
-def _log_fourier_experiment(experiment: FourierDiscriminationExperiment) -> None:
+def _log_fourier_experiment(experiment: FourierExperimentSet) -> None:
     """Log basic information of about the experiment."""
     logger.info("Running Fourier-discrimination experiment")
     logger.info("Number of qubit-pairs: %d", len(experiment.qubits))
@@ -142,7 +142,7 @@ CircuitKey = Tuple[int, int, str, float]
 
 
 def _collect_circuits_and_keys(
-    experiment: FourierDiscriminationExperiment,
+    experiment: FourierExperimentSet,
     components: FourierComponents,
 ) -> Tuple[Tuple[QuantumCircuit, ...], Tuple[CircuitKey, ...]]:
     """Construct all circuits needed for the experiment and assign them unique keys."""
@@ -176,7 +176,7 @@ def _collect_circuits_and_keys(
             circuit.bind_parameters({components.phi: phi}),
             (target, ancilla, circuit_name, float(phi)),
         )
-        for (target, ancilla, phi) in tqdm(list(experiment.enumerate_circuit_keys()))
+        for (target, ancilla, phi) in tqdm(list(experiment.enumerate_experiment_labels()))
         for circuit_name, circuit in _asemble(target, ancilla).items()
     ]
 
@@ -234,7 +234,7 @@ def _resolve_batches(batches: Iterable[BatchJob]) -> List[SingleResult]:
 
 
 def run_experiment(
-    experiment: FourierDiscriminationExperiment, backend_description: BackendDescription
+    experiment: FourierExperimentSet, backend_description: BackendDescription
 ) -> Union[FourierDiscriminationSyncResult, FourierDiscriminationAsyncResult]:
     """Run experiment on given backend.
 

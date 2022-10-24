@@ -15,8 +15,8 @@ from qbench.common_models import (
 )
 from qbench.fourier import (
     FourierDiscriminationAsyncResult,
-    FourierDiscriminationExperiment,
     FourierDiscriminationSyncResult,
+    FourierExperimentSet,
 )
 
 EXAMPLES_PATH = Path(__file__).parent / "../examples"
@@ -109,7 +109,7 @@ class TestFourierDiscriminationExperiment:
         ],
     )
     def test_can_be_parsed_from_correct_input(self, input):
-        description = FourierDiscriminationExperiment(**input)
+        description = FourierExperimentSet(**input)
         assert description.type == input["type"]
 
     def test_fails_to_validate_if_qubit_index_is_not_integral(self):
@@ -122,7 +122,7 @@ class TestFourierDiscriminationExperiment:
         }
 
         with pytest.raises(ValidationError):
-            FourierDiscriminationExperiment(**input)
+            FourierExperimentSet(**input)
 
     @pytest.mark.parametrize(
         "input",
@@ -150,7 +150,7 @@ class TestFourierDiscriminationExperiment:
     )
     def test_fails_to_validate_if_some_fields_are_missing(self, input):
         with pytest.raises(ValidationError):
-            FourierDiscriminationExperiment(**input)
+            FourierExperimentSet(**input)
 
     def test_fails_to_validate_if_experiment_type_is_different_from_fourier_discrimination(self):
         input = {
@@ -162,7 +162,7 @@ class TestFourierDiscriminationExperiment:
         }
 
         with pytest.raises(ValidationError):
-            FourierDiscriminationExperiment(**input)
+            FourierExperimentSet(**input)
 
     def test_fails_to_validate_if_method_is_unknown(self):
         input = {
@@ -174,7 +174,7 @@ class TestFourierDiscriminationExperiment:
         }
 
         with pytest.raises(ValidationError):
-            FourierDiscriminationExperiment(**input)
+            FourierExperimentSet(**input)
 
     def test_cannot_be_parsed_if_there_are_duplicate_qubit_pairs(self):
         input = {
@@ -189,7 +189,7 @@ class TestFourierDiscriminationExperiment:
             "number_of_shots": 5,
         }
         with pytest.raises(ValidationError):
-            FourierDiscriminationExperiment(**input)
+            FourierExperimentSet(**input)
 
 
 class TestAnglesRange:
@@ -235,7 +235,7 @@ class TestExampleYamlInputsAreMatchingModels:
         path = EXAMPLES_PATH / "fourier-discrimination-experiment.yml"
         with open(path) as f:
             data = safe_load(f)
-            FourierDiscriminationExperiment(**data)
+            FourierExperimentSet(**data)
 
     @pytest.mark.parametrize(
         "filename", ["simple-backend.yml", "simple-backend-with-run-options.yml"]

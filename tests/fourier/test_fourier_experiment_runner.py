@@ -1,14 +1,14 @@
 import pytest
 
 from qbench.common_models import SimpleBackendDescription
-from qbench.fourier import FourierDiscriminationExperiment
+from qbench.fourier import FourierExperimentSet
 from qbench.fourier.experiment_runner import (
     fetch_statuses,
     resolve_results,
     run_experiment,
     tabulate_results,
 )
-from qbench.fourier.testing import assert_sync_results_contain_data_for_all_circuits
+from qbench.fourier.testing import assert_sync_results_contain_data_for_all_experiments
 
 
 @pytest.fixture
@@ -36,7 +36,7 @@ def backend_with_mitigation_info_description():
 
 @pytest.fixture(params=["direct_sum", "postselection"])
 def experiment(request):
-    return FourierDiscriminationExperiment.parse_obj(
+    return FourierExperimentSet.parse_obj(
         {
             "type": "discrimination-fourier",
             "qubits": [
@@ -56,7 +56,7 @@ class TestSynchronousExecutionOfExperiment:
         self, experiment, sync_backend_description
     ):
         results = run_experiment(experiment, sync_backend_description)
-        assert_sync_results_contain_data_for_all_circuits(experiment, results)
+        assert_sync_results_contain_data_for_all_experiments(experiment, results)
 
 
 class TestASynchronousExecutionOfExperiment:
@@ -74,13 +74,13 @@ class TestASynchronousExecutionOfExperiment:
         results = run_experiment(experiment, async_backend_description)
         resolved = resolve_results(results)
 
-        assert_sync_results_contain_data_for_all_circuits(experiment, resolved)
+        assert_sync_results_contain_data_for_all_experiments(experiment, resolved)
 
     def test_tabulating_results_gives_dataframe_with_probabilities_for_all_circuits(
         self, experiment, sync_backend_description
     ):
         result = run_experiment(experiment, sync_backend_description)
-        expected_keys = experiment.enumerate_circuit_keys()
+        expected_keys = experiment.enumerate_experiment_labels()
 
         tab = tabulate_results(result)
 

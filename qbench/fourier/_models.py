@@ -24,7 +24,7 @@ from ..common_models import (
 )
 
 
-class FourierDiscriminationExperiment(BaseModel):
+class FourierExperimentSet(BaseModel):
     type: Literal["discrimination-fourier"]
     qubits: List[QubitsPair]
     angles: AnglesRange
@@ -39,7 +39,7 @@ class FourierDiscriminationExperiment(BaseModel):
             raise ValueError("All pairs of qubits should be distinct.")
         return qubits
 
-    def enumerate_circuit_keys(self) -> Iterable[Tuple[int, int, float]]:
+    def enumerate_experiment_labels(self) -> Iterable[Tuple[int, int, float]]:
         return (
             (pair.target, pair.ancilla, phi)
             for pair in self.qubits
@@ -48,7 +48,7 @@ class FourierDiscriminationExperiment(BaseModel):
 
 
 class FourierDiscriminationMetadata(BaseModel):
-    experiment: FourierDiscriminationExperiment
+    experiment: FourierExperimentSet
     backend_description: BackendDescription
 
 

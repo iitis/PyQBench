@@ -9,11 +9,11 @@ from qbench.cli import main
 from qbench.common_models import SimpleBackendDescription
 from qbench.fourier import (
     FourierDiscriminationAsyncResult,
-    FourierDiscriminationExperiment,
     FourierDiscriminationSyncResult,
+    FourierExperimentSet,
 )
 from qbench.fourier.testing import (
-    assert_sync_results_contain_data_for_all_circuits,
+    assert_sync_results_contain_data_for_all_experiments,
     assert_tabulated_results_contain_data_for_all_circuits,
 )
 from qbench.testing import MockProvider
@@ -40,7 +40,7 @@ def _read(model_cls, path):
 
 @pytest.fixture
 def create_experiment_file(tmp_path):
-    experiment = FourierDiscriminationExperiment.parse_obj(
+    experiment = FourierExperimentSet.parse_obj(
         {
             "type": "discrimination-fourier",
             "qubits": [
@@ -96,13 +96,13 @@ def test_main_entrypoint_with_disc_fourier_command(tmp_path, capsys):
 
     main(["disc-fourier", "tabulate", str(resolved_output_path), str(tabulated_output_path)])
 
-    experiment = _read(FourierDiscriminationExperiment, experiment_path)
+    experiment = _read(FourierExperimentSet, experiment_path)
     results = _read(FourierDiscriminationSyncResult, resolved_output_path)
     async_output = _read(FourierDiscriminationAsyncResult, async_output_path)
 
     result_df = pd.read_csv(tabulated_output_path)
 
-    assert_sync_results_contain_data_for_all_circuits(experiment, results)
+    assert_sync_results_contain_data_for_all_experiments(experiment, results)
 
     captured = capsys.readouterr()
     status_output = ast.literal_eval(captured.out)

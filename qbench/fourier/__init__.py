@@ -7,8 +7,8 @@ from ._cli import add_fourier_parser
 from ._components import FourierComponents
 from ._models import (
     FourierDiscriminationAsyncResult,
-    FourierDiscriminationExperiment,
     FourierDiscriminationSyncResult,
+    FourierExperimentSet,
 )
 
 
@@ -29,5 +29,5 @@ __all__ = [
     "FourierComponents",
     "FourierDiscriminationAsyncResult",
     "FourierDiscriminationSyncResult",
-    "FourierDiscriminationExperiment",
+    "FourierExperimentSet",
 ]

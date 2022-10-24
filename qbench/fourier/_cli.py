@@ -10,8 +10,8 @@ from yaml import safe_dump, safe_load
 from ..common_models import BackendDescriptionRoot
 from ._models import (
     FourierDiscriminationAsyncResult,
-    FourierDiscriminationExperiment,
     FourierDiscriminationSyncResult,
+    FourierExperimentSet,
 )
 from .experiment_runner import (
     fetch_statuses,
@@ -23,7 +23,7 @@ from .experiment_runner import (
 
 def _run_benchmark(args: Namespace) -> None:
     """Function executed when qbench disc-fourier benchmark is invoked."""
-    experiment = FourierDiscriminationExperiment(**safe_load(args.experiment_file))
+    experiment = FourierExperimentSet(**safe_load(args.experiment_file))
     backend_description = BackendDescriptionRoot(__root__=safe_load(args.backend_file)).__root__
 
     result = run_experiment(experiment, backend_description)
