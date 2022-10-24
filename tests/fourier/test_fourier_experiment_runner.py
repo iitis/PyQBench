@@ -8,7 +8,10 @@ from qbench.fourier.experiment_runner import (
     run_experiment,
     tabulate_results,
 )
-from qbench.fourier.testing import assert_sync_results_contain_data_for_all_experiments
+from qbench.fourier.testing import (
+    assert_sync_results_contain_data_for_all_experiments,
+    assert_tabulated_results_contain_data_for_all_circuits,
+)
 
 
 @pytest.fixture
@@ -80,13 +83,11 @@ class TestASynchronousExecutionOfExperiment:
         self, experiment, sync_backend_description
     ):
         result = run_experiment(experiment, sync_backend_description)
-        expected_keys = experiment.enumerate_experiment_labels()
 
         tab = tabulate_results(result)
 
         assert list(tab.columns) == ["target", "ancilla", "phi", "disc_prob"]
-        actual_keys = [(row[0], row[1], row[2]) for row in tab.itertuples(index=False)]
-        assert sorted(actual_keys) == sorted(expected_keys)
+        assert_tabulated_results_contain_data_for_all_circuits(experiment, tab)
 
     def test_tabulating_results_gives_frame_with_mitigated_histogram_if_such_info_is_available(
         self, experiment, backend_with_mitigation_info_description
@@ -96,3 +97,4 @@ class TestASynchronousExecutionOfExperiment:
         tab = tabulate_results(result)
 
         assert list(tab.columns) == ["target", "ancilla", "phi", "disc_prob", "mit_disc_prob"]
+        assert_tabulated_results_contain_data_for_all_circuits(experiment, tab)
