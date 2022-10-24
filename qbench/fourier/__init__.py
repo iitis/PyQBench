@@ -1,4 +1,5 @@
-"""Implementation of components and functions computing probabilities for Fourier experiment."""
+"""Implementation of components and functions computing probabilities for set of Fourier
+experiments."""
 from typing import Union
 
 import numpy as np

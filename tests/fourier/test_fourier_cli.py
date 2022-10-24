@@ -40,7 +40,7 @@ def _read(model_cls, path):
 
 @pytest.fixture
 def create_experiment_file(tmp_path):
-    experiment = FourierExperimentSet.parse_obj(
+    experiments = FourierExperimentSet.parse_obj(
         {
             "type": "discrimination-fourier",
             "qubits": [
@@ -55,7 +55,7 @@ def create_experiment_file(tmp_path):
     )
 
     with open(tmp_path / "experiment.yml", "wt") as stream:
-        safe_dump(experiment.dict(), stream)
+        safe_dump(experiments.dict(), stream)
 
 
 @pytest.fixture
@@ -96,13 +96,13 @@ def test_main_entrypoint_with_disc_fourier_command(tmp_path, capsys):
 
     main(["disc-fourier", "tabulate", str(resolved_output_path), str(tabulated_output_path)])
 
-    experiment = _read(FourierExperimentSet, experiment_path)
+    experiments = _read(FourierExperimentSet, experiment_path)
     results = _read(FourierDiscriminationSyncResult, resolved_output_path)
     async_output = _read(FourierDiscriminationAsyncResult, async_output_path)
 
     result_df = pd.read_csv(tabulated_output_path)
 
-    assert_sync_results_contain_data_for_all_experiments(experiment, results)
+    assert_sync_results_contain_data_for_all_experiments(experiments, results)
 
     captured = capsys.readouterr()
     status_output = ast.literal_eval(captured.out)
@@ -110,7 +110,7 @@ def test_main_entrypoint_with_disc_fourier_command(tmp_path, capsys):
     assert sum(status_output.values()) == len(async_output.data)
 
     assert list(result_df.columns) == ["target", "ancilla", "phi", "disc_prob"]
-    assert_tabulated_results_contain_data_for_all_circuits(experiment, result_df)
+    assert_tabulated_results_contain_data_for_all_circuits(experiments, result_df)
 
 
 @pytest.mark.usefixtures("create_experiment_file", "create_failing_backend_description")
@@ -161,7 +161,7 @@ def test_main_entrypoint_with_disc_fourier_command_and_failing_backend(tmp_path,
     )
 
     # Note that generally one cannot expect to reconstruct N/2 probabilities from N circuits in
-    # the direct sum experiment. However, this test case is designed so that failing jobs
+    # the direct sum experiments. However, this test case is designed so that failing jobs
     # constitute single computation of probability, and hence the succeeding ones are pairs
     # needed for computing probabilities.
     assert result_df.shape[0] == 7

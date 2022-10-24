@@ -48,7 +48,7 @@ class FourierExperimentSet(BaseModel):
 
 
 class FourierDiscriminationMetadata(BaseModel):
-    experiment: FourierExperimentSet
+    experiments: FourierExperimentSet
     backend_description: BackendDescription
 
 

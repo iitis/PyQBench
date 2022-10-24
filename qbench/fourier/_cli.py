@@ -55,8 +55,8 @@ def add_fourier_parser(parent_parser) -> None:
     """Add disc-fourier parser to the parent parser.
 
     The added parser will have the following subcommands:
-    - benchmark: run fourier discrimination experiment against given backend
-    - status: check status of asynchronously executed experiment
+    - benchmark: run set of Fourier discrimination experiments against given backend
+    - status: check status of asynchronously executed set of experiments
     - resolve: retrieve results of completed asynchronous job
 
     The exact syntax for using each command can be, as usually, obtained by running
@@ -71,13 +71,15 @@ def add_fourier_parser(parent_parser) -> None:
     benchmark = subcommands.add_parser(
         "benchmark",
         description=(
-            "Run benchmarking experiment utilizing measurement discrimination "
+            "Run set of benchmarking experiments utilizing measurement discrimination "
             "with parametrized Fourier family of measurements."
         ),
     )
 
     benchmark.add_argument(
-        "experiment_file", help="path to the file describing the experiment", type=FileType("r")
+        "experiment_file",
+        help="path to the file describing the set of experiments",
+        type=FileType("r"),
     )
     benchmark.add_argument(
         "backend_file",
@@ -99,7 +101,7 @@ def add_fourier_parser(parent_parser) -> None:
     plot.add_argument(
         "result",
         help=(
-            "result of discrimination experiment which can be obtained by running "
+            "result of discrimination experiments which can be obtained by running "
             "qbench benchmark"
         ),
         type=str,
@@ -117,13 +119,13 @@ def add_fourier_parser(parent_parser) -> None:
 
     resolve = subcommands.add_parser(
         "resolve",
-        description=("Resolve asynchronous jobs to obtain final experiment data."),
+        description=("Resolve asynchronous jobs to obtain final experiments data."),
     )
 
     resolve.add_argument(
         "async_results",
         help=(
-            "path to the file with data of discrimination experiment which can be obtained by "
+            "path to the file with data of discrimination experiments which can be obtained by "
             "running `qbench` benchmark using backend with asynchronous flag equal to True."
         ),
         type=FileType("r"),
@@ -144,7 +146,7 @@ def add_fourier_parser(parent_parser) -> None:
     status.add_argument(
         "async_results",
         help=(
-            "path to the file with data of discrimination experiment which can be obtained by "
+            "path to the file with data of discrimination experiments which can be obtained by "
             "running qbench benchmark using backend with asynchronous flag equal to True."
         ),
         type=FileType("r"),
@@ -155,14 +157,14 @@ def add_fourier_parser(parent_parser) -> None:
     tabulate = subcommands.add_parser(
         "tabulate",
         description=(
-            "Compute and tabulate probabilities from measurements obtained from the experiment."
+            "Compute and tabulate probabilities from measurements obtained from the experiments."
         ),
     )
 
     tabulate.add_argument(
         "sync_results",
         help=(
-            "path to the file with results of discrimination experiment. If the experiment was "
+            "path to the file with results of discrimination experiments. If experiments were "
             "conducted using asynchronous backend, they need to be manually resolved."
         ),
         type=FileType("r"),
@@ -172,7 +174,7 @@ def add_fourier_parser(parent_parser) -> None:
         "output",
         help=(
             "path to the resulting CSV file. This file will contain columns 'target', 'ancilla' "
-            "'phi' and 'disc_prob' with obvious meanings. If, in addition, experiment contained "
+            "'phi' and 'disc_prob' with obvious meanings. If each experiment contained "
             "mitigation data, the 'mitigated_disc_prob` containing discrimination probabilities "
             "computed using mitigated bitstrings will also be added."
         ),

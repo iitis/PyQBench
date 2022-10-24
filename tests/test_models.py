@@ -94,7 +94,7 @@ class TestBackendFactoryDescription:
         assert isinstance(backend.provider(), provider_cls)
 
 
-class TestFourierDiscriminationExperiment:
+class TestFourierDiscriminationExperimentSet:
     @pytest.mark.parametrize(
         "input",
         [
@@ -231,7 +231,7 @@ class TestAnglesRange:
 
 
 class TestExampleYamlInputsAreMatchingModels:
-    def test_fourier_discrimination_experiment_input_matches_model(self):
+    def test_fourier_discrimination_experiments_input_matches_model(self):
         path = EXAMPLES_PATH / "fourier-discrimination-experiment.yml"
         with open(path) as f:
             data = safe_load(f)

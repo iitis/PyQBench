@@ -17,7 +17,7 @@ def assemble_direct_sum_circuits(
     u_dag: Instruction,
     v0_v1_direct_sum_dag: Instruction,
 ) -> Dict[str, QuantumCircuit]:
-    """Assemble circuits required for running Fourier Discrimination experiment using direct-sum.
+    """Assemble circuits required for running Fourier discrimination experiment using direct-sum.
 
     :param target: index of qubit measured either in Z-basis or the alternative one.
     :param ancilla: index of auxiliary qubit.

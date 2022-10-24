@@ -17,27 +17,27 @@ def _circuit_keys_equal(actual: KeySequence, expected: KeySequence) -> bool:
 
 
 def assert_sync_results_contain_data_for_all_experiments(
-    experiment: FourierExperimentSet, results: FourierDiscriminationSyncResult
+    experiments: FourierExperimentSet, results: FourierDiscriminationSyncResult
 ) -> None:
     """Verify synchronous result of computation has measurements for each qubits pair and phi.
 
-    :param experiment: Fourier discrimination experiment. Note that this function does not take
-     into account the method used in experiment, and only checks (target, ancilla) pairs ond
-     values of phi parameter.
-    :param results: results of execution of synchronous experiment.
+    :param experiments: set of Fourier discrimination experiments.
+     Note that this function does not take into account the method used in experiments,
+     and only checks (target, ancilla) pairs ond values of phi parameter.
+    :param results: results of execution of synchronous experiments.
     :raise: AssertionError if measurements for some combination of (target, ancilla, phi) are
      missing.
     """
-    expected_keys = list(experiment.enumerate_experiment_labels())
+    expected_keys = list(experiments.enumerate_experiment_labels())
     actual_keys = [(entry.target, entry.ancilla, entry.phi) for entry in results.data]
 
     assert _circuit_keys_equal(actual_keys, expected_keys)
 
 
 def assert_tabulated_results_contain_data_for_all_circuits(
-    experiment: FourierExperimentSet, dataframe: pd.DataFrame
+    experiments: FourierExperimentSet, dataframe: pd.DataFrame
 ) -> None:
-    expected_keys = list(experiment.enumerate_experiment_labels())
+    expected_keys = list(experiments.enumerate_experiment_labels())
     actual_keys = [(row[0], row[1], row[2]) for row in dataframe.itertuples(index=False)]
 
     assert _circuit_keys_equal(actual_keys, expected_keys)

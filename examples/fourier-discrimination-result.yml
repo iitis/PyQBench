@@ -1,5 +1,5 @@
 metadata:
-  experiment:
+  experiments:
     type: discrimination-fourier
     qubits:
       - target: 0

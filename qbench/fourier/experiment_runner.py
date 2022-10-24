@@ -49,14 +49,14 @@ def _backend_name(backend) -> str:
         return backend.name
 
 
-def _log_fourier_experiment(experiment: FourierExperimentSet) -> None:
-    """Log basic information of about the experiment."""
+def _log_fourier_experiments(experiments: FourierExperimentSet) -> None:
+    """Log basic information of about the experiments."""
     logger.info("Running Fourier-discrimination experiment")
-    logger.info("Number of qubit-pairs: %d", len(experiment.qubits))
-    logger.info("Number of phi values: %d", experiment.angles.num_steps)
-    logger.info("Number of shots per circuit: %d", experiment.num_shots)
-    logger.info("Probability estimation method: %s", experiment.method)
-    logger.info("Gateset: %s", experiment.gateset)
+    logger.info("Number of qubit-pairs: %d", len(experiments.qubits))
+    logger.info("Number of phi values: %d", experiments.angles.num_steps)
+    logger.info("Number of shots per circuit: %d", experiments.num_shots)
+    logger.info("Probability estimation method: %s", experiments.method)
+    logger.info("Gateset: %s", experiments.gateset)
 
 
 def _matrix_from_mitigation_info(info: QubitMitigationInfo) -> np.ndarray:
@@ -142,7 +142,7 @@ CircuitKey = Tuple[int, int, str, float]
 
 
 def _collect_circuits_and_keys(
-    experiment: FourierExperimentSet,
+    experiments: FourierExperimentSet,
     components: FourierComponents,
 ) -> Tuple[Tuple[QuantumCircuit, ...], Tuple[CircuitKey, ...]]:
     """Construct all circuits needed for the experiment and assign them unique keys."""
@@ -167,7 +167,7 @@ def _collect_circuits_and_keys(
         )
 
     _asemble = (
-        _asemble_postselection if experiment.method == "postselection" else _asemble_direct_sum
+        _asemble_postselection if experiments.method == "postselection" else _asemble_direct_sum
     )
 
     logger.info("Assembling experiments...")
@@ -176,7 +176,7 @@ def _collect_circuits_and_keys(
             circuit.bind_parameters({components.phi: phi}),
             (target, ancilla, circuit_name, float(phi)),
         )
-        for (target, ancilla, phi) in tqdm(list(experiment.enumerate_experiment_labels()))
+        for (target, ancilla, phi) in tqdm(list(experiments.enumerate_experiment_labels()))
         for circuit_name, circuit in _asemble(target, ancilla).items()
     ]
 
@@ -234,39 +234,39 @@ def _resolve_batches(batches: Iterable[BatchJob]) -> List[SingleResult]:
 
 
 def run_experiment(
-    experiment: FourierExperimentSet, backend_description: BackendDescription
+    experiments: FourierExperimentSet, backend_description: BackendDescription
 ) -> Union[FourierDiscriminationSyncResult, FourierDiscriminationAsyncResult]:
-    """Run experiment on given backend.
+    """Run sef ot experiments on given backend.
 
-    :param experiment: experiment to be run.
+    :param experiments: set of experiments to be run.
     :param backend_description: object describing backend and possibly options that should
      be used when executing circuits.
-    :return: Object describing the experiment data. For synchronous execution, this object
+    :return: Object describing experiments data. For synchronous execution, this object
      contains histogram of measurements for all the circuits. For asynchronous execution,
      this object contains mapping between job ids and the sequence of circuits run in a given job.
     """
-    _log_fourier_experiment(experiment)
+    _log_fourier_experiments(experiments)
 
     phi = Parameter("phi")
-    components = FourierComponents(phi, gateset=experiment.gateset)
+    components = FourierComponents(phi, gateset=experiments.gateset)
 
     backend = backend_description.create_backend()
     logger.info(f"Backend type: {type(backend).__name__}, backend name: {_backend_name(backend)}")
 
-    circuits, keys = _collect_circuits_and_keys(experiment, components)
+    circuits, keys = _collect_circuits_and_keys(experiments, components)
 
     logger.info("Submitting jobs...")
     batches = execute_in_batches(
         backend,
         circuits,
         keys,
-        experiment.num_shots,
+        experiments.num_shots,
         get_limits(backend).max_circuits,
         show_progress=True,
     )
 
     metadata = {
-        "experiment": experiment,
+        "experiments": experiments,
         "backend_description": backend_description,
     }
 
@@ -291,7 +291,7 @@ def run_experiment(
 
 
 def fetch_statuses(async_results: FourierDiscriminationAsyncResult) -> Dict[str, int]:
-    """Fetch statuses of all jobs submitted for asynchronous execution of the experiment.
+    """Fetch statuses of all jobs submitted for asynchronous execution of experiments.
 
     :param async_results: object describing data of asynchronous execution.
      If the result object already contains histograms, an error will be raised.
@@ -318,7 +318,7 @@ def resolve_results(
     :param async_results: object describing data of asynchronous execution.
      If the result object already contains histograms, an error will be raised.
     :return: Object containing resolved data. Format of this object is the same as the one
-     returned directly from a synchronous execution of FourierDiscrimination experiment. In
+     returned directly from a synchronous execution of Fourier discrimination experiments. In
      particular, it contains histograms of bitstrings for each circuit run during the experiment.
     """
     logger.info("Enabling account and creating backend")
@@ -346,7 +346,7 @@ def resolve_results(
 def tabulate_results(sync_results: FourierDiscriminationSyncResult) -> pd.DataFrame:
     compute_probabilities = (
         compute_probabilities_from_postselection_measurements
-        if sync_results.metadata.experiment.method.lower() == "postselection"
+        if sync_results.metadata.experiments.method.lower() == "postselection"
         else compute_probabilities_from_direct_sum_measurements
     )
 
