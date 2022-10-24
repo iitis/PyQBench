@@ -6,15 +6,15 @@ from . import _generic, _ibmq, _lucy, _rigetti
 
 
 class FourierComponents:
-    """Class defining components for Fourier-measurement experiment."""
+    """Class defining components for Fourier-discrimination experiment."""
 
     def __init__(self, phi: Union[float, Parameter], gateset: Optional[str] = None):
-        """Initialize new instance of FourierCircuits.
+        """Initialize new instance of FourierComponents.
 
-        :param phi: Fourier angle of measurement to discriminate.
-        :param gateset: one of predefined basis gate sets to use. One of
-        ["lucy", "rigetti", "ibmq"]. If not provided, high-level definitions of gates
-        will be used without restrictions.
+        :param phi: Fourier angle of measurement to discriminate.May be a qiskit Parameter.
+        :param gateset: one of the predefined basis gate sets to use:
+         ["lucy", "rigetti", "ibmq"]. If not provided, high-level definitions of gates
+         will be used without restrictions on basis gates.
         """
         self.phi = phi
         self._module = _GATESET_MAPPING[gateset]
@@ -40,7 +40,7 @@ class FourierComponents:
 
         .. note::
            This instruction is needed because on actual devices we can only measure in Z-basis.
-           The corresponding unitary changes basis so that subsequent measurement in Z-basis can
+           The u_dag unitary changes basis so that subsequent measurement in Z-basis can
            be considered as performing desired von Neumann measurement to be discriminated from
            the Z-basis one. The corresponding circuit is:
 
@@ -91,7 +91,7 @@ class FourierComponents:
            See accompanying tests to see how it's done.
 
            The following article contains more details on basis vectors ordering used
-           (among others) by Qiskit and Braket:
+           (among others) by Qiskit:
            https://arxiv.org/abs/1711.02086
         """
         return self._module.v0_v1_direct_sum(self.phi)

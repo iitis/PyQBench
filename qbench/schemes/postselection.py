@@ -6,8 +6,8 @@ from qiskit.circuit import Instruction
 from qiskit.providers import BackendV1, BackendV2
 from qiskit.result import marginal_counts
 
-from qbench.common_models import MeasurementsDict
-from qbench.schemes._utils import remap_qubits
+from ..common_models import MeasurementsDict
+from ._utils import remap_qubits
 
 
 def _construct_identity_circuit(

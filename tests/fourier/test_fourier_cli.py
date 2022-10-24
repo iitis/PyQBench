@@ -8,10 +8,10 @@ from yaml import safe_dump, safe_load
 from qbench.cli import main
 from qbench.common_models import SimpleBackendDescription
 from qbench.fourier import (
+    FourierDiscriminationAsyncResult,
     FourierDiscriminationExperiment,
     FourierDiscriminationSyncResult,
 )
-from qbench.fourier._models import FourierDiscriminationAsyncResult
 from qbench.fourier.testing import (
     assert_sync_results_contain_data_for_all_circuits,
     assert_tabulated_results_contain_data_for_all_circuits,

@@ -2,7 +2,7 @@ import pytest
 
 from qbench.common_models import SimpleBackendDescription
 from qbench.fourier import FourierDiscriminationExperiment
-from qbench.fourier._experiment_runner import (
+from qbench.fourier.experiment_runner import (
     fetch_statuses,
     resolve_results,
     run_experiment,

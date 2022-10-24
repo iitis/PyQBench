@@ -1,23 +1,27 @@
-"""Definition of command line parsers and handlers for qbench disc-fourier command."""
-from argparse import FileType
+"""Definition of command line parsers and handlers for qbench disc-fourier command.
+
+This module also contains thin wrappers for functions from qbench.fourier.experiment_runner,
+to adapt them for command line usage.
+"""
+from argparse import FileType, Namespace
 
 from yaml import safe_dump, safe_load
 
 from ..common_models import BackendDescriptionRoot
-from ._experiment_runner import (
-    fetch_statuses,
-    resolve_results,
-    run_experiment,
-    tabulate_results,
-)
 from ._models import (
     FourierDiscriminationAsyncResult,
     FourierDiscriminationExperiment,
     FourierDiscriminationSyncResult,
 )
+from .experiment_runner import (
+    fetch_statuses,
+    resolve_results,
+    run_experiment,
+    tabulate_results,
+)
 
 
-def _run_benchmark(args):
+def _run_benchmark(args: Namespace) -> None:
     """Function executed when qbench disc-fourier benchmark is invoked."""
     experiment = FourierDiscriminationExperiment(**safe_load(args.experiment_file))
     backend_description = BackendDescriptionRoot(__root__=safe_load(args.backend_file)).__root__
@@ -26,21 +30,21 @@ def _run_benchmark(args):
     safe_dump(result.dict(), args.output, sort_keys=False, default_flow_style=None)
 
 
-def _status(args):
+def _status(args: Namespace) -> None:
     """Function executed when qbench disc-fourier status is invoked."""
     results = FourierDiscriminationAsyncResult(**safe_load(args.async_results))
     counts = fetch_statuses(results)
     print(counts)
 
 
-def _resolve(args):
+def _resolve(args: Namespace) -> None:
     """Function executed when qbench disc-fourier resolve is invoked."""
     results = FourierDiscriminationAsyncResult(**safe_load(args.async_results))
     resolved = resolve_results(results)
     safe_dump(resolved.dict(), args.output, sort_keys=False)
 
 
-def _tabulate(args):
+def _tabulate(args: Namespace) -> None:
     """Function executed when qbench disc-fourier tabulate is invoked."""
     results = FourierDiscriminationSyncResult(**safe_load(args.sync_results))
     table = tabulate_results(results)

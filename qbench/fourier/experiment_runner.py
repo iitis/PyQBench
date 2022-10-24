@@ -1,3 +1,4 @@
+"""Functions for running Fourier discrimination experiments and interacting with the results."""
 from collections import Counter, defaultdict
 from logging import getLogger
 from typing import Dict, Iterable, List, Optional, Tuple, Union, cast
@@ -9,19 +10,18 @@ from qiskit import QiskitError, QuantumCircuit
 from qiskit.circuit import Parameter
 from qiskit.providers import JobV1
 
-from qbench.schemes.direct_sum import (
+from ..batching import BatchJob, execute_in_batches
+from ..common_models import Backend, BackendDescription
+from ..jobs import retrieve_jobs
+from ..limits import get_limits
+from ..schemes.direct_sum import (
     assemble_direct_sum_circuits,
     compute_probabilities_from_direct_sum_measurements,
 )
-from qbench.schemes.postselection import (
+from ..schemes.postselection import (
     assemble_postselection_circuits,
     compute_probabilities_from_postselection_measurements,
 )
-
-from ..batching import BatchJob, execute_in_batches
-from ..common_models import BackendDescription
-from ..jobs import retrieve_jobs
-from ..limits import get_limits
 from ._components import FourierComponents
 from ._models import (
     BatchResult,
@@ -37,6 +37,7 @@ logger = getLogger("qbench")
 
 
 def _log_fourier_experiment(experiment: FourierDiscriminationExperiment) -> None:
+    """Log basic information of about the experiment."""
     logger.info("Running Fourier-discrimination experiment")
     logger.info("Number of qubit-pairs: %d", len(experiment.qubits))
     logger.info("Number of phi values: %d", experiment.angles.num_steps)
@@ -46,6 +47,7 @@ def _log_fourier_experiment(experiment: FourierDiscriminationExperiment) -> None
 
 
 def _matrix_from_mitigation_info(info: QubitMitigationInfo) -> np.ndarray:
+    """Construct Mthree-compatible matrix from mitigation info."""
     return np.array(
         [
             [1 - info.prob_meas1_prep0, info.prob_meas0_prep1],
@@ -54,31 +56,69 @@ def _matrix_from_mitigation_info(info: QubitMitigationInfo) -> np.ndarray:
     )
 
 
-def _mitigate(counts, target, ancilla, backend, mitigation_info):
+def _mitigate(
+    counts: Dict[str, int],
+    target: int,
+    ancilla: int,
+    backend: Backend,
+    mitigation_info: Dict[str, QubitMitigationInfo],
+) -> Dict[str, float]:
+    """Apply error mitigation to obtained counts.
+
+    :param counts: histogram of measured bitstrings.
+    :param target: index of the target qubit.
+    :param ancilla: index of the ancilla qubit.
+    :param backend: backend used for executing job.
+    :param mitigation_info: dictionary with keys 'ancilla' and 'target', mapping them to objects
+     holding mitigation info (prob_meas1_prep0 and prob_meas0_prep1).
+    :return: dictionary with corrected quasi-distribution of bitstrings. Note that this contains
+     probabilities and not counts, but nevertheless can be used for computing probabilities.
+    """
     mitigator = M3Mitigation(backend)
-    matrices = [None for _ in range(backend.configuration().num_qubits)]
+
+    matrices: List[Optional[np.ndarray]] = [None for _ in range(backend.configuration().num_qubits)]
     matrices[target] = _matrix_from_mitigation_info(mitigation_info["target"])
     matrices[ancilla] = _matrix_from_mitigation_info(mitigation_info["ancilla"])
+
     mitigator.cals_from_matrices(matrices)
     result = mitigator.apply_correction(counts, [target, ancilla])
+    # Wrap value in native floats, otherwise we get serialization problems
     return {key: float(value) for key, value in result.items()}
 
 
 def _extract_result_from_job(
     job: JobV1, target: int, ancilla: int, i: int, name: str
 ) -> Optional[ResultForCircuit]:
+    """Extract meaningful information from job and wra them in serializable object.
+
+    .. note::
+       Single job can comprise running multiple circuits (experiments in Qiskit terminology)
+       and hence we need parameter i to identify which one we are processing right now.
+
+    :param job: Qiskit job used for computing results.
+    :param target: index of the target qubit.
+    :param ancilla: index of the ancilla qubit.
+    :param i: index of the experiment in job.
+    :param name: name of the circuit to be used in the resulting object.
+    :return: object containing results or None if the provided job was not successful."""
     try:
         result = {"name": name, "histogram": job.result().get_counts()[i]}
     except QiskitError:
         return None
     try:
-        props = job.properties()
+        # We ignore some typing errors, since we are essentially accessing attributes that might
+        # not exist according to their base classes.
+        props = job.properties()  # type: ignore
         result["mitigation_info"] = {
             "target": QubitMitigationInfo.from_job_properties(props, target),
             "ancilla": QubitMitigationInfo.from_job_properties(props, ancilla),
         }
         result["mitigated_histogram"] = _mitigate(
-            result["histogram"], target, ancilla, job.backend(), result["mitigation_info"]
+            result["histogram"],
+            target,
+            ancilla,
+            job.backend(),  # type: ignore
+            result["mitigation_info"],
         )
     except AttributeError:
         pass
@@ -91,7 +131,6 @@ CircuitKey = Tuple[int, int, str, float]
 def _collect_circuits_and_keys(
     experiment: FourierDiscriminationExperiment,
     components: FourierComponents,
-    phi_range: np.ndarray,
 ) -> Tuple[Tuple[QuantumCircuit, ...], Tuple[CircuitKey, ...]]:
     """Construct all circuits needed for the experiment and assign them unique keys."""
 
@@ -127,24 +166,41 @@ def _collect_circuits_and_keys(
         for circuit_name, circuit in _asemble(target, ancilla).items()
     ]
 
-    # Cast is needed, because mypy cannot correctly infer types in zip
-    return cast(
-        Tuple[Tuple[QuantumCircuit, ...], Tuple[CircuitKey, ...]], tuple(zip(*circuit_key_pairs))
-    )
+    circuits, keys = zip(*circuit_key_pairs)
+    return circuits, keys
+
+
+def _iter_batches(batches: Iterable[BatchJob]) -> Iterable[Tuple[int, CircuitKey, JobV1]]:
+    """Iterate batches in a flat manner.
+
+    The returned iterable yields triples of the form (i, key, job)
+    where:
+    - key is the key in one one of the batches
+    - i is its index in the corresponding batch
+    - job is a job comprising this batch
+    """
+    return ((i, key, batch.job) for batch in batches for i, key in enumerate(batch.keys))
 
 
 def _resolve_batches(batches: Iterable[BatchJob]) -> List[SingleResult]:
+    """Resolve all results from batch of jobs and wrap them in a serializable object.
+
+    The number of returned objects can be less than what can be deduced from batches size iff
+    some jobs have failed.
+
+    :param batches: batches to be processed.
+    :return: dictionary mapping triples (target, ancilla, phi) to a list of results for each
+     circuit with that parameters.
+    """
     resolved = defaultdict(list)
 
     num_failed = 0
-    for batch in batches:
-        for i, key in enumerate(batch.keys):
-            target, ancilla, name, phi = key
-            result = _extract_result_from_job(batch.job, target, ancilla, i, name)
-            if result is None:
-                num_failed += 1
-            else:
-                resolved[target, ancilla, phi].append(result)
+    for i, (target, ancilla, name, phi), job in _iter_batches(batches):
+        result = _extract_result_from_job(job, target, ancilla, i, name)
+        if result is None:
+            num_failed += 1
+        else:
+            resolved[target, ancilla, phi].append(result)
 
     if num_failed:
         logger.warning(
@@ -175,14 +231,11 @@ def run_experiment(
 
     phi = Parameter("phi")
     components = FourierComponents(phi, gateset=experiment.gateset)
-    phi_range = np.linspace(
-        experiment.angles.start, experiment.angles.stop, experiment.angles.num_steps
-    )
 
     backend = backend_description.create_backend()
     logger.info(f"Backend type: {type(backend).__name__}, backend name: {backend.name}")
 
-    circuits, keys = _collect_circuits_and_keys(experiment, components, phi_range)
+    circuits, keys = _collect_circuits_and_keys(experiment, components)
 
     batches = execute_in_batches(
         backend, circuits, keys, experiment.num_shots, get_limits(backend).max_circuits
@@ -237,7 +290,7 @@ def resolve_results(
      If the result object already contains histograms, an error will be raised.
     :return: Object containing resolved data. Format of this object is the same as the one
      returned directly from a synchronous execution of FourierDiscrimination experiment. In
-     particular, it contains histograms of btstrings for each circuit run durign the experiment.
+     particular, it contains histograms of bitstrings for each circuit run during the experiment.
     """
     logger.info("Enabling account and creating backend")
     backend = async_results.metadata.backend_description.create_backend()
@@ -288,7 +341,7 @@ def tabulate_results(sync_results: FourierDiscriminationSyncResult) -> pd.DataFr
 
     rows = [_make_row(entry) for entry in sync_results.data]
 
-    # We assume that either all circuits have mitigation info, or none of th em has
+    # We assume that either all circuits have mitigation info, or none of them has
     columns = (
         ["target", "ancilla", "phi", "disc_prob"]
         if len(rows[0]) == 4

@@ -1,4 +1,14 @@
-from typing import Any, Iterable, List, Literal, Optional, Tuple, Type, TypeVar
+from typing import (
+    Any,
+    Iterable,
+    List,
+    Literal,
+    Optional,
+    Sequence,
+    Tuple,
+    Type,
+    TypeVar,
+)
 
 import numpy as np
 from pydantic import validator
@@ -80,7 +90,7 @@ class SingleResult(BaseModel):
 
 class BatchResult(BaseModel):
     job_id: str
-    keys: List[Tuple[int, int, str, float]]
+    keys: Sequence[Tuple[int, int, str, float]]
 
 
 class FourierDiscriminationSyncResult(BaseModel):

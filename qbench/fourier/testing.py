@@ -1,13 +1,15 @@
 """Testing utilities related qbench.fourier packager."""
+from typing import Sequence, Tuple
+
 import pandas as pd
 
-from qbench.fourier import (
-    FourierDiscriminationExperiment,
-    FourierDiscriminationSyncResult,
-)
+from ._models import FourierDiscriminationExperiment, FourierDiscriminationSyncResult
+
+KeySequence = Sequence[Tuple[int, int, float]]
 
 
-def _circuit_keys_equal(actual, expected):
+def _circuit_keys_equal(actual: KeySequence, expected: KeySequence) -> bool:
+    """Assert two sequences of"""
     return len(actual) == len(expected) and all(
         key1[0:2] == key2[0:2] and abs(key1[2] - key2[2]) < 1e-7
         for key1, key2 in zip(sorted(actual), sorted(expected))
@@ -34,7 +36,7 @@ def assert_sync_results_contain_data_for_all_circuits(
 
 def assert_tabulated_results_contain_data_for_all_circuits(
     experiment: FourierDiscriminationExperiment, dataframe: pd.DataFrame
-):
+) -> None:
     expected_keys = list(experiment.enumerate_circuit_keys())
     actual_keys = [(row[0], row[1], row[2]) for row in dataframe.itertuples(index=False)]
 

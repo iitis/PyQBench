@@ -6,7 +6,7 @@ from typing import Any, NamedTuple, Optional, Sequence
 from qiskit import QuantumCircuit
 from qiskit.providers import JobV1
 
-from qbench.common_models import Backend
+from .common_models import Backend
 
 
 class BatchWithKey(NamedTuple):

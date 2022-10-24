@@ -14,10 +14,10 @@ from qbench.common_models import (
     SimpleBackendDescription,
 )
 from qbench.fourier import (
+    FourierDiscriminationAsyncResult,
     FourierDiscriminationExperiment,
     FourierDiscriminationSyncResult,
 )
-from qbench.fourier._models import FourierDiscriminationAsyncResult
 
 EXAMPLES_PATH = Path(__file__).parent / "../examples"
 
@@ -42,7 +42,7 @@ class TestSimpleBackendDescription:
         [
             (
                 BackendFactoryDescription(
-                    factory="qiskit_braket_provider:BraketLocalBackend", args=("braket_sv",)
+                    factory="qiskit_braket_provider:BraketLocalBackend", args=["braket_sv"]
                 ),
                 "braket_sv",
             ),
@@ -77,7 +77,7 @@ class TestBackendFactoryDescription:
     )
     def test_does_not_validate_if_factory_path_string_is_incorrectly_formatted(self, factory):
         with pytest.raises(ValidationError):
-            BackendFactoryDescription(factory=factory, args=("BraketLocalBackend",))
+            BackendFactoryDescription(factory=factory, args=["BraketLocalBackend"])
 
     @pytest.mark.parametrize(
         "provider, name, provider_cls",
@@ -200,32 +200,34 @@ class TestAnglesRange:
         assert description.stop == input["stop"]
 
     def test_degenerate_range_can_contain_only_one_angle(self):
-        angle_range = AnglesRange(start=10, stop=10, num_steps=1)
+        angle_range = AnglesRange.parse_obj({"start": 10, "stop": 10, "num_steps": 1})
         assert angle_range.stop == angle_range.start == 10
         assert angle_range.num_steps == 1
 
         with pytest.raises(ValidationError):
-            AnglesRange(start=10, stop=10, num_steps=2)
+            AnglesRange.parse_obj({"start": 10, "stop": 10, "num_steps": 2})
 
     def test_start_and_stop_can_contain_arithmetic_expression_with_pi(self):
-        angles_range = AnglesRange(start="-2 * pi", stop="3 * pi", num_steps=10)
+        angles_range = AnglesRange.parse_obj(
+            {"start": "-2 * pi", "stop": "3 * pi", "num_steps": 10}
+        )
         assert angles_range.start == -2 * np.pi
         assert angles_range.stop == 3 * np.pi
         assert angles_range.num_steps == 10
 
     def test_pi_is_the_only_non_numeric_literal_recognized_in_start_or_stop(self):
         with pytest.raises(ValidationError):
-            AnglesRange(start="2 * x", stop=4, num_steps=5)
+            AnglesRange.parse_obj({"start": "2 * x", "stop": 4, "num_steps": 5})
 
         with pytest.raises(ValidationError):
-            AnglesRange(start=2, stop="4 * test", num_steps=5)
+            AnglesRange.parse_obj({"start": 2, "stop": "4 * test", "num_steps": 5})
 
         with pytest.raises(ValidationError):
-            AnglesRange(start=2, stop="4 * [1, 2, 3]", num_steps=5)
+            AnglesRange.parse_obj({"start": 2, "stop": "4 * [1, 2, 3]", "num_steps": 5})
 
     def test_raises_validation_error_if_start_gt_stop(self):
         with pytest.raises(ValidationError):
-            AnglesRange(start=2, stop=1, num_steps=3)
+            AnglesRange.parse_obj({"start": 2, "stop": 1, "num_steps": 3})
 
 
 class TestExampleYamlInputsAreMatchingModels:
@@ -251,7 +253,7 @@ class TestExampleYamlInputsAreMatchingModels:
         path = EXAMPLES_PATH / filename
         with open(path) as f:
             data = safe_load(f)
-            BackendFactoryDescription(**data)
+            BackendFactoryDescription.parse_obj(data)
 
     @pytest.mark.parametrize(
         "filename",
