@@ -41,6 +41,7 @@ dynamic = ["version"]
 [project.optional-dependencies]
 test = ["pytest>=6.1.2", "pytest-mock>=3.3.1", "pytest-cov>=2.12.1"]
 dev = ["flake8>=4.0.1", "black>=21.12b0", "isort>=5.10.1", "mypy>=0.961"]
+docs = ["sphinx>=5.3.0", "pydata-sphinx-theme>=0.11.0", "myst-parser>=0.18.1"]
 
 [project.scripts]
 qbench = "qbench.cli:main"
