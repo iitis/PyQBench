@@ -1,5 +1,16 @@
-from typing import Dict, List, Literal, Optional, Tuple, Union
+from typing import (
+    Any,
+    Iterable,
+    List,
+    Literal,
+    Optional,
+    Sequence,
+    Tuple,
+    Type,
+    TypeVar,
+)
 
+import numpy as np
 from pydantic import validator
 
 from ..common_models import (
@@ -13,7 +24,7 @@ from ..common_models import (
 )
 
 
-class FourierDiscriminationExperiment(BaseModel):
+class FourierExperimentSet(BaseModel):
     type: Literal["discrimination-fourier"]
     qubits: List[QubitsPair]
     angles: AnglesRange
@@ -28,15 +39,34 @@ class FourierDiscriminationExperiment(BaseModel):
             raise ValueError("All pairs of qubits should be distinct.")
         return qubits
 
+    def enumerate_experiment_labels(self) -> Iterable[Tuple[int, int, float]]:
+        return (
+            (pair.target, pair.ancilla, phi)
+            for pair in self.qubits
+            for phi in np.linspace(self.angles.start, self.angles.stop, self.angles.num_steps)
+        )
+
 
 class FourierDiscriminationMetadata(BaseModel):
-    experiment: FourierDiscriminationExperiment
+    experiments: FourierExperimentSet
     backend_description: BackendDescription
+
+
+T = TypeVar("T", bound="QubitMitigationInfo")
 
 
 class QubitMitigationInfo(BaseModel):
     prob_meas0_prep1: float
     prob_meas1_prep0: float
+
+    @classmethod
+    def from_job_properties(cls: Type[T], properties, qubit) -> T:
+        return cls.parse_obj(
+            {
+                "prob_meas0_prep1": properties.qubit_property(qubit)["prob_meas0_prep1"][0],
+                "prob_meas1_prep0": properties.qubit_property(qubit)["prob_meas1_prep0"][0],
+            }
+        )
 
 
 class MitigationInfo(BaseModel):
@@ -45,26 +75,29 @@ class MitigationInfo(BaseModel):
 
 
 class ResultForCircuit(BaseModel):
+    name: str
     histogram: SynchronousHistogram
-    mitigation_info: Optional[MitigationInfo] = None
-
-
-class ResultForAngle(BaseModel):
-    phi: float
-    circuits_for_angle: Dict[str, ResultForCircuit]
+    mitigation_info: Optional[MitigationInfo]
+    mitigated_histogram: Optional[Any]
 
 
 class SingleResult(BaseModel):
     target: Qubit
     ancilla: Qubit
-    measurement_counts: List[ResultForAngle]
+    phi: float
+    results_per_circuit: List[ResultForCircuit]
 
 
 class BatchResult(BaseModel):
     job_id: str
-    keys: List[Tuple[int, int, str, float]]
+    keys: Sequence[Tuple[int, int, str, float]]
 
 
-class FourierDiscriminationResult(BaseModel):
+class FourierDiscriminationSyncResult(BaseModel):
     metadata: FourierDiscriminationMetadata
-    results: Union[List[SingleResult], List[BatchResult]]
+    data: List[SingleResult]
+
+
+class FourierDiscriminationAsyncResult(BaseModel):
+    metadata: FourierDiscriminationMetadata
+    data: List[BatchResult]

@@ -6,9 +6,12 @@ from typing import Any, Dict, List, Optional, Union
 from pydantic import BaseModel as PydanticBaseModel
 from pydantic import ConstrainedInt, Field, StrictStr, root_validator, validator
 from qiskit import IBMQ
+from qiskit.circuit import Parameter
 from qiskit.providers import BackendV1, BackendV2
 
 from ._expressions import eval_expr
+
+AnyParameter = Union[float, Parameter]
 
 
 class BaseModel(PydanticBaseModel):

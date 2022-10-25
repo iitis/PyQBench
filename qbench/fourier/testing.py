@@ -1,38 +1,50 @@
 """Testing utilities related qbench.fourier packager."""
-from typing import List, cast
+from typing import Sequence, Tuple
 
-import numpy as np
+import pandas as pd
 
-from qbench.fourier import FourierDiscriminationExperiment, FourierDiscriminationResult
-from qbench.fourier._models import SingleResult
+from ._models import FourierDiscriminationSyncResult, FourierExperimentSet
+
+LabelSequence = Sequence[Tuple[int, int, float]]
 
 
-def assert_sync_results_contain_data_for_all_circuits(
-    experiment: FourierDiscriminationExperiment, results: FourierDiscriminationResult
+def _experiment_labels_equal(actual: LabelSequence, expected: LabelSequence) -> bool:
+    """Assert two sequences of experiment labels are equal.
+
+    The label comprises index of target, index of ancilla and Fourier angle phi.
+    While we require exact equality between indices of qubits, equality of angles is
+    checked only up to 7 decimal places, which is enough for the purpose of our unit tests.
+    The exact equality of angles cannot be expected because of the serialization of floating
+    point numbers.
+    """
+    return len(actual) == len(expected) and all(
+        label1[0:2] == label2[0:2] and abs(label1[2] - label2[2]) < 1e-7
+        for label1, label2 in zip(sorted(actual), sorted(expected))
+    )
+
+
+def assert_sync_results_contain_data_for_all_experiments(
+    experiments: FourierExperimentSet, results: FourierDiscriminationSyncResult
 ) -> None:
     """Verify synchronous result of computation has measurements for each qubits pair and phi.
 
-    :param experiment: Fourier discrimination experiment. Note that this function does not take
-     into account the method used in experiment, and only checks (target, ancilla) pairs ond
-     values of phi parameter.
-    :param results: results of execution of synchronous experiment.
+    :param experiments: set of Fourier discrimination experiments.
+     Note that this function does not take into account the method used in experiments,
+     and only checks (target, ancilla) pairs ond values of phi parameter.
+    :param results: results of execution of synchronous experiments.
     :raise: AssertionError if measurements for some combination of (target, ancilla, phi) are
      missing.
     """
-    actual_qubit_pairs = [
-        (entry.target, entry.ancilla) for entry in cast(List[SingleResult], results.results)
-    ]
+    expected_labels = list(experiments.enumerate_experiment_labels())
+    actual_labels = [(entry.target, entry.ancilla, entry.phi) for entry in results.data]
 
-    expected_qubit_pairs = [(entry.target, entry.ancilla) for entry in experiment.qubits]
+    assert _experiment_labels_equal(actual_labels, expected_labels)
 
-    assert set(actual_qubit_pairs) == set(expected_qubit_pairs)
-    assert len(actual_qubit_pairs) == len(expected_qubit_pairs)
 
-    expected_angles = np.linspace(
-        experiment.angles.start, experiment.angles.stop, experiment.angles.num_steps
-    )
+def assert_tabulated_results_contain_data_for_all_experiments(
+    experiments: FourierExperimentSet, dataframe: pd.DataFrame
+) -> None:
+    expected_labels = list(experiments.enumerate_experiment_labels())
+    actual_labels = [(row[0], row[1], row[2]) for row in dataframe.itertuples(index=False)]
 
-    assert all(
-        sorted([counts.phi for counts in entry.measurement_counts]) == sorted(expected_angles)
-        for entry in cast(List[SingleResult], results.results)
-    )
+    assert _experiment_labels_equal(actual_labels, expected_labels)

@@ -1,12 +1,13 @@
 """Functions for splitting sequences of circuits into batches."""
 import math
 from itertools import islice
-from typing import Any, NamedTuple, Optional, Sequence
+from typing import Any, Iterable, NamedTuple, Optional, Sequence
 
 from qiskit import QuantumCircuit
 from qiskit.providers import JobV1
+from tqdm import tqdm
 
-from qbench.common_models import Backend
+from .common_models import Backend
 
 
 class BatchWithKey(NamedTuple):
@@ -54,8 +55,9 @@ def execute_in_batches(
     keys: Sequence[Any],
     shots: int,
     batch_size: Optional[int],
+    show_progress: bool = False,
     **kwargs
-) -> Sequence[BatchJob]:
+) -> Iterable[BatchJob]:
     """Execute given sequence of circuits with corresponding keys in batches on a backend.
 
     :param backend: backend which will be usd for executing circuits.
@@ -65,12 +67,17 @@ def execute_in_batches(
     :param batch_size: number of circuits in a batch. The circuits and keys will be batches using
      batch_circuits_with_keys_function, and each batch will be executed as a single job on
      the backend.
-    :return: Sequence of namedtuples with fields `job` and `keys`. Each job runs circuits
+    :param show_progress: flag determining if a tqdm progress bar should be shown (True) or not
+     (False). Defaults to False.
+    :return: Iterable of namedtuples with fields `job` and `keys`. Each job runs circuits
      corresponding to keys in `keys`, and the order of circuits in the job corresponds to
      order of `keys`.
     """
     batches = batch_circuits_with_keys(circuits, keys, batch_size)
-    return [
+    result = (
         BatchJob(backend.run(batch.circuits, shots=shots, **kwargs), batch.keys)
         for batch in batches
-    ]
+    )
+    if show_progress:
+        result = tqdm(result, total=len(batches))
+    return result

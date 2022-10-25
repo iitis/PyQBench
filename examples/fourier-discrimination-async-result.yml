@@ -1,5 +1,5 @@
 metadata:
-  experiment:
+  experiments:
     type: discrimination-fourier
     qubits:
       - target: 0
@@ -19,7 +19,7 @@ metadata:
       - "braket_dm"
     run_options:
       verbatim: true
-results:
+data:
   - job_id: 6325bded0d41675e850873d2
     keys:
       - [0, 1, "id_v0", 0.0]

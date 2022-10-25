@@ -13,7 +13,11 @@ from qbench.common_models import (
     IBMQBackendDescription,
     SimpleBackendDescription,
 )
-from qbench.fourier import FourierDiscriminationExperiment, FourierDiscriminationResult
+from qbench.fourier import (
+    FourierDiscriminationAsyncResult,
+    FourierDiscriminationSyncResult,
+    FourierExperimentSet,
+)
 
 EXAMPLES_PATH = Path(__file__).parent / "../examples"
 
@@ -38,7 +42,7 @@ class TestSimpleBackendDescription:
         [
             (
                 BackendFactoryDescription(
-                    factory="qiskit_braket_provider:BraketLocalBackend", args=("braket_sv",)
+                    factory="qiskit_braket_provider:BraketLocalBackend", args=["braket_sv"]
                 ),
                 "braket_sv",
             ),
@@ -73,7 +77,7 @@ class TestBackendFactoryDescription:
     )
     def test_does_not_validate_if_factory_path_string_is_incorrectly_formatted(self, factory):
         with pytest.raises(ValidationError):
-            BackendFactoryDescription(factory=factory, args=("BraketLocalBackend",))
+            BackendFactoryDescription(factory=factory, args=["BraketLocalBackend"])
 
     @pytest.mark.parametrize(
         "provider, name, provider_cls",
@@ -90,7 +94,7 @@ class TestBackendFactoryDescription:
         assert isinstance(backend.provider(), provider_cls)
 
 
-class TestFourierDiscriminationExperiment:
+class TestFourierDiscriminationExperimentSet:
     @pytest.mark.parametrize(
         "input",
         [
@@ -105,7 +109,7 @@ class TestFourierDiscriminationExperiment:
         ],
     )
     def test_can_be_parsed_from_correct_input(self, input):
-        description = FourierDiscriminationExperiment(**input)
+        description = FourierExperimentSet(**input)
         assert description.type == input["type"]
 
     def test_fails_to_validate_if_qubit_index_is_not_integral(self):
@@ -118,7 +122,7 @@ class TestFourierDiscriminationExperiment:
         }
 
         with pytest.raises(ValidationError):
-            FourierDiscriminationExperiment(**input)
+            FourierExperimentSet(**input)
 
     @pytest.mark.parametrize(
         "input",
@@ -146,7 +150,7 @@ class TestFourierDiscriminationExperiment:
     )
     def test_fails_to_validate_if_some_fields_are_missing(self, input):
         with pytest.raises(ValidationError):
-            FourierDiscriminationExperiment(**input)
+            FourierExperimentSet(**input)
 
     def test_fails_to_validate_if_experiment_type_is_different_from_fourier_discrimination(self):
         input = {
@@ -158,7 +162,7 @@ class TestFourierDiscriminationExperiment:
         }
 
         with pytest.raises(ValidationError):
-            FourierDiscriminationExperiment(**input)
+            FourierExperimentSet(**input)
 
     def test_fails_to_validate_if_method_is_unknown(self):
         input = {
@@ -170,7 +174,7 @@ class TestFourierDiscriminationExperiment:
         }
 
         with pytest.raises(ValidationError):
-            FourierDiscriminationExperiment(**input)
+            FourierExperimentSet(**input)
 
     def test_cannot_be_parsed_if_there_are_duplicate_qubit_pairs(self):
         input = {
@@ -185,7 +189,7 @@ class TestFourierDiscriminationExperiment:
             "number_of_shots": 5,
         }
         with pytest.raises(ValidationError):
-            FourierDiscriminationExperiment(**input)
+            FourierExperimentSet(**input)
 
 
 class TestAnglesRange:
@@ -196,40 +200,42 @@ class TestAnglesRange:
         assert description.stop == input["stop"]
 
     def test_degenerate_range_can_contain_only_one_angle(self):
-        angle_range = AnglesRange(start=10, stop=10, num_steps=1)
+        angle_range = AnglesRange.parse_obj({"start": 10, "stop": 10, "num_steps": 1})
         assert angle_range.stop == angle_range.start == 10
         assert angle_range.num_steps == 1
 
         with pytest.raises(ValidationError):
-            AnglesRange(start=10, stop=10, num_steps=2)
+            AnglesRange.parse_obj({"start": 10, "stop": 10, "num_steps": 2})
 
     def test_start_and_stop_can_contain_arithmetic_expression_with_pi(self):
-        angles_range = AnglesRange(start="-2 * pi", stop="3 * pi", num_steps=10)
+        angles_range = AnglesRange.parse_obj(
+            {"start": "-2 * pi", "stop": "3 * pi", "num_steps": 10}
+        )
         assert angles_range.start == -2 * np.pi
         assert angles_range.stop == 3 * np.pi
         assert angles_range.num_steps == 10
 
     def test_pi_is_the_only_non_numeric_literal_recognized_in_start_or_stop(self):
         with pytest.raises(ValidationError):
-            AnglesRange(start="2 * x", stop=4, num_steps=5)
+            AnglesRange.parse_obj({"start": "2 * x", "stop": 4, "num_steps": 5})
 
         with pytest.raises(ValidationError):
-            AnglesRange(start=2, stop="4 * test", num_steps=5)
+            AnglesRange.parse_obj({"start": 2, "stop": "4 * test", "num_steps": 5})
 
         with pytest.raises(ValidationError):
-            AnglesRange(start=2, stop="4 * [1, 2, 3]", num_steps=5)
+            AnglesRange.parse_obj({"start": 2, "stop": "4 * [1, 2, 3]", "num_steps": 5})
 
     def test_raises_validation_error_if_start_gt_stop(self):
         with pytest.raises(ValidationError):
-            AnglesRange(start=2, stop=1, num_steps=3)
+            AnglesRange.parse_obj({"start": 2, "stop": 1, "num_steps": 3})
 
 
 class TestExampleYamlInputsAreMatchingModels:
-    def test_fourier_discrimination_experiment_input_matches_model(self):
+    def test_fourier_discrimination_experiments_input_matches_model(self):
         path = EXAMPLES_PATH / "fourier-discrimination-experiment.yml"
         with open(path) as f:
             data = safe_load(f)
-            FourierDiscriminationExperiment(**data)
+            FourierExperimentSet(**data)
 
     @pytest.mark.parametrize(
         "filename", ["simple-backend.yml", "simple-backend-with-run-options.yml"]
@@ -247,7 +253,7 @@ class TestExampleYamlInputsAreMatchingModels:
         path = EXAMPLES_PATH / filename
         with open(path) as f:
             data = safe_load(f)
-            BackendFactoryDescription(**data)
+            BackendFactoryDescription.parse_obj(data)
 
     @pytest.mark.parametrize(
         "filename",
@@ -257,13 +263,13 @@ class TestExampleYamlInputsAreMatchingModels:
         path = EXAMPLES_PATH / filename
         with open(path) as f:
             data = safe_load(f)
-            FourierDiscriminationResult(**data)
+            FourierDiscriminationSyncResult(**data)
 
     def test_fourier_discrimination_async_result_matches_model(self):
         path = EXAMPLES_PATH / "fourier-discrimination-async-result.yml"
         with open(path) as f:
             data = safe_load(f)
-            FourierDiscriminationResult(**data)
+            FourierDiscriminationAsyncResult(**data)
 
     def tests_ibmq_backend_input_matches_model(self):
         path = EXAMPLES_PATH / "ibmq-backend.yml"

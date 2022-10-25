@@ -6,8 +6,8 @@ from qiskit.circuit import Instruction
 from qiskit.providers import BackendV1, BackendV2
 from qiskit.result import marginal_counts
 
-from qbench.common_models import MeasurementsDict
-from qbench.utils import remap_qubits
+from ..common_models import MeasurementsDict
+from ._utils import remap_qubits
 
 
 def assemble_direct_sum_circuits(
@@ -17,7 +17,7 @@ def assemble_direct_sum_circuits(
     u_dag: Instruction,
     v0_v1_direct_sum_dag: Instruction,
 ) -> Dict[str, QuantumCircuit]:
-    """Assemble circuits required for running Fourier Discrimination experiment using direct-sum.
+    """Assemble circuits required for running Fourier discrimination experiment using direct-sum.
 
     :param target: index of qubit measured either in Z-basis or the alternative one.
     :param ancilla: index of auxiliary qubit.

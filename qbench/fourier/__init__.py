@@ -1,11 +1,16 @@
-"""Implementation of components and functions computing probabilities for Fourier experiment."""
+"""Implementation of components and functions computing probabilities for set of Fourier
+experiments."""
 from typing import Union
 
 import numpy as np
 
 from ._cli import add_fourier_parser
 from ._components import FourierComponents
-from ._models import FourierDiscriminationExperiment, FourierDiscriminationResult
+from ._models import (
+    FourierDiscriminationAsyncResult,
+    FourierDiscriminationSyncResult,
+    FourierExperimentSet,
+)
 
 
 def discrimination_probability_upper_bound(
@@ -23,6 +28,7 @@ __all__ = [
     "discrimination_probability_upper_bound",
     "add_fourier_parser",
     "FourierComponents",
-    "FourierDiscriminationResult",
-    "FourierDiscriminationExperiment",
+    "FourierDiscriminationAsyncResult",
+    "FourierDiscriminationSyncResult",
+    "FourierExperimentSet",
 ]

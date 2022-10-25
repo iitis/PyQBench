@@ -6,8 +6,8 @@ from qiskit.circuit import Instruction
 from qiskit.providers import BackendV1, BackendV2
 from qiskit.result import marginal_counts
 
-from qbench.common_models import MeasurementsDict
-from qbench.utils import remap_qubits
+from ..common_models import MeasurementsDict
+from ._utils import remap_qubits
 
 
 def _construct_identity_circuit(
@@ -39,7 +39,7 @@ def assemble_postselection_circuits(
     v0_dag: Instruction,
     v1_dag: Instruction,
 ) -> Dict[str, QuantumCircuit]:
-    """Assemble circuits required for running Fourier Discrimination experiment using postselection.
+    """Assemble circuits required for running Fourier discrimination experiment using postselection.
 
     :param target: index of qubit measured either in Z-basis or the alternative one.
     :param ancilla: index of auxiliary qubit.
@@ -71,7 +71,8 @@ def compute_probabilities_from_postselection_measurements(
     u_v0_counts: MeasurementsDict,
     u_v1_counts: MeasurementsDict,
 ) -> float:
-    """Convert measurements obtained from postselection Fourier experiment to probabilities.
+    """Convert measurements obtained from postselection Fourier discrimination experiment
+    to probabilities.
 
     :param id_v0_counts: measurements for circuit with identity measurement on target and
      v0 measurement on ancilla.

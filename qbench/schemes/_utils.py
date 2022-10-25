@@ -4,7 +4,7 @@ from typing import Dict
 from qiskit import QuantumCircuit, transpile
 
 
-def remap_qubits(circuit: QuantumCircuit, virtual_to_physical: Dict[int, int]):
+def remap_qubits(circuit: QuantumCircuit, virtual_to_physical: Dict[int, int]) -> QuantumCircuit:
     """Transpile a circuit by assigning virtual qubits to physical ones.
 
     :param circuit: quantum circuit to be transpiled.

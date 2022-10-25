@@ -2,9 +2,9 @@ import numpy as np
 from matplotlib import pyplot as plt
 from qiskit_braket_provider import BraketLocalBackend
 
-from qbench.direct_sum import benchmark_using_controlled_unitary
 from qbench.fourier import discrimination_probability_upper_bound
 from qbench.fourier._components import FourierComponents
+from qbench.schemes.direct_sum import benchmark_using_controlled_unitary
 
 NUM_SHOTS_PER_MEASUREMENT = 10000
 TARGET = 0
@@ -33,7 +33,7 @@ def main():
 
     fig, ax = plt.subplots()
     ax.plot(phis, theoretical_probs, color="red", label="theoretical_predictions")
-    ax.plot(phis, actual_probs, color="blue", label="actual results")
+    ax.plot(phis, actual_probs, color="blue", label="actual data")
     ax.legend()
 
     plt.show()

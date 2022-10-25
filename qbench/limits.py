@@ -15,10 +15,10 @@ class Limits(NamedTuple):
 
 
 @singledispatch
-def get_limits(backend):
+def get_limits(_backend):
     """Obtain limit on maximum number of circuits and shots (per circuit) in a single job.
 
-    :param backend: backend to obtain limit for.
+    :param _backend: backend to obtain limit for.
     :return: namedtuple with max_circuits and max_shots, both optional integers. If any of the
      limits is set to None, it should be treated as lack of limit.
     """

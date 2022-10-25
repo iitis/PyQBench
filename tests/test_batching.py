@@ -75,7 +75,7 @@ class TestRunningCircuitInBatches:
         keys = range(2, 10)
         circuits = [_dummy_circuit(n) for n in keys]
 
-        batch_jobs = execute_in_batches(backend, circuits, keys, shots=100, batch_size=2)
+        batch_jobs = list(execute_in_batches(backend, circuits, keys, shots=100, batch_size=2))
 
         def _n_qubits_from_counts(counts):
             return next(iter(len(key) for key in counts))
