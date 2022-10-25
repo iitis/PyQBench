@@ -1,3 +1,4 @@
+"""Module defining compnents used in Fourier discrimination experiment."""
 from typing import Optional, Union
 
 from qiskit.circuit import Instruction, Parameter
@@ -11,7 +12,7 @@ class FourierComponents:
     def __init__(self, phi: Union[float, Parameter], gateset: Optional[str] = None):
         """Initialize new instance of FourierComponents.
 
-        :param phi: Fourier angle of measurement to discriminate.May be a qiskit Parameter.
+        :param phi: Fourier angle of measurement to discriminate. May be a qiskit Parameter.
         :param gateset: one of the predefined basis gate sets to use:
          ["lucy", "rigetti", "ibmq"]. If not provided, high-level definitions of gates
          will be used without restrictions on basis gates.

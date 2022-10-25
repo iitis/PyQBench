@@ -14,7 +14,7 @@ from qbench.fourier import (
 )
 from qbench.fourier.testing import (
     assert_sync_results_contain_data_for_all_experiments,
-    assert_tabulated_results_contain_data_for_all_circuits,
+    assert_tabulated_results_contain_data_for_all_experiments,
 )
 from qbench.testing import MockProvider
 
@@ -110,7 +110,7 @@ def test_main_entrypoint_with_disc_fourier_command(tmp_path, capsys):
     assert sum(status_output.values()) == len(async_output.data)
 
     assert list(result_df.columns) == ["target", "ancilla", "phi", "disc_prob"]
-    assert_tabulated_results_contain_data_for_all_circuits(experiments, result_df)
+    assert_tabulated_results_contain_data_for_all_experiments(experiments, result_df)
 
 
 @pytest.mark.usefixtures("create_experiment_file", "create_failing_backend_description")

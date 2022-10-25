@@ -50,8 +50,8 @@ def _backend_name(backend) -> str:
 
 
 def _log_fourier_experiments(experiments: FourierExperimentSet) -> None:
-    """Log basic information of about the experiments."""
-    logger.info("Running Fourier-discrimination experiment")
+    """Log basic information about the set of experiments."""
+    logger.info("Running set of Fourier-discrimination experiments")
     logger.info("Number of qubit-pairs: %d", len(experiments.qubits))
     logger.info("Number of phi values: %d", experiments.angles.num_steps)
     logger.info("Number of shots per circuit: %d", experiments.num_shots)
@@ -102,7 +102,7 @@ def _mitigate(
 def _extract_result_from_job(
     job: JobV1, target: int, ancilla: int, i: int, name: str
 ) -> Optional[ResultForCircuit]:
-    """Extract meaningful information from job and wra them in serializable object.
+    """Extract meaningful information from job and wrap them in serializable object.
 
     .. note::
        Single job can comprise running multiple circuits (experiments in Qiskit terminology)
@@ -113,7 +113,8 @@ def _extract_result_from_job(
     :param ancilla: index of the ancilla qubit.
     :param i: index of the experiment in job.
     :param name: name of the circuit to be used in the resulting object.
-    :return: object containing results or None if the provided job was not successful."""
+    :return: object containing results or None if the provided job was not successful.
+    """
     try:
         result = {"name": name, "histogram": job.result().get_counts()[i]}
     except QiskitError:
@@ -187,8 +188,7 @@ def _collect_circuits_and_keys(
 def _iter_batches(batches: Iterable[BatchJob]) -> Iterable[Tuple[int, CircuitKey, JobV1]]:
     """Iterate batches in a flat manner.
 
-    The returned iterable yields triples of the form (i, key, job)
-    where:
+    The returned iterable yields triples of the form (i, key, job) where:
     - key is the key in one one of the batches
     - i is its index in the corresponding batch
     - job is a job comprising this batch

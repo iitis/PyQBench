@@ -5,14 +5,21 @@ import pandas as pd
 
 from ._models import FourierDiscriminationSyncResult, FourierExperimentSet
 
-KeySequence = Sequence[Tuple[int, int, float]]
+LabelSequence = Sequence[Tuple[int, int, float]]
 
 
-def _circuit_keys_equal(actual: KeySequence, expected: KeySequence) -> bool:
-    """Assert two sequences of"""
+def _experiment_labels_equal(actual: LabelSequence, expected: LabelSequence) -> bool:
+    """Assert two sequences of experiment labels are equal.
+
+    The label comprises index of target, index of ancilla and Fourier angle phi.
+    While we require exact equality between indices of qubits, equality of angles is
+    checked only up to 7 decimal places, which is enough for the purpose of our unit tests.
+    The exact equality of angles cannot be expected because of the serialization of floating
+    point numbers.
+    """
     return len(actual) == len(expected) and all(
-        key1[0:2] == key2[0:2] and abs(key1[2] - key2[2]) < 1e-7
-        for key1, key2 in zip(sorted(actual), sorted(expected))
+        label1[0:2] == label2[0:2] and abs(label1[2] - label2[2]) < 1e-7
+        for label1, label2 in zip(sorted(actual), sorted(expected))
     )
 
 
@@ -28,16 +35,16 @@ def assert_sync_results_contain_data_for_all_experiments(
     :raise: AssertionError if measurements for some combination of (target, ancilla, phi) are
      missing.
     """
-    expected_keys = list(experiments.enumerate_experiment_labels())
-    actual_keys = [(entry.target, entry.ancilla, entry.phi) for entry in results.data]
+    expected_labels = list(experiments.enumerate_experiment_labels())
+    actual_labels = [(entry.target, entry.ancilla, entry.phi) for entry in results.data]
 
-    assert _circuit_keys_equal(actual_keys, expected_keys)
+    assert _experiment_labels_equal(actual_labels, expected_labels)
 
 
-def assert_tabulated_results_contain_data_for_all_circuits(
+def assert_tabulated_results_contain_data_for_all_experiments(
     experiments: FourierExperimentSet, dataframe: pd.DataFrame
 ) -> None:
-    expected_keys = list(experiments.enumerate_experiment_labels())
-    actual_keys = [(row[0], row[1], row[2]) for row in dataframe.itertuples(index=False)]
+    expected_labels = list(experiments.enumerate_experiment_labels())
+    actual_labels = [(row[0], row[1], row[2]) for row in dataframe.itertuples(index=False)]
 
-    assert _circuit_keys_equal(actual_keys, expected_keys)
+    assert _experiment_labels_equal(actual_labels, expected_labels)
