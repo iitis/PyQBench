@@ -40,4 +40,4 @@ class TestLucyDeviceCanRunDecomposedCircuitsInVerbatimMode:
         _assert_can_be_run_in_verbatim_mode(lucy, circuits.v1_dag)
 
     def test_v0_v1_direct_sum_dag_can_be_run(self, lucy, circuits):
-        _assert_can_be_run_in_verbatim_mode(lucy, circuits.controlled_v0_v1_dag)
+        _assert_can_be_run_in_verbatim_mode(lucy, circuits.v0_v1_direct_sum_dag)

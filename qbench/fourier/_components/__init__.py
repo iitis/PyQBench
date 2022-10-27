@@ -89,8 +89,8 @@ class FourierComponents:
         return self._module.v1_dag(self.phi)
 
     @property
-    def controlled_v0_v1_dag(self) -> Instruction:
-        r"""Direct sum of positive and negative part of Holevo-Helstrom measurement $V_0^\dagger \oplus V_1^\dagger$. # # noqa: E501
+    def v0_v1_direct_sum_dag(self) -> Instruction:
+        r"""Direct sum $V_0^\dagger\oplusV_1^\dagger$ of both parts of Holevo-Helstrom measurement.
 
         .. note::
            In usual basis ordering, the unitaries returned by this property would be

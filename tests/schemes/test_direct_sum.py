@@ -18,7 +18,7 @@ def test_computed_discrimination_probability_is_feasible(phi: float, gateset):
         ancilla=1,
         state_preparation=circuits.state_preparation,
         u_dag=circuits.u_dag,
-        v0_v1_direct_sum_dag=circuits.controlled_v0_v1_dag,
+        v0_v1_direct_sum_dag=circuits.v0_v1_direct_sum_dag,
         num_shots_per_measurement=20,
     )
 
