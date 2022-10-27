@@ -9,7 +9,7 @@ estimating how well they can discriminate between certain measurements.
 installing
 tutorial
 mathematical_foundations
-api_reference
+reference/index
 citing
 faq
 ```
