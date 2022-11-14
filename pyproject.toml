@@ -17,6 +17,12 @@ authors = [
     {name="Aleksandra Krawiec", email="aaleksandra.krawiec@gmail.com"},
     {name="Łukasz Pawela", email="lpawela@iitis.pl"},
 ]
+maintainers = [
+    {name="Paulina Lewandowska", email="plewandowska@iitis.pl"},
+    {name="Konrad Jałowiecki", email="dexter2206@gmail.com"},
+    {name="Aleksandra Krawiec", email="aaleksandra.krawiec@gmail.com"},
+    {name="Łukasz Pawela", email="lpawela@iitis.pl"},
+]
 license = {text="Apache-2.0"}
 classifiers = [
     "Intended Audience :: Science/Research",
@@ -48,7 +54,7 @@ docs = ["sphinx>=5.3.0", "pydata-sphinx-theme>=0.11.0", "myst-parser>=0.18.1", "
 qbench = "qbench.cli:main"
 
 [project.urls]
-repository = "https://github.com/iitis/PyQBench"
+"Source Code" = "https://github.com/iitis/PyQBench"
 
 [tool.setuptools.packages]
 find = {exclude = ["tests"]}
