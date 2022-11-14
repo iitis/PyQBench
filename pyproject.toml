@@ -17,12 +17,6 @@ authors = [
     {name="Aleksandra Krawiec", email="aaleksandra.krawiec@gmail.com"},
     {name="Łukasz Pawela", email="lpawela@iitis.pl"},
 ]
-maintainers = [
-    {name="Paulina Lewandowska", email="plewandowska@iitis.pl"},
-    {name="Konrad Jałowiecki", email="dexter2206@gmail.com"},
-    {name="Aleksandra Krawiec", email="aaleksandra.krawiec@gmail.com"},
-    {name="Łukasz Pawela", email="lpawela@iitis.pl"},
-]
 license = {text="Apache-2.0"}
 classifiers = [
     "Intended Audience :: Science/Research",
@@ -58,7 +52,6 @@ qbench = "qbench.cli:main"
 
 [tool.setuptools.packages]
 find = {exclude = ["tests"]}
-
 
 [tool.black]
 line-length = 100
