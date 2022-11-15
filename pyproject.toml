@@ -15,7 +15,7 @@ authors = [
     {name="Paulina Lewandowska", email="plewandowska@iitis.pl"},
     {name="Konrad Jałowiecki", email="dexter2206@gmail.com"},
     {name="Aleksandra Krawiec", email="aaleksandra.krawiec@gmail.com"},
-    {name="Łukasz Pawela", email="lpawela@iitis.pl"},
+    {name="Łukasz Pawela", email="lukasz.pawela@gmail.com"},
 ]
 license = {text="Apache-2.0"}
 classifiers = [
