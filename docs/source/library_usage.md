@@ -19,7 +19,7 @@ discrimination experiments. We'll only restrict ourselves to the details necessa
 experiments using PyQBench. However, we encourage you to check out Mathematical Foundations to
 get a better grasp of the entities and concepts discussed here.
 
-## Defining experiment using circuit components.
+## What do we need?
 
 On the conceptual level, every discrimination experiment performed in PyQBench needs the following:
 
@@ -37,9 +37,105 @@ scheme, we need the following operations implemented as Qiskit Instructions:
 - Instructions implementing $U^\dagger$, $V_0^\dagger$ and $V_1^\dagger$.
 
 Task of implementing needed instruction is trivial when we know the decomposition of our 
-unitaries into sequences of gates. If we only know unitary matrices, we can either decompose 
+unitaries into sequences of gates. If we only know the unitary matrices, we can either decompose 
 them by hand, or try using one of the available transpilers.
 
 For the direct-sum experiment we don't use $V_0^\dagger$ and $V_1^\dagger$ separately. Instead, 
 we need a two-qubit gate $V_0^\dagger \oplus V_1^\dagger$.
 
+## Our toy model
+
+In our example, we will use $U = H$ (the Hadamard gate). To keep us focused on the implementation
+in PyQBench and not delve too deep into mathematical explanation, we simply provide explicit 
+formulas for discrimination and $V_0$ and $V_1$, leaving the calculations to the interested reader.
+
+The explicit formula for discriminator in our toy model reads:
+
+$$
+| \Psi_0 \rangle = \frac{1}{\sqrt{2}} (| 00 \rangle + | 11 \rangle),
+$$ 
+
+with corresponding parts of optimal measurement being equal to 
+
+$$
+V_0 = \begin{bmatrix}
+\alpha & -\beta \\
+\beta & \alpha
+\end{bmatrix}
+$$
+
+$$
+V_1 = \begin{bmatrix}
+-\beta & \alpha \\
+\alpha & \beta
+\end{bmatrix}
+$$
+
+where
+
+$$
+\alpha = \frac{\sqrt{2 - \sqrt{2}}}{2} = \cos\left(\frac{3}{8}\pi\right)
+$$
+
+$$
+\beta = \frac{\sqrt{2 + \sqrt{2}}}{2} = \sin\left(\frac{3}{8}\pi\right)
+$$
+
+For completeness, here's how the direct sum $V_0 \oplus V_1$ looks like
+
+$$
+V_0 \oplus V_1  = \begin{bmatrix}
+V_0 & 0 \\
+0 & V_1
+\end{bmatrix} = \begin{bmatrix}
+\alpha & -\beta & 0 & 0 \\
+\beta & \alpha & 0 & 0 \\
+0 & 0 & -\beta & \alpha \\
+0 & 0 & \alpha & \beta
+\end{bmatrix}
+$$
+
+As a next step, we need decompose our matrices into actual sequences of gates.
+
+## Decomposing circuit components into gates
+
+We are lucky, because our discriminator is just a Bell state. Thus, the circuit taking 
+$|00\rangle$ to $|\Phi_0 \rangle$ is well known, and comprises  Hadamard gate 
+followed by CNOT gate on both qubits.
+
+< PLACEHOLDER FOR CIRCUIT >
+
+For $V_0$ and $V_1$ observe that $V_0 = \operatorname{RY} \left( \frac{3}{4} \pi \right)$, where 
+$\operatorname{RY}$ is just standard rotation around the $Y$ axis
+
+$$
+\operatorname{RY}(\theta) = \begin{bmatrix}
+\cos \frac{\theta}{2} & -\sin \frac{\theta}{2} \\
+\sin \frac{\theta}{2} & \cos \frac{\theta}{2}
+\end{bmatrix}
+$$
+
+To obtain $V_1$, we need only to swap the columns, which is equivalent to following $V_0$ by $X$ 
+matrix. Finally, remembering that we need to take Hermitian conjugates for our actual circuits,
+we obtain the following decompositions
+
+$$
+V_0^\dagger = \operatorname{RY} \left( \frac{3}{4} \pi \right)^\dagger = \operatorname{RY} \left
+( -\frac{3}{4} \pi \right)
+$$
+
+$$
+V_1^\dagger = \left(\operatorname{RY} \left( \frac{3}{4} \pi \right) \cdot X\right)^\dagger = 
+X \cdot \operatorname{RY} \left ( -\frac{3}{4} \pi \right)
+$$
+
+Recall that to perform an experiment using postselection scheme we need four circuits. One of them 
+(realizing $(U, V_0)$ alternative) looks like this.
+
+![Circuit implementing U^dagger, V_0 alternative](img/hadamard_u_v0.svg){#imgattr width="70%"}
+
+Other circuits can be created analogously by using identity instead of $U$ and/or $V_1^\dagger$ 
+instead of $V_0^\dagger$. However, you don't need to memorize how the circuits look like, because
+qbench will construct them for you.
+
+## Defining needed instructions using Qiskit
