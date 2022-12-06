@@ -11,7 +11,8 @@ script. In particular, we will cover the following topics:
 
 ## Setting the stage
 
-Before we start, make sure you installed PyQBench (see installation for detailed instruction).
+Before we start, make sure you installed PyQBench (see installation for 
+detailed instructions).
 Optionally, you might want to install matplotlib library for plotting the final results.
 
 In this guide we won't repeat mathematical foundations needed for understanding measurement
@@ -47,7 +48,8 @@ we need a two-qubit gate $V_0^\dagger \oplus V_1^\dagger$.
 
 In our example, we will use $U = H$ (the Hadamard gate). To keep us focused on the implementation
 in PyQBench and not delve too deep into mathematical explanation, we simply provide explicit 
-formulas for discrimination and $V_0$ and $V_1$, leaving the calculations to the interested reader.
+formulas for discriminator $|\Psi_0\rangle$ and $V_0$ and $V_1$, leaving the 
+calculations to the interested reader.
 
 The explicit formula for discriminator in our toy model reads:
 
@@ -139,3 +141,68 @@ instead of $V_0^\dagger$. However, you don't need to memorize how the circuits l
 qbench will construct them for you.
 
 ## Defining needed instructions using Qiskit
+
+We will start our code with the needed imports. Aside standard stuff like 
+numpy, we need to be able to define quantum circuits and a simulator to run 
+them.
+
+```{literalinclude} examples/example_01_hadamard.py
+:start-after: "# External imports"
+:end-before: "# ---"
+```
+
+
+Next we import needed functions from PyQBench. For our first example we'll 
+need two functions.
+```{literalinclude} examples/example_01_hadamard.py
+:start-after: "# PyQBench imports"
+:end-before: "# ---"
+```
+
+The first one, `benchmark_using_postselection` performs 
+the whole benchmarking process using postselection scheme. In particular, it 
+assembles the needed circuits, runs them using specified backend and 
+interprets measurement histograms in terms of discrimination probability. 
+Similarly, the `benchmark_using_direct_sum` does the same but with "direct 
+sum" scheme.
+
+To run any of these functions, we need to define components that we 
+discussed in previous sections. Its perhaps best to do this by defining 
+separate function for each component. The important thing to remember is 
+that we need to create Qiskit instructions, not circuits. We can 
+conveniently do so by constructing circuit acting on qubits 0 and 1 and then 
+converting them using `to_instruction()` method.
+
+```{literalinclude} examples/example_01_hadamard.py
+:start-after: "# Components definitions"
+:end-before: "# ---"
+```
+
+:::{note}
+You may wonder why we only define circuits on qubits 0 and 1, when we might 
+want to run the benchmarks for other qubits as well? It turns out that it 
+doesn't matter. In Qiskit, circuit converted to Instruction behaves just 
+like a gate. During the assembly stage, PyQBench will use those 
+instructions on correct qubits.
+:::
+
+Lastly, before launching our simulations, we need to construct simulator 
+they will run on. For the purpose of this example, we'll start with basic 
+[Qiskit Aer simulator](https://github.com/Qiskit/qiskit-aer).
+
+```{literalinclude} examples/example_01_hadamard.py
+:start-after: "# Obtaining Aer Simulator"
+:end-before: "# ---"
+```
+
+Now running the simulation is as simple as invoking functions imported from 
+`qbench` package.
+
+```{literalinclude} examples/example_01_hadamard.py
+:start-after: "# Running postselection"
+:end-before: "# ---"
+```
+```{literalinclude} examples/example_01_hadamard.py
+:start-after: "# Running direct_sum"
+:end-before: "# ---"
+```
