@@ -3,7 +3,7 @@ import pytest
 from qiskit_braket_provider import BraketLocalBackend
 
 from qbench.fourier import FourierComponents
-from qbench.schemes.direct_sum import benchmark_using_controlled_unitary
+from qbench.schemes.direct_sum import benchmark_using_direct_sum
 
 
 @pytest.mark.parametrize("phi", np.linspace(0, 2 * np.pi, 20))
@@ -12,7 +12,7 @@ def test_computed_discrimination_probability_is_feasible(phi: float, gateset):
     backend = BraketLocalBackend()
     circuits = FourierComponents(phi=phi, gateset=gateset)
 
-    probability = benchmark_using_controlled_unitary(
+    probability = benchmark_using_direct_sum(
         backend=backend,
         target=0,
         ancilla=1,

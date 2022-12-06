@@ -4,7 +4,7 @@ from qiskit_braket_provider import BraketLocalBackend
 
 from qbench.fourier import discrimination_probability_upper_bound
 from qbench.fourier._components import FourierComponents
-from qbench.schemes.direct_sum import benchmark_using_controlled_unitary
+from qbench.schemes.direct_sum import benchmark_using_direct_sum
 
 NUM_SHOTS_PER_MEASUREMENT = 10000
 TARGET = 0
@@ -19,7 +19,7 @@ def main():
     theoretical_probs = discrimination_probability_upper_bound(phis)
 
     actual_probs = [
-        benchmark_using_controlled_unitary(
+        benchmark_using_direct_sum(
             backend=backend,
             target=TARGET,
             ancilla=ANCILLA,
