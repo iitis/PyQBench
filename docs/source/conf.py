@@ -14,7 +14,7 @@ author = "Konrad Jałowiecki, Paulina Lewandowska, Łukasz Pawela"
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = ["sphinx.ext.autodoc", "myst_parser", "sphinx.ext.mathjax", "sphinx_math_dollar"]
+extensions = ["sphinx.ext.autodoc", "myst_nb", "sphinx.ext.mathjax", "sphinx_math_dollar"]
 
 templates_path = ["_templates"]
 exclude_patterns: List[str] = []
