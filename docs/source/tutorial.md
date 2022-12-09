@@ -11,6 +11,6 @@ PyQBench can be used in two different ways:
 Refer to the guides below for in-depth walkthroughs.
 
 ```{toctree}
-library_usage
+notebooks/Example 01 discriminating measurements in Hadamard basis.ipynb
 cli_usage
 ```
