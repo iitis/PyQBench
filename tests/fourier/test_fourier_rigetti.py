@@ -40,4 +40,4 @@ class TestRigettiDeviceCanRunDecomposedCircuitsInVerbatimMode:
         _assert_can_be_run_in_verbatim_mode(aspen, circuits.v1_dag)
 
     def test_v0_v1_direct_sum_dag_can_be_run(self, aspen, circuits):
-        _assert_can_be_run_in_verbatim_mode(aspen, circuits.controlled_v0_v1_dag)
+        _assert_can_be_run_in_verbatim_mode(aspen, circuits.v0_v1_direct_sum_dag)

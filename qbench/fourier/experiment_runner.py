@@ -162,7 +162,7 @@ def _collect_circuits_and_keys(
         return assemble_direct_sum_circuits(
             state_preparation=components.state_preparation,
             u_dag=components.u_dag,
-            v0_v1_direct_sum_dag=components.controlled_v0_v1_dag,
+            v0_v1_direct_sum_dag=components.v0_v1_direct_sum_dag,
             target=target,
             ancilla=ancilla,
         )

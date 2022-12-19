@@ -63,7 +63,7 @@ def compute_probabilities_from_direct_sum_measurements(
     ) / (2 * num_shots_per_measurement)
 
 
-def benchmark_using_controlled_unitary(
+def benchmark_using_direct_sum(
     backend: Union[BackendV1, BackendV2],
     target: int,
     ancilla: int,

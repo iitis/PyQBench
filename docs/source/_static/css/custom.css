@@ -1,0 +1,19 @@
+html * {
+    --pst-color-secondary: rgb(157, 158, 159);
+    --pst-color-link: rgb(231, 121, 25);
+    --pst-color-inline-code: rgb(231, 121, 25);
+}
+
+html[data-theme="light"] * {
+    --pst-color-background: rgb(247, 247, 247);
+    --pst-color-primary: rgb(50, 50, 50);
+    --pst-color-inline-code: rgb(231, 121, 25);
+}
+
+html[data-theme="dark"] * {
+    --pst-color-primary: rgb(247, 247, 247);
+}
+
+nav * {
+    color: rgb(231, 121, 25);
+}

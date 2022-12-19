@@ -1,5 +1,11 @@
-"""Implementation of components and functions computing probabilities for set of Fourier
-experiments."""
+"""Functionalities relating specifically to Fourier-discrimination experiments.
+
+This module contains the following:
+
+- Components (in the form of Qiskit Instructions) needed for performing postselection
+  or direct sum experiment using Fourier parametrized family.
+- Utility function computing upper bound on probability of correct discrimination.
+"""
 from typing import Union
 
 import numpy as np
