@@ -110,7 +110,7 @@ class TestFourierCircuits:
     def test_decomposed_v0_v1_circuit_is_equal_to_the_original_one_up_to_phase(
         self, phi: float, gateset
     ):
-        v0_v1_direct_sum = FourierComponents(phi=phi, gateset=gateset).controlled_v0_v1_dag
+        v0_v1_direct_sum = FourierComponents(phi=phi, gateset=gateset).v0_v1_direct_sum_dag
         expected = _v0_v1_block_diag_ref(phi).conj().T
 
         _assert_are_equivalent(v0_v1_direct_sum, expected)
