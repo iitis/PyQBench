@@ -24,6 +24,7 @@ exclude_patterns: List[str] = []
 
 html_theme = "pydata_sphinx_theme"
 html_static_path = ["_static"]
+html_logo = "_static/logo.png"
 html_css_files = ["css/custom.css"]
 
 myst_enable_extensions = ["colon_fence", "dollarmath", "attrs_image"]
