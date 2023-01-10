@@ -2,7 +2,10 @@
 #
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
+from datetime import datetime
 from typing import List
+
+from pkg_resources import get_distribution
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
@@ -20,6 +23,9 @@ extensions = [
     "sphinx.ext.mathjax",
     "sphinx_math_dollar",
     "sphinxcontrib.bibtex",
+    "sphinx_design",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.extlinks",
 ]
 
 templates_path = ["_templates"]
@@ -33,7 +39,12 @@ html_static_path = ["_static"]
 html_logo = "_static/logo.png"
 html_css_files = ["css/custom.css"]
 
-myst_enable_extensions = ["colon_fence", "dollarmath", "attrs_image", "amsmath"]
+myst_enable_extensions = ["colon_fence", "dollarmath", "attrs_image", "amsmath", "substitution"]
+
+myst_substitutions = {
+    "version": get_distribution("pyqbench").version,
+    "date": datetime.now().strftime("%Y-%m-%d"),
+}
 
 autodoc_typehints = "description"
 
@@ -51,3 +62,9 @@ mathjax3_config = {
 numfig = True
 bibtex_bibfiles = ["references.bib"]
 bibtex_default_style = "plain"
+
+intersphinx_mapping = {
+    "qiskit": ("https://qiskit.org/documentation/", None),
+}
+
+extlinks = {"qiskit_tutorials": ("https://qiskit.org/documentation/tutorials/", None)}

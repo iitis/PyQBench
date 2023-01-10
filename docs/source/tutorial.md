@@ -1,3 +1,5 @@
+(section/tutorial)=
+
 # User guide
 
 PyQBench can be used in two different ways:

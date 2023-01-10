@@ -17,3 +17,17 @@ html[data-theme="dark"] * {
 nav * {
     color: rgb(231, 121, 25);
 }
+
+.summary {
+    font-size: 1.5em;
+}
+
+.fas {
+    font-size: 1.5em;
+    color: rgb(231, 121, 25);
+}
+
+.sd-card-header a {
+    font-weight: bold;
+    font-size: 1.5em;
+}

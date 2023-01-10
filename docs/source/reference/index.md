@@ -1,3 +1,5 @@
+(section/manual)=
+
 # Reference manual
 
 ```{toctree}

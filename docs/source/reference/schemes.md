@@ -1,13 +1,17 @@
-# `qbench.schemes` module
+# `qbench.schemes` package
 
-## Postselection scheme
+## `qbench.scheme.postselection` module
+
 ```{eval-rst} 
 .. automodule:: qbench.schemes.postselection
-    :members: 
+   :members:   
 ```
 
-## Direct sum scheme
+## `qbench.scheme.directsum` module
+
 ```{eval-rst} 
-.. automodule:: qbench.schemes.direct_sum
-    :members: 
+.. automodule:: qbench.schemes.directsum
+   :members:   
 ```
+
+

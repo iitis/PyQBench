@@ -1,12 +1,7 @@
 # `qbench.fourier` module
 
-## Fourier components
 ```{eval-rst} 
-.. autoclass:: qbench.fourier.FourierComponents
-    :members: 
-```
-
-## Utilities
-```{eval-rst} 
-.. autofunction:: qbench.fourier.discrimination_probability_upper_bound
+.. automodule:: qbench.fourier
+    :members:
+    :exclude-members: add_fourier_parser 
 ```

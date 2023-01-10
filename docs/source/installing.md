@@ -1,3 +1,5 @@
+(section/installation)=
+
 # Installing
 
 ## Basic installation

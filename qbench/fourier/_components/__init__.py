@@ -9,10 +9,22 @@ from . import _generic, _ibmq, _lucy, _rigetti
 class FourierComponents:
     """Class defining components for Fourier-discrimination experiment.
 
-    :param phi: Fourier angle of measurement to discriminate. May be a qiskit Parameter.
-    :param gateset: one of the predefined basis gate sets to use:
-      ["lucy", "rigetti", "ibmq"]. If not provided, high-level definitions of gates
-      will be used without restrictions on basis gates.
+    :param phi: angle defining measurement to discriminate. May be a number or an instance of
+      a Qiskit Parameter. See
+      :qiskit_tutorial:`here <circuits_advanced/01_advanced_circuits.html#Parameterized-circuits>`_
+      if you are new to parametrized circuits in Qiskit.
+
+    :param gateset: name of the one of the predefined basis gate sets to use. It controls which
+      gates will be used to construct the circuit components. Available choices are:
+
+      - :code:`"lucy"`: gateset comprising gates native to
+        `OQC Lucy <https://aws.amazon.com/braket/quantum-computers/oqc/>`_ computer.
+      - :code:`"rigetti"`: gateset comprising gates native to
+        `Rigetti <https://www.rigetti.com/>`_ computers.
+      - :code:`"ibmq"`: gateset comprising gates native to
+        `IBMQ <https://quantum-computing.ibm.com/lab>`_ computers.
+
+      If no gateset is provided, high-level gates will be used without restriction on basis gates.
     """
 
     def __init__(self, phi: Union[float, Parameter], gateset: Optional[str] = None):
@@ -22,7 +34,7 @@ class FourierComponents:
 
     @property
     def state_preparation(self) -> Instruction:
-        """Instruction performing state preparation |00> -> bell state
+        """Instruction performing transformation $|00\\rangle$ -> Bell state
 
         The corresponding circuit is:
 
@@ -39,15 +51,15 @@ class FourierComponents:
 
     @property
     def u_dag(self) -> Instruction:
-        r"""Unitary $U^\dagger$ defining alternative measurement.
+        r"""Unitary $U^\dagger$ defining Fourier measurement.
 
         The corresponding circuit is:
 
         .. code::
 
-                 ┌───┐┌─────────────┐┌───┐
-              q: ┤ H ├┤ Phase(-phi) ├┤ H ├
-                 └───┘└─────────────┘└───┘
+                 ┌───┐┌───────────┐┌───┐
+              q: ┤ H ├┤ Phase(-φ) ├┤ H ├
+                 └───┘└───────────┘└───┘
 
         .. note::
 
@@ -67,9 +79,9 @@ class FourierComponents:
 
         .. code::
 
-                 ┌──────────┐┌──────────────────┐
-              q: ┤ Rz(-π/2) ├┤ Ry(-phi/2 - π/2) ├
-                 └──────────┘└──────────────────┘
+                 ┌──────────┐┌────────────────┐
+              q: ┤ Rz(-π/2) ├┤ Ry(-φ/2 - π/2) ├
+                 └──────────┘└────────────────┘
 
         """
         return self._module.v0_dag(self.phi)
@@ -82,15 +94,15 @@ class FourierComponents:
 
         .. code::
 
-                 ┌──────────┐┌──────────────────┐┌────────┐
-              q: ┤ Rz(-π/2) ├┤ Ry(-phi/2 - π/2) ├┤ Rx(-π) ├
-                 └──────────┘└──────────────────┘└────────┘
+                 ┌──────────┐┌────────────────┐┌────────┐
+              q: ┤ Rz(-π/2) ├┤ Ry(-φ/2 - π/2) ├┤ Rx(-π) ├
+                 └──────────┘└────────────────┘└────────┘
         """
         return self._module.v1_dag(self.phi)
 
     @property
     def v0_v1_direct_sum_dag(self) -> Instruction:
-        r"""Direct sum $V_0^\dagger\oplusV_1^\dagger$ of both parts of Holevo-Helstrom measurement.
+        """Direct sum $V_0^\\dagger\\oplus V_1^\\dagger$ of both parts of Holevo-Helstrom measurement.
 
         .. note::
            In usual basis ordering, the unitaries returned by this property would be
