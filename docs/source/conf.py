@@ -67,4 +67,4 @@ intersphinx_mapping = {
     "qiskit": ("https://qiskit.org/documentation/", None),
 }
 
-extlinks = {"qiskit_tutorials": ("https://qiskit.org/documentation/tutorials/", None)}
+extlinks = {"qiskit_tutorials": ("https://qiskit.org/documentation/tutorials/%s", None)}

@@ -7,10 +7,10 @@
    :members:   
 ```
 
-## `qbench.scheme.directsum` module
+## `qbench.scheme.direct_sum` module
 
 ```{eval-rst} 
-.. automodule:: qbench.schemes.directsum
+.. automodule:: qbench.schemes.direct_sum
    :members:   
 ```
 
