@@ -73,7 +73,7 @@ that transitive dependencies are not included in the list.
 ### Mandatory dependencies
 
 - `qiskit`: used for constructing quantum circuits and interfacing with quantum devices
-- `amaozn-braket-sdk` and `qiskit-braket-provider`: used for interacting with Amazon Braket devices
+- `amazon-braket-sdk` and `qiskit-braket-provider`: used for interacting with Amazon Braket devices
 - `mthree`: used for readout error mitigation
 - `numpy` and `scipy`: basic libraries for numerical calculations
 - `tqdm`: used for rendering progress bars in CLI
