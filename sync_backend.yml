@@ -1,0 +1,6 @@
+name: ibmq_quito
+asynchronous: false
+provider:
+  hub: ibm-q
+  group: open
+  project: main

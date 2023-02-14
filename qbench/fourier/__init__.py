@@ -22,9 +22,6 @@ p_{U(\\varphi)} = \\frac12 + \\frac14 \\lvert 1 - e^{i \\varphi}\\rvert.
 $$
 
 """
-from typing import Union
-
-import numpy as np
 
 from ._cli import add_fourier_parser
 from ._components import FourierComponents
@@ -33,18 +30,7 @@ from ._models import (
     FourierDiscriminationSyncResult,
     FourierExperimentSet,
 )
-
-
-def discrimination_probability_upper_bound(
-    phi: Union[float, np.ndarray]
-) -> Union[float, np.ndarray]:
-    """Compute exact upper bound on the probability of discrimination.
-
-    :param phi: angle parametrizing the performed measurement.
-    :return: maximum probability with which identity and $p_{U(\\varphi)}$ can be discriminated.
-    """
-    return 0.5 + 0.25 * np.abs(1 - np.exp(1j * phi))
-
+from .experiment_runner import discrimination_probability_upper_bound
 
 __all__ = [
     "discrimination_probability_upper_bound",

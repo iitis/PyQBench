@@ -63,8 +63,6 @@ numfig = True
 bibtex_bibfiles = ["references.bib"]
 bibtex_default_style = "plain"
 
-intersphinx_mapping = {
-    "qiskit": ("https://qiskit.org/documentation/", None),
-}
+intersphinx_mapping = {"qiskit": ("https://qiskit.org/documentation/", None)}
 
 extlinks = {"qiskit_tutorials": ("https://qiskit.org/documentation/tutorials/%s", None)}

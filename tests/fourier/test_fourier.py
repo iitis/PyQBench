@@ -5,14 +5,7 @@ from scipy import linalg
 
 from qbench.fourier import FourierComponents, discrimination_probability_upper_bound
 
-SWAP_MATRIX = np.array(
-    [
-        [1, 0, 0, 0],
-        [0, 0, 1, 0],
-        [0, 1, 0, 0],
-        [0, 0, 0, 1],
-    ]
-)
+SWAP_MATRIX = np.array([[1, 0, 0, 0], [0, 0, 1, 0], [0, 1, 0, 0], [0, 0, 0, 1]])
 
 
 def _fix_qubit_ordering(qiskit_unitary):

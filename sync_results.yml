@@ -1,0 +1,122 @@
+metadata:
+  experiments:
+    type: discrimination-fourier
+    qubits:
+    - {target: 0, ancilla: 1}
+    - {target: 1, ancilla: 2}
+    angles: {start: 0.0, stop: 6.283185307179586, num_steps: 3}
+    gateset: ibmq
+    method: direct_sum
+    num_shots: 100
+  backend_description:
+    name: ibmq_quito
+    asynchronous: false
+    provider: {group: open, hub: ibm-q, project: main}
+data:
+- target: 0
+  ancilla: 1
+  phi: 0.0
+  results_per_circuit:
+  - name: id
+    histogram: {'00': 28, '01': 26, '10': 21, '11': 25}
+    mitigation_info:
+      target: {prob_meas0_prep1: 0.052200000000000024, prob_meas1_prep0: 0.0172}
+      ancilla: {prob_meas0_prep1: 0.05900000000000005, prob_meas1_prep0: 0.0202}
+    mitigated_histogram: {'00': 0.2637212373658018, '01': 0.25865061319892463, '10': 0.2067279352110304,
+      '11': 0.2709002142242433}
+  - name: u
+    histogram: {'00': 30, '01': 16, '10': 28, '11': 26}
+    mitigation_info:
+      target: {prob_meas0_prep1: 0.052200000000000024, prob_meas1_prep0: 0.0172}
+      ancilla: {prob_meas0_prep1: 0.05900000000000005, prob_meas1_prep0: 0.0202}
+    mitigated_histogram: {'00': 0.2857378991684036, '01': 0.14975297832942433, '10': 0.28142307224788693,
+      '11': 0.2830860502542851}
+- target: 0
+  ancilla: 1
+  phi: 3.141592653589793
+  results_per_circuit:
+  - name: id
+    histogram: {'00': 4, '01': 5, '10': 45, '11': 46}
+    mitigation_info:
+      target: {prob_meas0_prep1: 0.052200000000000024, prob_meas1_prep0: 0.0172}
+      ancilla: {prob_meas0_prep1: 0.05900000000000005, prob_meas1_prep0: 0.0202}
+    mitigated_histogram: {'00': 0.011053610583159325, '01': 0.02261276648026373, '10': 0.4593955619936729,
+      '11': 0.5069380609429042}
+  - name: u
+    histogram: {'00': 56, '01': 43, '10': 1}
+    mitigation_info:
+      target: {prob_meas0_prep1: 0.052200000000000024, prob_meas1_prep0: 0.0172}
+      ancilla: {prob_meas0_prep1: 0.05900000000000005, prob_meas1_prep0: 0.0202}
+    mitigated_histogram: {'00': 0.5573987337172156, '01': 0.44424718645642625, '10': -0.0016459201736417181}
+- target: 0
+  ancilla: 1
+  phi: 6.283185307179586
+  results_per_circuit:
+  - name: id
+    histogram: {'00': 36, '01': 18, '10': 25, '11': 21}
+    mitigation_info:
+      target: {prob_meas0_prep1: 0.052200000000000024, prob_meas1_prep0: 0.0172}
+      ancilla: {prob_meas0_prep1: 0.05900000000000005, prob_meas1_prep0: 0.0202}
+    mitigated_histogram: {'00': 0.3488190312089973, '01': 0.17355281935572894, '10': 0.2505792064871127,
+      '11': 0.22704894294816103}
+  - name: u
+    histogram: {'00': 32, '01': 27, '10': 24, '11': 17}
+    mitigation_info:
+      target: {prob_meas0_prep1: 0.052200000000000024, prob_meas1_prep0: 0.0172}
+      ancilla: {prob_meas0_prep1: 0.05900000000000005, prob_meas1_prep0: 0.0202}
+    mitigated_histogram: {'00': 0.3025357275361897, '01': 0.27413673119534815, '10': 0.24313373302688793,
+      '11': 0.18019380824157433}
+- target: 1
+  ancilla: 2
+  phi: 0.0
+  results_per_circuit:
+  - name: id
+    histogram: {'00': 27, '01': 20, '10': 24, '11': 29}
+    mitigation_info:
+      target: {prob_meas0_prep1: 0.05900000000000005, prob_meas1_prep0: 0.0202}
+      ancilla: {prob_meas0_prep1: 0.07540000000000002, prob_meas1_prep0: 0.0528}
+    mitigated_histogram: {'00': 0.2594378169217188, '01': 0.19318893233269735, '10': 0.23035366874292057,
+      '11': 0.3170195820026633}
+  - name: u
+    histogram: {'00': 31, '01': 24, '10': 23, '11': 22}
+    mitigation_info:
+      target: {prob_meas0_prep1: 0.05900000000000005, prob_meas1_prep0: 0.0202}
+      ancilla: {prob_meas0_prep1: 0.07540000000000002, prob_meas1_prep0: 0.0528}
+    mitigated_histogram: {'00': 0.30056875246775644, '01': 0.2438221628798003, '10': 0.22180309809696985,
+      '11': 0.23380598655547338}
+- target: 1
+  ancilla: 2
+  phi: 3.141592653589793
+  results_per_circuit:
+  - name: id
+    histogram: {'00': 5, '01': 4, '10': 50, '11': 41}
+    mitigation_info:
+      target: {prob_meas0_prep1: 0.05900000000000005, prob_meas1_prep0: 0.0202}
+      ancilla: {prob_meas0_prep1: 0.07540000000000002, prob_meas1_prep0: 0.0528}
+    mitigated_histogram: {'00': 0.009552870928837118, '01': 0.007194089383161034,
+      '10': 0.5236791012692514, '11': 0.4595739384187503}
+  - name: u
+    histogram: {'00': 41, '01': 51, '10': 3, '11': 5}
+    mitigation_info:
+      target: {prob_meas0_prep1: 0.05900000000000005, prob_meas1_prep0: 0.0202}
+      ancilla: {prob_meas0_prep1: 0.07540000000000002, prob_meas1_prep0: 0.0528}
+    mitigated_histogram: {'00': 0.4073387714165384, '01': 0.5614614121117936, '10': 0.006431862814564833,
+      '11': 0.024767953657102992}
+- target: 1
+  ancilla: 2
+  phi: 6.283185307179586
+  results_per_circuit:
+  - name: id
+    histogram: {'00': 30, '01': 28, '10': 23, '11': 19}
+    mitigation_info:
+      target: {prob_meas0_prep1: 0.05900000000000005, prob_meas1_prep0: 0.0202}
+      ancilla: {prob_meas0_prep1: 0.07540000000000002, prob_meas1_prep0: 0.0528}
+    mitigated_histogram: {'00': 0.2868459834940102, '01': 0.2919564941384742, '10': 0.22466574543735374,
+      '11': 0.19653177693016174}
+  - name: u
+    histogram: {'00': 15, '01': 20, '10': 36, '11': 29}
+    mitigation_info:
+      target: {prob_meas0_prep1: 0.05900000000000005, prob_meas1_prep0: 0.0202}
+      ancilla: {prob_meas0_prep1: 0.07540000000000002, prob_meas1_prep0: 0.0528}
+    mitigated_histogram: {'00': 0.1187719606657805, '01': 0.1962085394489247, '10': 0.3710195249988589,
+      '11': 0.31399997488643583}

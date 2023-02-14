@@ -143,8 +143,7 @@ CircuitKey = Tuple[int, int, str, float]
 
 
 def _collect_circuits_and_keys(
-    experiments: FourierExperimentSet,
-    components: FourierComponents,
+    experiments: FourierExperimentSet, components: FourierComponents
 ) -> Tuple[Tuple[QuantumCircuit, ...], Tuple[CircuitKey, ...]]:
     """Construct all circuits needed for the experiment and assign them unique keys."""
 
@@ -265,10 +264,7 @@ def run_experiment(
         show_progress=True,
     )
 
-    metadata = {
-        "experiments": experiments,
-        "backend_description": backend_description,
-    }
+    metadata = {"experiments": experiments, "backend_description": backend_description}
 
     if backend_description.asynchronous:
         async_result = FourierDiscriminationAsyncResult.parse_obj(
@@ -343,6 +339,17 @@ def resolve_results(
     return result
 
 
+def discrimination_probability_upper_bound(
+    phi: Union[float, np.ndarray]
+) -> Union[float, np.ndarray]:
+    """Compute exact upper bound on the probability of discrimination.
+
+    :param phi: angle parametrizing the performed measurement.
+    :return: maximum probability with which identity and $p_{U(\\varphi)}$ can be discriminated.
+    """
+    return 0.5 + 0.25 * np.abs(1 - np.exp(1j * phi))
+
+
 def tabulate_results(sync_results: FourierDiscriminationSyncResult) -> pd.DataFrame:
     compute_probabilities = (
         compute_probabilities_from_postselection_measurements
@@ -355,6 +362,7 @@ def tabulate_results(sync_results: FourierDiscriminationSyncResult) -> pd.DataFr
             entry.target,
             entry.ancilla,
             entry.phi,
+            discrimination_probability_upper_bound(entry.phi),
             compute_probabilities(
                 **{f"{info.name}_counts": info.histogram for info in entry.results_per_circuit}
             ),
@@ -366,7 +374,7 @@ def tabulate_results(sync_results: FourierDiscriminationSyncResult) -> pd.DataFr
                         f"{info.name}_counts": info.mitigated_histogram
                         for info in entry.results_per_circuit
                     }
-                ),
+                )
             )
         except AttributeError:
             pass  # totally acceptable, not all results have mitigation info
@@ -377,9 +385,9 @@ def tabulate_results(sync_results: FourierDiscriminationSyncResult) -> pd.DataFr
 
     # We assume that either all circuits have mitigation info, or none of them has
     columns = (
-        ["target", "ancilla", "phi", "disc_prob"]
-        if len(rows[0]) == 4
-        else ["target", "ancilla", "phi", "disc_prob", "mit_disc_prob"]
+        ["target", "ancilla", "phi", "ideal_prob", "disc_prob"]
+        if len(rows[0]) == 5
+        else ["target", "ancilla", "phi", "ideal_prob", "disc_prob", "mit_disc_prob"]
     )
 
     result = pd.DataFrame(data=rows, columns=columns)

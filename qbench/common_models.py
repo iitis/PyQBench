@@ -146,9 +146,7 @@ class IBMQBackendDescription(BaseModel):
     def create_backend(self):
         if IBMQ.active_account():
             provider = IBMQ.get_provider(
-                hub=self.provider.hub,
-                group=self.provider.group,
-                project=self.provider.project,
+                hub=self.provider.hub, group=self.provider.group, project=self.provider.project
             )
         else:
             provider = IBMQ.enable_account(

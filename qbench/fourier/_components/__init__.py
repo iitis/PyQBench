@@ -102,7 +102,8 @@ class FourierComponents:
 
     @property
     def v0_v1_direct_sum_dag(self) -> Instruction:
-        """Direct sum $V_0^\\dagger\\oplus V_1^\\dagger$ of both parts of Holevo-Helstrom measurement.
+        """Direct sum $V_0^\\dagger\\oplus V_1^\\dagger$ of both parts of Holevo-Helstrom
+        measurement.
 
         .. note::
            In usual basis ordering, the unitaries returned by this property would be
@@ -120,9 +121,4 @@ class FourierComponents:
         return self._module.v0_v1_direct_sum(self.phi)
 
 
-_GATESET_MAPPING = {
-    "lucy": _lucy,
-    "rigetti": _rigetti,
-    "ibmq": _ibmq,
-    None: _generic,
-}
+_GATESET_MAPPING = {"lucy": _lucy, "rigetti": _rigetti, "ibmq": _ibmq, None: _generic}

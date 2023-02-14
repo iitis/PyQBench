@@ -118,8 +118,7 @@ def add_fourier_parser(parent_parser) -> None:
     )
 
     resolve = subcommands.add_parser(
-        "resolve",
-        description="Resolve asynchronous jobs to obtain final experiments data.",
+        "resolve", description="Resolve asynchronous jobs to obtain final experiments data."
     )
 
     resolve.add_argument(
