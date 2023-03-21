@@ -45,5 +45,5 @@ jobs:
           pre-commit run -a
       - name: Run mypy
         run: |
-          mypy --install-types
+          pip install types-PyYAML
           mypy --namespace-packages --ignore-missing-imports --explicit-package-bases qbench
