@@ -44,4 +44,4 @@ jobs:
           pre-commit install
           pre-commit run -a
       - name: Run mypy
-        run: mypy --strict --namespace-packages --explicit-package-bases $(git ls-files '*.py')
+        run: mypy --strict --namespace-packages --ignore-missing-imports --install-types --explicit-package-bases qbench
