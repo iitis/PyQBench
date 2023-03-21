@@ -56,7 +56,7 @@ def execute_in_batches(
     shots: int,
     batch_size: Optional[int],
     show_progress: bool = False,
-    **kwargs
+    **kwargs,
 ) -> Iterable[BatchJob]:
     """Execute given sequence of circuits with corresponding keys in batches on a backend.
 
