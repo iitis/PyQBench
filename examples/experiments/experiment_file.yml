@@ -1,0 +1,13 @@
+type: discrimination-fourier
+qubits:
+  - target: 0
+    ancilla: 1
+  - target: 1
+    ancilla: 2
+angles:
+  start: 0
+  stop: 2 * pi
+  num_steps: 3
+gateset: ibmq
+method: direct_sum
+num_shots: 100
