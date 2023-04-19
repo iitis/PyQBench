@@ -83,7 +83,12 @@ qbench disc-fourier tabulate results.yml results.csv
 
 Here's what the result looks like:
 
-**TODO** include a table here
+| target      | ancilla     | phi           | ideal_prob      | disc_prob     | mit_disc_prob   |
+| :----:      | :----:      |  :----:       | :----:          |    :----:     |         :----:  |
+| 1           | 2           | 0             | 0.5             | 0.57          | 0.57            |
+| 1           | 2           | 3.14          | 1               | 0.88          | 0.94            |
+| 1           | 2           | 6.28          | 0.5             | 0.55          | 0.56            |
+
 
 ## What else can PyQBench do?
 
@@ -99,4 +104,5 @@ Refer to [PyQBench's documentation](https://qiskit.org/ecosystem/mthree/stubs/mt
 
 PyQBench is the work of Konrad Jałowiecki, Paulina Lewandowska and Łukasz Pawela.
 Support email for questions ``dexter2206@gmail.com``.
-If you use PyQBench, please cite as per the included [BibTeX file](https://arxiv.org/abs/2304.00045).
+If you use PyQBench, please cite as per the included [BibTeX file](https://github.com/iitis/PyQBench/tree/pl/readme/pyqbench.bib
+).
