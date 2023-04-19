@@ -48,10 +48,10 @@ For this purpose, we use two possible options: using a postselection or a direct
 ### Discrimination scheme for parameterized Fourier family of measurements
 
 The parametrized Fourier family of measurements is defined as a set of the measurements
-$\{\mathcal{P}_{U_\phi}\colon \phi \in [0, 2\pi]\}$, where
-
+$\\\{\mathcal{P}_{U_\phi} :  \phi \in [0, 2\pi]\\\}$,
+where
 $U_\phi = H
-\left(\begin{array}{cc}1&0\\0&e^{i \phi}\end{array}\right)  H^\dagger,
+\begin{pmatrix} 1&0\\0&e^{i \phi}\end{pmatrix}  H^\dagger,
 $
 
 and $H$ is the Hadamard matrix of dimension two. For this family of measurement we calculate the optimal strategy and probability of discirmination to implement it in CLI mode.
@@ -76,12 +76,12 @@ The first YML configuration file describes the experiment ``experiment_file.yml`
 ```yml
 type: discrimination-fourier
 qubits:
-	- target: 1
+    - target: 1
       ancilla: 2
 angles:
-	start: 0
-	stop: 2 * pi
-	num_steps: 3
+    start: 0
+    stop: 2 * pi
+    num_steps: 3
 gateset: ibmq
 method: direct_sum
 num_shots: 100
@@ -92,9 +92,9 @@ The second file describes example of the backend in ``backend_file.yml``.
 name: ibmq_quito
 asynchronous: true
 provider:
-	hub: ibm-q
-	group: open
-	project: main
+    hub: ibm-q
+    group: open
+    project: main
 ```
 IBMQ backends typically require an access token to IBM Quantum Experience. Since it would be unsafe
 to store it in plain text, the token has to be configured separately in ``IBMQ_TOKEN``
