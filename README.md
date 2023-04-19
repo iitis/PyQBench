@@ -22,7 +22,7 @@ pip install pyqbench
 ## Set-up
 ### Von Neumann measurements
 A von Neumann measurement $\mathcal{P}$ is a collection of rank--one projectors
-$\{\ket{u_0}\bra{u_0}, \ldots, \ket{u_{d-1}}\bra{u_{d-1}} \}$ that sum up to identity. If $U$ is a unitary matrix,
+ that sum up to identity. If $U$ is a unitary matrix,
 one can construct a von Neumann measurement $\mathcal{P}_{U}$ by taking projectors onto its columns. In this
 case we say that $\mathcal{P}_{U}$ is described by the matrix $U$.
 To implement an arbitrary von Neumann measurement $\mathcal{P}_{U}$, one has to first apply $U^\dagger$
@@ -47,14 +47,14 @@ For this purpose, we use two possible options: using a postselection or a direct
 
 ### Discrimination scheme for parameterized Fourier family of measurements
 
-The parametrized Fourier family of measurements is defined as a set of the measurements
-$\\\{\mathcal{P}_{U_\phi} :  \phi \in [0, 2\pi]\\\}$,
-where
+The parametrized Fourier family of measurements is defined as a set of the measurements for
+
 $U_\phi = H
 \begin{pmatrix} 1&0\\0&e^{i \phi}\end{pmatrix}  H^\dagger,
 $
 
-and $H$ is the Hadamard matrix of dimension two. For this family of measurement we calculate the optimal strategy and probability of discirmination to implement it in CLI mode.
+where $\phi \in [0, 2\pi]$
+and $H$ is the Hadamard matrix of dimension two. For this family of measurement we calculate components $\ket{\psi}$, $\mathcal{P}_{V_i}$ and probability of discirmination to implement it in CLI mode.
 ## Creating Your First Benchmark with PyQBench
 As already described, PyQBench can be used both as a library and a CLI. Both functionalities are
 implemented as a part of ``qbench`` Python package. The exposed CLI tool is also named ``qbench``.
