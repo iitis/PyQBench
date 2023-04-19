@@ -1,15 +1,10 @@
 # PyQBench
 
-PyQBench is a package for benchmarking gate-based quantum computers by
-estimating how well they can discriminate between two von Neumann measurements. Benchmarks in PyQBench work by experimentally determining the probability of correct discrimination by the device under test and comparing the result with the ideal, theoretical predictions. PyQBench offers a simplified, ready-to-use, command line interface (CLI) for running benchmarks using a predefined parametrized Fourier family of measurements. For more advanced scenarios, PyQBench offers a way of employing user-defined measurements instead of predefined ones. PyQBench is built around the Qiskit ecosystem and the configuration of CLI is done by YAML  files describing the benchmark to be performed and the description of the backend on which the benchmark should be run. Additionally, PyQBench's CLI can be used in synchronous and asynchronous modes.
+https://arxiv.org/abs/2304.00045
 
-For more details on how to use PyQBench you can refer to the documentation located here:
+**PyQBench** is a package for benchmarking gate-based quantum computers by estimating how well they can discriminate between two von Neumann measurements.  **PyQBench** is built around the Qiskit ecosystem and its configuration is driven by YAML files describing the experiment scenarios and backends to be used.
 
 https://pyqbench.readthedocs.io/en/latest/
-
-or the article:
-
-https://arxiv.org/abs/2304.00045
 
 ## Installation
 
