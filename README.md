@@ -1,5 +1,8 @@
 # PyQBench
 
+![GitHub](https://img.shields.io/github/license/iitis/PyQBench)
+![PyPI](https://img.shields.io/pypi/v/pyqbench)
+
 https://arxiv.org/abs/2304.00045
 
 **PyQBench** is a package for benchmarking gate-based quantum computers by estimating how well they can discriminate between two von Neumann measurements.  **PyQBench** is built around the Qiskit ecosystem and its configuration is driven by YAML files describing the experiment scenarios and backends to be used.
