@@ -2,74 +2,29 @@
 
 ![GitHub](https://img.shields.io/github/license/iitis/PyQBench)
 ![PyPI](https://img.shields.io/pypi/v/pyqbench)
+![Read the Docs](https://img.shields.io/readthedocs/pyqbench)
 
 https://arxiv.org/abs/2304.00045
 
 **PyQBench** is a package for benchmarking gate-based quantum computers by estimating how well they can discriminate between two von Neumann measurements.  **PyQBench** is built around the Qiskit ecosystem and its configuration is driven by YAML files describing the experiment scenarios and backends to be used.
 
-https://pyqbench.readthedocs.io/en/latest/
-
 ## Installation
 
-We encourage installing PyQBench via ``pip``. The following command installs needed packages and actual versions neceserry to use PyQBench.
+PyQBench can be installed from PyPI using `pip`:
 
 ```bash
 pip install pyqbench
 ```
 
-## Set-up
-### Von Neumann measurements
-A von Neumann measurement $\mathcal{P}$ is a collection of rank--one projectors
- that sum up to identity. If $U$ is a unitary matrix,
-one can construct a von Neumann measurement $\mathcal{P}_{U}$ by taking projectors onto its columns. In this
-case we say that $\mathcal{P}_{U}$ is described by the matrix $U$.
-To implement an arbitrary von Neumann measurement $\mathcal{P}_{U}$, one has to first apply $U^\dagger$
- and then follow with $Z$-basis measurement.
-In PyQBench we will consider discrimination task between single qubit measurements
-$\mathcal{P}_I$, performed in the computational Z-basis, and an alternative measurement $\mathcal{P}_U$ performed in the basis $U$.
+## Quickstart
 
-### Discrimination scheme
-In general, the discrimination scheme  requires an
-auxiliary qubit. First, the joint system is prepared in some state $\ket{\psi}$. Then, one of the
-measurements,  either $\mathcal{P}_U$ or $\mathcal{P}_I$, is performed on the first part of the system. Based on its outcome i, we choose another POVM $\mathcal{P}_{V_i}$ and perform it on the second
-qubit, obtaining the output in $j$. Finally, if $j=0$, we say that the performed measurement is
-$\mathcal{P}_U$, otherwise we say that it was $\mathcal{P}_I$. Naturally, we need to repeat the
-same procedure multiple times for both measurements to obtain a reliable estimate of the underlying
-probability distribution. In PyQBench, we assume that the experiment is repeated the same number of
-times for both $\mathcal{P}_U$ and $\mathcal{P}_I$.
+The most basic way to use PyQBench is by using its CLI. For more advanced usages see [PyQBench's docs](https://pyqbench.readthedocs.io/en/latest/notebooks/Example%2001%20discriminating%20measurements%20in%20Hadamard%20basis.html).
 
-Current NISQ devices are unable to perform conditional measurements, which is the biggest
-obstacle to implementing our scheme on real hardware. However, we circumvent this problem by
-slightly adjusting our scheme so that it only uses components available on current devices.
-For this purpose, we use two possible options: using a postselection or a direct sum.
+PyQBench's CLI can only run experiments using the parametrized [Fourier family of measurements](https://pyqbench.readthedocs.io/en/latest/reference/fourier.html#qbench.fourier.FourierComponents). Here's a basic example of how it works:
 
-### Discrimination scheme for parameterized Fourier family of measurements
+### Step 1: preparing configuration files
 
-The parametrized Fourier family of measurements is defined as a set of the measurements for
-
-$U_\phi = H
-\begin{pmatrix} 1&0\\0&e^{i \phi}\end{pmatrix}  H^\dagger,
-$
-
-where $\phi \in [0, 2\pi]$
-and $H$ is the Hadamard matrix of dimension two. For this family of measurement we calculate components $\ket{\psi}$, $\mathcal{P}_{V_i}$ and probability of discirmination to implement it in CLI mode.
-## Creating Your First Benchmark with PyQBench
-As already described, PyQBench can be used both as a library and a CLI. Both functionalities are
-implemented as a part of ``qbench`` Python package. The exposed CLI tool is also named ``qbench``.
-A general form of the CLI invocation is:
-```bash
-qbench <benchmark-type> <command> <parameters>
-```
-
-The workflow with PyQBench's CLI can be summarized
-as the following list of steps:
-- Preparing configuration files describing the backend and the experiment scenario.
-- Submitting/running experiments. Depending on the experiment scenario, execution can be synchronous, or asynchronous.
-- (optional) Checking the status of the submitted jobs if the execution is asynchronous.
-- Resolving asynchronous jobs into the actual measurement outcomes.
-- Converting obtained measurement outcomes into tabulated form.
-
-The first YML configuration file describes the experiment ``experiment_file.yml`` scenario to be executed.
+The first YAML configuration file describes the experiment scenario to be executed:
 
 ```yml
 type: discrimination-fourier
@@ -84,7 +39,7 @@ gateset: ibmq
 method: direct_sum
 num_shots: 100
 ```
-The second file describes example of the backend in ``backend_file.yml``.
+The second file describes the backend. The precise format of this file depends on the type of the backend, here's an example for Qiskit's IBMQ backend:
 
 ```yml
 name: ibmq_quito
@@ -95,40 +50,50 @@ provider:
     project: main
 ```
 IBMQ backends typically require an access token to IBM Quantum Experience. Since it would be unsafe
-to store it in plain text, the token has to be configured separately in ``IBMQ_TOKEN``
-environmental variable.
+to store it in plain text, the token has to be configured separately in ``IBMQ_TOKEN`` environmental variable.
 
-After preparing YAML files defining experiment and backend,
-running the benchmark can be launched by using the following command line invocation:
-```bash
-qbench disc-fourier benchmark experiment_file.yml backend_file.yml
-```
-The output file will be printed to stdout. Optionally, the ``--output OUTPUT`` parameter might be provided to write the output to the ``OUTPUT`` file instead.
+### Step 2: running the experiment
+After preparing YAML files defining experiment and backend, running the benchmark can be launched by using the following command line invocation:
 ```bash
 qbench disc-fourier benchmark experiment_file.yml backend_file.yml --output async_results.yml
 ```
 
-The result of running the above command can be twofold:
-- If backend is asynchronous, the output will contain intermediate data containing, amongst others, ``job_ids`` correlated with the circuit they correspond to.
-- If the backend is synchronous, the output will contain measurement outcomes (bitstrings) for each of the circuits run.
+The `benchmark` command will submit several batch jobs that will run asynchronously. It is non blocking, meaning that it won't wait for the jobs to finish.
 
-PyQBench provides also a helper command that will fetch the statuses of asynchronous jobs. The command is:
+You can check the status of the submitted jobs by running:
+
 ```bash
 qbench disc-fourier status async_results.yml
 ```
 
-For asynchronous experiments, the stored intermediate data has to be resolved in actual
-by using the following command:
+### Step 3: resolving asynchronous jobs
+To get the actual results from the submitted asynchronous jobs, you can use `resolve` command.
 ```bash
 qbench disc-fourier resolve async-results.yml resolved.yml
 ```
 
-The resolved results, stored in ``resolved.yml``, would look just like if the experiment was
-run synchronously and no matter which option we use, results file has to be passed to ``tabulate``
-command:
+This operation is blocking and will wait for all the results to be available.
+
+### Step 4: tabulate results
+
+Finally, the obtained results can be summarized into a table.
 ```bash
 qbench disc-fourier tabulate results.yml results.csv
 ```
+
+Here's what the result looks like:
+
+**TODO** include a table here
+
+## What else can PyQBench do?
+
+The above quickstart guide does not cover:
+
+- Running the experiments in synchronous (blocking mode)
+- Using error mitigation via [M3Mitigation suite](https://qiskit.org/ecosystem/mthree/stubs/mthree.M3Mitigation.html)
+- Using user-defined measurements instead of the default Fourier
+
+Refer to [PyQBench's documentation](https://qiskit.org/ecosystem/mthree/stubs/mthree.M3Mitigation.html) for further reading.
 
 ## Authors and Citation
 
