@@ -25,6 +25,8 @@ jobs:
           pip install .[test]
       - name: Run unit tests
         run: pytest --cov=qbench --cov-report=xml
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v3
 
   run_quality_cheks:
     runs-on: ubuntu-latest
