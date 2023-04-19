@@ -33,7 +33,7 @@ $\mathcal{P}_I$, performed in the computational Z-basis, and an alternative meas
 ### Discrimination scheme
 In general, the discrimination scheme  requires an
 auxiliary qubit. First, the joint system is prepared in some state $\ket{\psi}$. Then, one of the
-measurements,  either $\mathcal{P}_U$ or $\mathcal{P}_I$, is performed on the first part of the system. Based on its outcome $i$, we choose another POVM $\mathcal{P}_{V_i}$ and perform it on the second
+measurements,  either $\mathcal{P}_U$ or $\mathcal{P}_I$, is performed on the first part of the system. Based on its outcome i, we choose another POVM $\mathcal{P}_{V_i}$ and perform it on the second
 qubit, obtaining the output in $j$. Finally, if $j=0$, we say that the performed measurement is
 $\mathcal{P}_U$, otherwise we say that it was $\mathcal{P}_I$. Naturally, we need to repeat the
 same procedure multiple times for both measurements to obtain a reliable estimate of the underlying
