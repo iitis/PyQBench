@@ -98,7 +98,7 @@ The above quickstart guide does not cover:
 - Using error mitigation via [M3Mitigation suite](https://qiskit.org/ecosystem/mthree/stubs/mthree.M3Mitigation.html)
 - Using user-defined measurements instead of the default Fourier
 
-Refer to [PyQBench's documentation](https://qiskit.org/ecosystem/mthree/stubs/mthree.M3Mitigation.html) for further reading.
+Refer to [PyQBench's documentation](https://pyqbench.readthedocs.io/en/latest/index.html) for further reading.
 
 ## Authors and Citation
 
