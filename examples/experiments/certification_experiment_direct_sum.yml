@@ -1,11 +1,14 @@
-type: discrimination-fourier
+type: certification-fourier
 qubits:
   - target: 0
     ancilla: 1
 angles:
   start: 0
   stop: 2 * pi
-  num_steps: 50
+  num_steps: 2
+delta: 0.05
 gateset: ibmq
 method: direct_sum
-num_shots: 100
+num_shots: 10
+
+

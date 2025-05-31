@@ -41,7 +41,7 @@ def test_ibmq_jobs_can_be_retrieved_using_retrieve_job():
 
     ids_to_retrieve = [job_1.job_id(), job_2.job_id()]
 
-    retrieved_jobs = retrieve_jobs(backend, ids_to_retrieve)
+    retrieved_jobs = retrieve_jobs(ids_to_retrieve)
 
     assert len(retrieved_jobs) == 2
     assert set([job.job_id() for job in retrieved_jobs]) == {job_1.job_id(), job_2.job_id()}

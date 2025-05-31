@@ -10,8 +10,8 @@ from yaml import safe_dump, safe_load
 
 from ..common_models import BackendDescriptionRoot
 from ._models import (
-    FourierDiscriminationAsyncResult,
-    FourierDiscriminationSyncResult,
+    FourierCertificationAsyncResult,
+    FourierCertificationSyncResult,
     FourierExperimentSet,
 )
 from .experiment_runner import (
@@ -23,37 +23,52 @@ from .experiment_runner import (
 
 
 def _run_benchmark(args: Namespace) -> None:
-    """Function executed when qbench disc-fourier benchmark is invoked."""
+    """Function executed when qbench cert-fourier benchmark is invoked."""
     experiment = FourierExperimentSet(**safe_load(args.experiment_file))
     backend_description = BackendDescriptionRoot(__root__=safe_load(args.backend_file)).__root__
-
     result = run_experiment(experiment, backend_description)
     safe_dump(result.dict(), args.output, sort_keys=False, default_flow_style=None)
 
 
 def _status(args: Namespace) -> None:
     """Function executed when qbench disc-fourier status is invoked."""
-    results = FourierDiscriminationAsyncResult(**safe_load(args.async_results))
+    results = FourierCertificationAsyncResult(**safe_load(args.async_results))
     counts = fetch_statuses(results)
     print(counts)
 
 
 def _resolve(args: Namespace) -> None:
     """Function executed when qbench disc-fourier resolve is invoked."""
-    results = FourierDiscriminationAsyncResult(**safe_load(args.async_results))
+    results = FourierCertificationAsyncResult(**safe_load(args.async_results))
     resolved = resolve_results(results)
-    safe_dump(resolved.dict(), args.output, sort_keys=False)
+
+    res_dict = resolved.dict()
+
+    # Remove 'name: u' from the output
+    for e in res_dict["data"]:
+        for res in e["results_per_circuit"]:
+            del res["name"]
+
+    safe_dump(res_dict, args.output, sort_keys=False)
 
 
 def _tabulate(args: Namespace) -> None:
     """Function executed when qbench disc-fourier tabulate is invoked."""
-    results = FourierDiscriminationSyncResult(**safe_load(args.sync_results))
+    t = safe_load(args.sync_results)
+
+    # Add dummy name for the results
+    # TODO Should we go for another datatype specific for certification?
+    for e in t["data"]:
+        for res in e["results_per_circuit"]:
+            res["name"] = "u"
+    # results = FourierCertificationSyncResult(**safe_load(args.sync_results))
+    results = FourierCertificationSyncResult(**t)
     table = tabulate_results(results)
     table.to_csv(args.output, index=False)
 
 
-def add_fourier_parser(parent_parser) -> None:
-    """Add disc-fourier parser to the parent parser.
+def add_fourier_certification_parser(parent_parser) -> None:
+    """Add cert-fourier parser to the parent parser.
 
     The added parser will have the following subcommands:
     - benchmark: run set of Fourier discrimination experiments against given backend
@@ -65,7 +80,7 @@ def add_fourier_parser(parent_parser) -> None:
 
     :param parent_parser: a parser to which disc-fourier command should be added.
     """
-    parser = parent_parser.add_parser("disc-fourier")
+    parser = parent_parser.add_parser("cert-fourier")
 
     subcommands = parser.add_subparsers()
 

@@ -1,10 +1,12 @@
 """Functions for splitting sequences of circuits into batches."""
+
 import math
 from itertools import islice
 from typing import Any, Iterable, NamedTuple, Optional, Sequence
 
 from qiskit import QuantumCircuit
 from qiskit.providers import JobV1
+from qiskit_ibm_runtime import RuntimeJob, RuntimeJobV2, SamplerV2
 from tqdm import tqdm
 
 from .common_models import Backend
@@ -16,7 +18,7 @@ class BatchWithKey(NamedTuple):
 
 
 class BatchJob(NamedTuple):
-    job: JobV1
+    job: JobV1 | RuntimeJob | RuntimeJobV2
     keys: Sequence[Any]
 
 
@@ -74,10 +76,22 @@ def execute_in_batches(
      order of `keys`.
     """
     batches = batch_circuits_with_keys(circuits, keys, batch_size)
-    result = (
-        BatchJob(backend.run(batch.circuits, shots=shots, **kwargs), batch.keys)
-        for batch in batches
+
+    sampler = SamplerV2(mode=backend)
+
+    # result = (
+    #     BatchJob(backend.run(batch.circuits, shots=shots, **kwargs), batch.keys)
+    #     for batch in batches
+    # )
+
+    result_gen = (
+        BatchJob(sampler.run(batch.circuits, shots=shots), batch.keys) for batch in batches
     )
+
+    # Declare the variable 'result'
+    result: Iterable[BatchJob]
     if show_progress:
-        result = tqdm(result, total=len(batches))
+        result = tqdm(result_gen, total=len(batches))
+    else:
+        result = result_gen
     return result

@@ -130,3 +130,12 @@ dmypy.json
 
 # PyCharm files
 .idea/**
+
+# Generated files
+res.yml
+resolved.yml
+results.yml
+resolved.csv
+results.csv
+*.yml
+*.csv

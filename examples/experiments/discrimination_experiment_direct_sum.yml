@@ -5,7 +5,11 @@ qubits:
 angles:
   start: 0
   stop: 2 * pi
-  num_steps: 50
+  num_steps: 5
 gateset: ibmq
-method: postselection
-num_shots: 100
+method: direct_sum
+num_shots: 10
+
+
+
+

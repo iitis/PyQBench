@@ -1,4 +1,5 @@
 """Module containing utilities, maybe combinatorial ones."""
+
 from typing import Dict
 
 from qiskit import QuantumCircuit, transpile

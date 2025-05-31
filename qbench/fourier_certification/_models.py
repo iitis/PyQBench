@@ -25,9 +25,10 @@ from qbench.common_models import (
 
 
 class FourierExperimentSet(BaseModel):
-    type: Literal["discrimination-fourier"]
+    type: Literal["certification-fourier"]
     qubits: List[QubitsPair]
     angles: AnglesRange
+    delta: float
     gateset: Optional[str]
     method: Literal["direct_sum", "postselection"]
     num_shots: StrictPositiveInt
@@ -47,7 +48,7 @@ class FourierExperimentSet(BaseModel):
         )
 
 
-class FourierDiscriminationMetadata(BaseModel):
+class FourierCertificationMetadata(BaseModel):
     experiments: FourierExperimentSet
     backend_description: BackendDescription
 
@@ -85,19 +86,20 @@ class SingleResult(BaseModel):
     target: Qubit
     ancilla: Qubit
     phi: float
+    delta: float
     results_per_circuit: List[ResultForCircuit]
 
 
 class BatchResult(BaseModel):
     job_id: str
-    keys: Sequence[Tuple[int, int, str, float]]
+    keys: Sequence[Tuple[int, int, str, float, float]]
 
 
-class FourierDiscriminationSyncResult(BaseModel):
-    metadata: FourierDiscriminationMetadata
+class FourierCertificationSyncResult(BaseModel):
+    metadata: FourierCertificationMetadata
     data: List[SingleResult]
 
 
-class FourierDiscriminationAsyncResult(BaseModel):
-    metadata: FourierDiscriminationMetadata
+class FourierCertificationAsyncResult(BaseModel):
+    metadata: FourierCertificationMetadata
     data: List[BatchResult]

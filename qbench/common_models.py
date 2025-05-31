@@ -1,15 +1,15 @@
-import os
 import re
 from importlib import import_module
 from typing import Any, Dict, List, Optional, Union
 
-from pydantic import BaseModel as PydanticBaseModel
-from pydantic import ConstrainedInt, Field, StrictStr, root_validator, validator
-from qiskit import IBMQ
+from pydantic.v1 import BaseModel as PydanticBaseModel
+from pydantic.v1 import ConstrainedInt, Field, StrictStr, root_validator, validator
 from qiskit.circuit import Parameter
 from qiskit.providers import BackendV1, BackendV2
+from qiskit_aer import AerSimulator
+from qiskit_ibm_runtime import QiskitRuntimeService
 
-from ._expressions import eval_expr
+from qbench._expressions import eval_expr
 
 AnyParameter = Union[float, Parameter]
 
@@ -61,6 +61,10 @@ class AnglesRange(BaseModel):
         if (values.get("start") == values.get("stop")) and values.get("num_steps") != 1:
             raise ValueError("There can be only one step if start equals stop.")
         return values
+
+
+class Delta(BaseModel):
+    delta: Any
 
 
 class QubitsPair(BaseModel):
@@ -140,28 +144,33 @@ class IBMQProviderDescription(BaseModel):
 class IBMQBackendDescription(BaseModel):
     name: str
     asynchronous: bool = False
-
     provider: IBMQProviderDescription
 
     def create_backend(self):
-        if IBMQ.active_account():
-            provider = IBMQ.get_provider(
-                hub=self.provider.hub,
-                group=self.provider.group,
-                project=self.provider.project,
-            )
-        else:
-            provider = IBMQ.enable_account(
-                os.getenv("IBMQ_TOKEN"),
-                hub=self.provider.hub,
-                group=self.provider.group,
-                project=self.provider.project,
-            )
-        return provider.get_backend(self.name)
+        service = QiskitRuntimeService(
+            channel="ibm_quantum",
+            instance=f"{self.provider.hub}/{self.provider.group}/{self.provider.project}",
+        )
+
+        return service.backend(name=self.name)
+
+        # TODO finish!
+        # exit(-1)
+
+
+class AerBackendDescription(BaseModel):
+    name: str
+    asynchronous: bool = False
+
+    def create_backend(self):
+        return AerSimulator()
 
 
 BackendDescription = Union[
-    SimpleBackendDescription, BackendFactoryDescription, IBMQBackendDescription
+    SimpleBackendDescription,
+    BackendFactoryDescription,
+    IBMQBackendDescription,
+    AerBackendDescription,
 ]
 
 

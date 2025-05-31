@@ -1,6 +1,6 @@
 import pytest
 from qiskit import QuantumCircuit
-from qiskit.providers.aer import AerSimulator
+from qiskit_aer import AerSimulator
 
 from qbench.batching import batch_circuits_with_keys, execute_in_batches
 
@@ -56,7 +56,6 @@ class TestRunningCircuitInBatches:
         backend = AerSimulator()
         keys = range(2, 10)
         circuits = [_dummy_circuit(n) for n in keys]
-
         batch_jobs = execute_in_batches(backend, circuits, keys, shots=100, batch_size=2)
 
         # Example is constructed in such a way that each key == number of qubits in the
@@ -64,8 +63,8 @@ class TestRunningCircuitInBatches:
         def _circuit_matches_key(batch_job):
             return all(
                 len(bitstring) == key
-                for key, counts in zip(batch_job.keys, batch_job.job.result().get_counts())
-                for bitstring in counts.keys()
+                for key, res in zip(batch_job.keys, batch_job.job.result())
+                for bitstring in res.join_data().get_counts().keys()
             )
 
         assert all(_circuit_matches_key(batch_job) for batch_job in batch_jobs)
@@ -81,11 +80,10 @@ class TestRunningCircuitInBatches:
             return next(iter(len(key) for key in counts))
 
         submitted_keys = [key for job in batch_jobs for key in job.keys]
-
         submitted_circuits_n_qubits = [
-            _n_qubits_from_counts(counts)
+            _n_qubits_from_counts(res.join_data().get_counts())
             for batch in batch_jobs
-            for counts in batch.job.result().get_counts()
+            for res in batch.job.result()
         ]
 
         expected_n_qubits = [circuit.num_qubits for circuit in circuits]

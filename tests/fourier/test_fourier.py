@@ -3,7 +3,8 @@ import pytest
 from qiskit.quantum_info import Operator
 from scipy import linalg
 
-from qbench.fourier import FourierComponents, discrimination_probability_upper_bound
+from qbench.fourier import FourierComponents
+from qbench.fourier._components import discrimination_probability_upper_bound
 
 SWAP_MATRIX = np.array(
     [
