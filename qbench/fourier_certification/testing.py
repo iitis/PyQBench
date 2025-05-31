@@ -4,7 +4,7 @@ from typing import Sequence, Tuple
 
 import pandas as pd
 
-from ._models import FourierDiscriminationSyncResult, FourierExperimentSet
+from ._models import FourierCertificationSyncResult, FourierExperimentSet
 
 LabelSequence = Sequence[Tuple[int, int, float]]
 
@@ -25,7 +25,7 @@ def _experiment_labels_equal(actual: LabelSequence, expected: LabelSequence) -> 
 
 
 def assert_sync_results_contain_data_for_all_experiments(
-    experiments: FourierExperimentSet, results: FourierDiscriminationSyncResult
+    experiments: FourierExperimentSet, results: FourierCertificationSyncResult
 ) -> None:
     """Verify synchronous result of computation has measurements for each qubits pair and phi.
 

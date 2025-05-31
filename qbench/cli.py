@@ -1,10 +1,12 @@
 """Command line interface for qbench package."""
+
 from argparse import ArgumentParser
 
 from .fourier import add_fourier_parser
-from .logging import configure_logging
+from .fourier_certification import add_fourier_certification_parser
+from .logger import configure_logging
 
-PARSERS_TO_ADD = [add_fourier_parser]
+PARSERS_TO_ADD = [add_fourier_parser, add_fourier_certification_parser]
 
 
 def main(args=None):

@@ -1,13 +1,14 @@
 """Module implementing several test utilities and mocks."""
+
 from datetime import datetime
 from functools import lru_cache
 from typing import List
 
 from qiskit import QiskitError
 from qiskit.providers import BackendV1, JobStatus, JobV1, ProviderV1
-from qiskit.providers.aer import AerSimulator
 from qiskit.providers.models import BackendProperties
 from qiskit.providers.models.backendproperties import Nduv
+from qiskit_aer import AerSimulator
 
 
 def _make_job_fail(job):
@@ -25,7 +26,7 @@ def _make_job_fail(job):
 def _add_mitigation_info(job):
     # All typing problems ignored below seem to be problems with BackendProperties and Nduv
     props = BackendProperties(
-        backend_name=job.backend().name(),
+        backend_name=job.backend().name,
         backend_version=job.backend().version,
         last_update_date=datetime.now(),  # type: ignore
         qubits=[
@@ -61,11 +62,11 @@ class MockSimulator(AerSimulator):
         super().__init__(*args, **kwargs)
         self._job_dict = {}
         self._job_count = 0
-        self._name = name
+        self.name = name
 
-    def name(self):
-        """Return name of this backend."""
-        return self._name
+    # def name(self):
+    #     """Return name of this backend."""
+    #     return self._name
 
     def retrieve_job(self, job_id: str) -> JobV1:
         """Retrieve job of given ID."""
@@ -112,10 +113,11 @@ class MockProvider(ProviderV1):
             _create_failing_mock_simulator(),
             _create_mock_simulator_with_mitigation_info(),
         ]
+
         return (
             all_backends
             if name is None
-            else [backend for backend in all_backends if backend.name() == name]
+            else [backend for backend in all_backends if backend.name == name]
         )
 
     @staticmethod

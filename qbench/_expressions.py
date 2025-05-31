@@ -1,4 +1,5 @@
 """Implementation of arithmetic expression parsing."""
+
 import ast
 import operator as op
 from functools import singledispatch

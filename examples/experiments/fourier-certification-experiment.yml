@@ -1,0 +1,16 @@
+type: certification-fourier
+qubits:
+  - target: 0
+    ancilla: 1
+  - target: 2
+    ancilla: 3
+  - target: 1
+    ancilla: 0
+angles:
+  start: 0
+  stop: 2 * pi
+  num_steps: 10
+delta: 0.05
+gateset: ibmq
+method: postselection
+num_shots: 10000

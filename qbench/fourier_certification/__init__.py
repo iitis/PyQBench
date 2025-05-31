@@ -1,4 +1,4 @@
-"""Functionalities relating specifically to Fourier-discrimination experiments.
+"""Functionalities relating specifically to Fourier-certification experiments.
 
 
 This package defines all instructions (_components) needed for assembling
@@ -14,28 +14,23 @@ All _components are available as properties of :class:`FourierComponents` class.
 instances of this class can be constructed in such a way that the instructions they
 provide are compatible with several different quantum devices available on the market.
 
-Additionally, this module provides a function computing optimal discrimination probability
-for Fourier family of measurements, which is defined as:
-
-$$
-p_{U(\\varphi)} = \\frac12 + \\frac14 \\lvert 1 - e^{i \\varphi}\\rvert.
-$$
+Additionally, this module provides a function computing the minimized probability of
+type II error.
 
 """
 
-from ._cli import add_fourier_parser
+from ._cli import add_fourier_certification_parser
 from ._components.components import FourierComponents
 from ._models import (
-    FourierDiscriminationAsyncResult,
-    FourierDiscriminationSyncResult,
+    FourierCertificationAsyncResult,
+    FourierCertificationSyncResult,
     FourierExperimentSet,
 )
 
 __all__ = [
-    # "discrimination_probability_upper_bound",
-    "add_fourier_parser",
+    "add_fourier_certification_parser",
     "FourierComponents",
-    "FourierDiscriminationAsyncResult",
-    "FourierDiscriminationSyncResult",
+    "FourierCertificationAsyncResult",
+    "FourierCertificationSyncResult",
     "FourierExperimentSet",
 ]

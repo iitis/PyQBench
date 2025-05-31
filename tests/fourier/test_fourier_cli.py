@@ -79,6 +79,7 @@ def create_failing_backend_description(tmp_path):
 
 
 @pytest.mark.usefixtures("create_experiment_file", "create_backend_description")
+@pytest.mark.aersim
 def test_main_entrypoint_with_disc_fourier_command(tmp_path, capsys):
     MockProvider().reset_caches()
 
@@ -114,6 +115,7 @@ def test_main_entrypoint_with_disc_fourier_command(tmp_path, capsys):
 
 
 @pytest.mark.usefixtures("create_experiment_file", "create_failing_backend_description")
+@pytest.mark.aersim
 def test_main_entrypoint_with_disc_fourier_command_and_failing_backend(tmp_path, capsys, caplog):
     # The only difference compared to the previous test is that now we know that some jobs failed
     # Order of circuits run is subject to change but we know (because of how mock backend works)

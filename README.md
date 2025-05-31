@@ -1,5 +1,4 @@
 ![Logo](https://raw.githubusercontent.com/iitis/pyqbench/master/docs/source/_static/logo.png)
-
 ![GitHub](https://img.shields.io/github/license/iitis/PyQBench)
 ![PyPI](https://img.shields.io/pypi/v/pyqbench)
 ![Read the Docs](https://img.shields.io/readthedocs/pyqbench)

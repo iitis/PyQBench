@@ -1,4 +1,5 @@
 """Implementation of colored logging and definitions of log format used by PyQBench."""
+
 import logging
 
 RESET = "\x1b[0m"

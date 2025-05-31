@@ -1,4 +1,4 @@
-name: ibmq_quito
+name: ibm_kyiv
 asynchronous: true
 provider:
   hub: ibm-q

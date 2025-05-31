@@ -2,8 +2,8 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from pydantic import ValidationError
-from qiskit.providers.aer import AerProvider
+from pydantic.v1 import ValidationError
+from qiskit_aer import AerProvider
 from qiskit_braket_provider import BraketLocalBackend
 from yaml import safe_load
 
@@ -60,7 +60,9 @@ class TestSimpleBackendDescription:
     ):
         backend = description.create_backend()
         assert isinstance(backend, BraketLocalBackend)
-        assert backend.name == "sv_simulator"
+        # TODO why was there "sv_simulator" as a reference? Is it because of
+        #  https://github.com/qiskit-community/qiskit-braket-provider/issues/87?
+        assert backend.name == backend_name
         assert backend.backend_name == backend_name
 
 
@@ -82,7 +84,7 @@ class TestBackendFactoryDescription:
     @pytest.mark.parametrize(
         "provider, name, provider_cls",
         [
-            ("qiskit.providers.aer:AerProvider", "aer_simulator", AerProvider),
+            ("qiskit_aer:AerProvider", "aer_simulator", AerProvider),
         ],
     )
     def test_backend_created_from_description_has_correct_name_and_provider(
@@ -90,8 +92,8 @@ class TestBackendFactoryDescription:
     ):
         backend = SimpleBackendDescription(provider=provider, name=name).create_backend()
 
-        assert backend.name() == name
-        assert isinstance(backend.provider(), provider_cls)
+        assert backend.name == name
+        assert isinstance(backend.provider, provider_cls)
 
 
 class TestFourierDiscriminationExperimentSet:

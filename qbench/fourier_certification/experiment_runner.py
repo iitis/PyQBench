@@ -1,17 +1,15 @@
-"""Functions for running Fourier discrimination experiments and interacting with the results."""
+"""Functions for running Fourier certification experiments and interacting with the results."""
 
-import sys
 from collections import Counter, defaultdict
 from logging import getLogger
-from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Tuple, Union, cast
 
 import numpy as np
 import pandas as pd
 from mthree import M3Mitigation
 from qiskit import QiskitError, QuantumCircuit, transpile
-from qiskit.circuit import Parameter
 from qiskit.providers import JobV1
+from qiskit_ibm_runtime import RuntimeJobV2
 from tqdm import tqdm
 
 from qbench.batching import BatchJob, execute_in_batches
@@ -19,27 +17,25 @@ from qbench.common_models import Backend, BackendDescription
 from qbench.jobs import retrieve_jobs
 from qbench.limits import get_limits
 from qbench.schemes.direct_sum import (
-    assemble_discrimination_direct_sum_circuits,
-    compute_probabilities_from_direct_sum_measurements,
+    assemble_certification_direct_sum_circuits,
+    compute_probabilities_from_certification_direct_sum_measurements,
 )
 from qbench.schemes.postselection import (
-    assemble_circuits_discrimination_postselection,
-    compute_probabilities_discrimination_postselection,
+    assemble_circuits_certification_postselection,
+    compute_probabilities_certification_postselection,
 )
 
-from ._components import discrimination_probability_upper_bound
+from ._components import certification_probability_upper_bound
 from ._components.components import FourierComponents
 from ._models import (
     BatchResult,
-    FourierDiscriminationAsyncResult,
-    FourierDiscriminationSyncResult,
+    FourierCertificationAsyncResult,
+    FourierCertificationSyncResult,
     FourierExperimentSet,
     QubitMitigationInfo,
     ResultForCircuit,
     SingleResult,
 )
-
-sys.path.append(str(Path(sys.argv[0]).resolve().parent.parent))
 
 logger = getLogger("qbench")
 
@@ -58,9 +54,10 @@ def _backend_name(backend) -> str:
 
 def _log_fourier_experiments(experiments: FourierExperimentSet) -> None:
     """Log basic information about the set of experiments."""
-    logger.info("Running set of Fourier-discrimination experiments")
+    logger.info("Running set of Fourier-certification experiments")
     logger.info("Number of qubit-pairs: %d", len(experiments.qubits))
     logger.info("Number of phi values: %d", experiments.angles.num_steps)
+    logger.info("Statistical significance: %s", "{0:g}".format(experiments.delta))
     logger.info("Number of shots per circuit: %d", experiments.num_shots)
     logger.info("Probability estimation method: %s", experiments.method)
     logger.info("Gateset: %s", experiments.gateset)
@@ -102,12 +99,15 @@ def _mitigate(
 
     mitigator.cals_from_matrices(matrices)
     result = mitigator.apply_correction(counts, [target, ancilla])
+
+    # Probability distribution
+    result = result.nearest_probability_distribution()
     # Wrap value in native floats, otherwise we get serialization problems
     return {key: float(value) for key, value in result.items()}
 
 
 def _extract_result_from_job(
-    job: JobV1, target: int, ancilla: int, i: int, name: str
+    job: JobV1 | RuntimeJobV2, target: int, ancilla: int, i: int, name: str
 ) -> Optional[ResultForCircuit]:
     """Extract meaningful information from job and wrap them in serializable object.
 
@@ -126,6 +126,7 @@ def _extract_result_from_job(
         result = {"name": name, "histogram": job.result()[i].join_data().get_counts()}
     except QiskitError:
         return None
+
     try:
         # We ignore some typing errors, since we are essentially accessing attributes that might
         # not exist according to their base classes.
@@ -146,7 +147,7 @@ def _extract_result_from_job(
     return ResultForCircuit.parse_obj(result)
 
 
-CircuitKey = Tuple[int, int, str, float]
+CircuitKey = Tuple[int, int, str, float, float]
 
 
 def _collect_circuits_and_keys(
@@ -156,7 +157,7 @@ def _collect_circuits_and_keys(
     """Construct all circuits needed for the experiment and assign them unique keys."""
 
     def _asemble_postselection(target: int, ancilla: int) -> Dict[str, QuantumCircuit]:
-        return assemble_circuits_discrimination_postselection(
+        return assemble_circuits_certification_postselection(
             state_preparation=components.state_preparation,
             u_dag=components.u_dag,
             v0_dag=components.v0_dag,
@@ -166,7 +167,7 @@ def _collect_circuits_and_keys(
         )
 
     def _asemble_direct_sum(target: int, ancilla: int) -> Dict[str, QuantumCircuit]:
-        return assemble_discrimination_direct_sum_circuits(
+        return assemble_certification_direct_sum_circuits(
             state_preparation=components.state_preparation,
             u_dag=components.u_dag,
             v0_v1_direct_sum_dag=components.v0_v1_direct_sum_dag,
@@ -181,7 +182,7 @@ def _collect_circuits_and_keys(
     logger.info("Assembling experiments...")
     circuit_key_pairs = [
         (
-            circuit.assign_parameters({components.phi: phi}, inplace=False),
+            circuit.assign_parameters({components.phi: float(phi)}),
             (target, ancilla, circuit_name, float(phi)),
         )
         for (target, ancilla, phi) in tqdm(list(experiments.enumerate_experiment_labels()))
@@ -196,7 +197,7 @@ def _iter_batches(batches: Iterable[BatchJob]) -> Iterable[Tuple[int, CircuitKey
     """Iterate batches in a flat manner.
 
     The returned iterable yields triples of the form (i, key, job) where:
-    - key is the key in one one of the batches
+    - key is the key in one of the batches
     - i is its index in the corresponding batch
     - job is a job comprising this batch
     """
@@ -207,6 +208,20 @@ def _iter_batches(batches: Iterable[BatchJob]) -> Iterable[Tuple[int, CircuitKey
     )
 
 
+# def _iter_batches(batches: Iterable[BatchJob]) -> Generator[
+#     tuple[int, tuple[int, Any], JobV1 | RuntimeJob | RuntimeJobV2], None, None]:
+#     """Iterate batches in a flat manner.
+#
+#     The returned iterable yields triples of the form (i, key, job) where:
+#     - key is the key in one of the batches
+#     - i is its index in the corresponding batch
+#     - job is a job comprising this batch
+#     """
+#     for batch in tqdm(batches, desc="Batch"):
+#         for i, key in enumerate(tqdm(batch.keys, desc="Circuit", leave=False)):
+#             yield i, key, batch.job
+
+
 def _resolve_batches(batches: Iterable[BatchJob]) -> List[SingleResult]:
     """Resolve all results from batch of jobs and wrap them in a serializable object.
 
@@ -214,18 +229,19 @@ def _resolve_batches(batches: Iterable[BatchJob]) -> List[SingleResult]:
     some jobs have failed.
 
     :param batches: batches to be processed.
-    :return: dictionary mapping triples (target, ancilla, phi) to a list of results for each
+    :return: dictionary mapping triples (target, ancilla, phi, delta to a list of results for each
      circuit with that parameters.
     """
     resolved = defaultdict(list)
 
     num_failed = 0
-    for i, (target, ancilla, name, phi), job in _iter_batches(batches):
+    for i, key, job in _iter_batches(batches):
+        target, ancilla, name, phi, delta = key
         result = _extract_result_from_job(job, target, ancilla, i, name)
         if result is None:
             num_failed += 1
         else:
-            resolved[target, ancilla, phi].append(result)
+            resolved[target, ancilla, phi, delta].append(result)
 
     if num_failed:
         logger.warning(
@@ -234,15 +250,21 @@ def _resolve_batches(batches: Iterable[BatchJob]) -> List[SingleResult]:
 
     return [
         SingleResult.parse_obj(
-            {"target": target, "ancilla": ancilla, "phi": phi, "results_per_circuit": results}
+            {
+                "target": target,
+                "ancilla": ancilla,
+                "phi": phi,
+                "delta": delta,
+                "results_per_circuit": results,
+            }
         )
-        for (target, ancilla, phi), results in resolved.items()
+        for (target, ancilla, phi, delta), results in resolved.items()
     ]
 
 
 def run_experiment(
     experiments: FourierExperimentSet, backend_description: BackendDescription
-) -> Union[FourierDiscriminationSyncResult, FourierDiscriminationAsyncResult]:
+) -> Union[FourierCertificationSyncResult, FourierCertificationAsyncResult]:
     """Run sef ot experiments on given backend.
 
     :param experiments: set of experiments to be run.
@@ -254,17 +276,50 @@ def run_experiment(
     """
     _log_fourier_experiments(experiments)
 
-    phi = Parameter("phi")
-    components = FourierComponents(phi, gateset=experiments.gateset)
-
     backend = backend_description.create_backend()
-    print(f"Backend type: {type(backend).__name__}, backend name: {_backend_name(backend)}")
     logger.info(f"Backend type: {type(backend).__name__}, backend name: {_backend_name(backend)}")
 
-    circuits_col, keys = _collect_circuits_and_keys(experiments, components)
+    if experiments.method == "postselection":
+        circuit_key_pairs = []
+        for target, ancilla, phi in tqdm(list(experiments.enumerate_experiment_labels())):
+            components = FourierComponents(phi, experiments.delta, gateset=experiments.gateset)
+            cos = assemble_circuits_certification_postselection(
+                state_preparation=components.state_preparation,
+                u_dag=components.u_dag,
+                v0_dag=components.v0_dag,
+                v1_dag=components.v1_dag,
+                target=target,
+                ancilla=ancilla,
+            )
+            for circuit_name, circuit in cos.items():
+                circuit_key_pairs += [
+                    (
+                        transpile(circuit, backend=backend),
+                        (target, ancilla, circuit_name, float(phi), experiments.delta),
+                    )
+                ]
+    else:
+        circuit_key_pairs = []
+        for target, ancilla, phi in tqdm(list(experiments.enumerate_experiment_labels())):
+            components = FourierComponents(phi, experiments.delta, gateset=experiments.gateset)
+            cos = assemble_certification_direct_sum_circuits(
+                state_preparation=components.state_preparation,
+                u_dag=components.u_dag,
+                v0_v1_direct_sum_dag=components.v0_v1_direct_sum_dag,
+                target=target,
+                ancilla=ancilla,
+            )
+            for circuit_name, circuit in cos.items():
+                circuit_key_pairs += [
+                    (
+                        transpile(circuit, backend=backend),
+                        (target, ancilla, circuit_name, float(phi), experiments.delta),
+                    )
+                ]
 
-    # Transpile circuit according to the universal set of gates supported by the selected backend
-    circuits = [transpile(circuit, backend=backend) for circuit in circuits_col]
+    logger.info("Assembling experiments...")
+
+    circuits, keys = zip(*circuit_key_pairs)
 
     logger.info("Submitting jobs...")
     batches = execute_in_batches(
@@ -282,7 +337,7 @@ def run_experiment(
     }
 
     if backend_description.asynchronous:
-        async_result = FourierDiscriminationAsyncResult.parse_obj(
+        async_result = FourierCertificationAsyncResult.parse_obj(
             {
                 "metadata": metadata,
                 "data": [
@@ -294,21 +349,21 @@ def run_experiment(
         return async_result
     else:
         logger.info("Executing jobs...")
-        sync_result = FourierDiscriminationSyncResult.parse_obj(
+        sync_result = FourierCertificationSyncResult.parse_obj(
             {"metadata": metadata, "data": _resolve_batches(batches)}
         )
         logger.info("Done")
         return sync_result
 
 
-def fetch_statuses(async_results: FourierDiscriminationAsyncResult) -> Dict[str, int]:
+def fetch_statuses(async_results: FourierCertificationAsyncResult) -> Dict[str, int]:
     """Fetch statuses of all jobs submitted for asynchronous execution of experiments.
 
     :param async_results: object describing data of asynchronous execution.
      If the result object already contains histograms, an error will be raised.
     :return: dictionary mapping status name to number of its occurrences.
     """
-    logger.info("Enabling account and creating backend")
+    # logger.info("Enabling account and creating backend")
     # backend = async_results.metadata.backend_description.create_backend()
 
     logger.info("Reading jobs ids from the input file")
@@ -322,19 +377,17 @@ def fetch_statuses(async_results: FourierDiscriminationAsyncResult) -> Dict[str,
 
 
 def resolve_results(
-    async_results: FourierDiscriminationAsyncResult,
-) -> FourierDiscriminationSyncResult:
+    async_results: FourierCertificationAsyncResult,
+) -> FourierCertificationSyncResult:
     """Resolve data of asynchronous execution.
 
     :param async_results: object describing data of asynchronous execution.
      If the result object already contains histograms, an error will be raised.
     :return: Object containing resolved data. Format of this object is the same as the one
-     returned directly from a synchronous execution of Fourier discrimination experiments. In
+     returned directly from a synchronous execution of Fourier certification experiments. In
      particular, it contains histograms of bitstrings for each circuit run during the experiment.
     """
-    logger.info("Enabling account and creating backend")
-
-    # TODO Will we need to use the backend instance in the future?
+    # logger.info("Enabling account and creating backend")
     # backend = async_results.metadata.backend_description.create_backend()
 
     logger.info("Reading jobs ids from the input file")
@@ -348,7 +401,7 @@ def resolve_results(
     logger.info("Resolving results. This might take a while if mitigation info is included...")
     resolved = _resolve_batches(batches)
 
-    result = FourierDiscriminationSyncResult.parse_obj(
+    result = FourierCertificationSyncResult.parse_obj(
         {"metadata": async_results.metadata, "data": resolved}
     )
 
@@ -356,11 +409,11 @@ def resolve_results(
     return result
 
 
-def tabulate_results(sync_results: FourierDiscriminationSyncResult) -> pd.DataFrame:
+def tabulate_results(sync_results: FourierCertificationSyncResult) -> pd.DataFrame:
     compute_probabilities = (
-        compute_probabilities_discrimination_postselection
+        compute_probabilities_certification_postselection
         if sync_results.metadata.experiments.method.lower() == "postselection"
-        else compute_probabilities_from_direct_sum_measurements
+        else compute_probabilities_from_certification_direct_sum_measurements
     )
 
     def _make_row(entry):
@@ -368,7 +421,8 @@ def tabulate_results(sync_results: FourierDiscriminationSyncResult) -> pd.DataFr
             entry.target,
             entry.ancilla,
             entry.phi,
-            discrimination_probability_upper_bound(entry.phi),
+            entry.delta,
+            certification_probability_upper_bound(entry.phi, entry.delta),
             compute_probabilities(
                 **{f"{info.name}_counts": info.histogram for info in entry.results_per_circuit}
             ),
@@ -391,11 +445,19 @@ def tabulate_results(sync_results: FourierDiscriminationSyncResult) -> pd.DataFr
 
     # We assume that either all circuits have mitigation info, or none of them has
     columns = (
-        ["target", "ancilla", "phi", "ideal_prob", "disc_prob"]
-        if len(rows[0]) == 5
-        else ["target", "ancilla", "phi", "ideal_prob", "disc_prob", "mit_disc_prob"]
+        ["target", "ancilla", "phi", "delta", "ideal_prob", "cert_prob"]
+        if len(rows[0]) == 6
+        else ["target", "ancilla", "phi", "delta", "ideal_prob", "cert_prob", "mit_cert_prob"]
     )
 
     result = pd.DataFrame(data=rows, columns=columns)
+
+    # fig, ax = plt.subplots()
+    # ax.plot(phis, theoretical_probs, color="red", label="theoretical_predictions")
+    # ax.plot(phis, actual_probs, color="blue", label="actual results")
+    # ax.legend()
+
+    # plt.savefig(PATH + f'direct_sum_{backend}_{NUM_SHOTS_PER_MEASUREMENT}.png')
+
     logger.info("Done")
     return result

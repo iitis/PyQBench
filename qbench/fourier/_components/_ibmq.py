@@ -3,10 +3,12 @@
 For detailed description of functions in this module refer to the documentation of
 FourierComponents class.
 """
+
 import numpy as np
 from qiskit.circuit import Instruction, QuantumCircuit
 
-from ...common_models import AnyParameter
+from qbench.common_models import AnyParameter
+
 from ._lucy_and_ibmq_common import u_dag, v0_dag, v1_dag
 
 
